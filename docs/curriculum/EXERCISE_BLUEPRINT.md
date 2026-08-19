@@ -20,6 +20,6 @@ Use these terms consistently: tasks are **not started**, **in-progress**, or **c
 
 ## Skills and map connections in an exercise
 
-List only the relevant skills, by readable identifier and name. A task or checkpoint may strengthen a skill, but the list itself does not advance confidence. After the learner passes a checkpoint, Codex drafts a first-person reflection in chat. Only when the learner explicitly confirms that wording and the checkpoint result may Codex append evidence to `LEARNING_LOG.md` and update the justified confidence in `SKILLS.md`.
+List only the relevant skills, by readable identifier and name. A task or checkpoint may strengthen a skill, but the list itself does not advance confidence. After the learner completes the checkpoint's required inspection, explanation, decision, or test, Codex drafts a first-person reflection in chat. The learner's approval of that reflection also confirms checkpoint completion; do not require a second confirmation unless a stated checkpoint requirement remains missing. Only then may Codex append evidence to `LEARNING_LOG.md` and update the justified confidence in `SKILLS.md`.
 
 An exercise may include an optional map connection or check-in when it helps connect the work to `AGENTIC_AI_MAP.md`; it never blocks product progress. Do not infer `Demonstrated` from explanation by Codex, task completion alone, or an unconfirmed response. Demonstrated requires both an approved first-person reflection and observable evidence.
