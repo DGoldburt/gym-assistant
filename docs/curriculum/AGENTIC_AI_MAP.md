@@ -1,0 +1,109 @@
+# Agentic-AI Map
+
+This is a living mental map of agentic-AI practices, capabilities, and questions—not a checklist or grade. It was seeded in August 2026 while building Gym Assistant, but it is meant to outlive that project and keep evolving through future work, reading, and experiments.
+
+## Current orientation
+
+No learner-specific orientation has been recorded yet. At the first approved map check-in, replace this paragraph with a short account of the learner's current interests, experience, open questions, and preferred ways to test new agentic-AI ideas.
+
+## How to use this map
+
+At a planned check-in—or whenever an article, newsletter, or discussion raises an interesting idea—connect it to one or more areas below. Ask: what does this change in my mental model, what would I have done differently earlier, and what could I test in this project? A check-in is optional and never blocks a numbered exercise.
+
+Save external sources when available, but write the claim and connection in your own words. Do not add an idea merely because it sounds fashionable; incorporate it, park it, or define a bounded test.
+
+## Use with ChatGPT outside this repository
+
+Until the external-source TODO below is complete, the user may optionally create a ChatGPT Project for agentic-AI learning and upload this file and `SKILLS.md` as project sources. Codex must not create the Project, upload files, change sharing, or migrate the source of truth unless the user explicitly starts that work and approves the required external actions. If the user adopts this workflow, keep related discussions in that Project and replace the uploaded map when this local version changes. A local repository file is not automatically available to unrelated ChatGPT chats.
+
+For an important discussion, begin with: “Read the Current orientation and relevant sections of my uploaded Agentic-AI Map before answering. Relate new ideas to my existing project examples, identify what is genuinely new, and suggest a test or reflection question where appropriate.”
+
+## TODO — establish an external source of truth
+
+**Goal:** replace this local file as the active mind map with one external, user-controlled artifact—such as a Google Doc in Google Drive—that multiple chats can use as the current source of truth. Once migrated, this file should contain only a link and brief instructions for when agents should read the external map; it must not become a second, competing map or a snapshot of that map.
+
+1. Investigate what external tool and format can best capture a mind map, and what Skills ChatGPT requires to interact with that tool. 
+2. After explicit user approval, choose a tool and create an external artifact named **Agentic-AI Map** and configure its sharing/privacy settings. Do a quick prototype to make sure ChatGPT has the right Skills to interact with it.
+3. Move this map's current orientation, map areas, research seed, and incoming-ideas structure into it; mark it clearly as canonical. 
+4. Create a dedicated ChatGPT Project for Agentic AI exploration and add that artifact to it. In two separate chats, ask ChatGPT to read it and verify that it can use the same current context; define any refresh step actually required.
+5. Replace the body of this local file with the canonical link, last-updated date, a one-sentence description of the artifact, and this instruction: read the external map whenever an agentic-AI discussion, outside source, or map check-in needs personal context.
+
+## 1. Delivery loop and evidence
+
+An agent is more useful when it can act, observe objective feedback, correct itself, and show a reproducible result. This connects the agent loop, harness engineering, executable acceptance criteria, fixtures, automated checks, and manual artifacts.
+
+**Project connections:** the Notes spike must be repeatedly tested in the real workflow; resolver fixtures and the verification harness come later.
+
+## 2. Context and task framing
+
+An agent needs the right amount of durable context in the right place: product truth, agent rules, architecture decisions, plans, and current task instructions serve different jobs. A well-framed task names outcome, context, constraints, verification, and stopping conditions.
+
+**Project connections:** `PRODUCT.md`, `AGENTS.md`, `ARCHITECTURE.md`, `PLANS.md`, the curriculum, and the current task each have a distinct purpose.
+
+### Context windows, compaction, tokens, and memory
+
+A context window is the model's bounded working set for a turn, measured in tokens. It can include instructions, conversation content, tool definitions and results, and selected file contents; it is not the same thing as everything stored in a chat, project, repository, or memory system. Tokens are the units that consume this capacity, while durable files and other persisted state can remain available outside the active window and be retrieved again when needed.
+
+Inspection has layers. I can inspect the visible conversation, opened files, tool results, agent threads, and any context-usage indicator the current client exposes. I can also ask an agent to identify the sources and assumptions it is relying on, but that is an explanatory report rather than a literal dump of every internal input. Hidden instructions, private reasoning, and encrypted compacted state are not fully inspectable.
+
+Compaction extends a long-running workflow by compressing earlier conversation state into a smaller continuation representation. The Responses API documentation describes this representation as loss-aware but opaque: it aims to preserve task-relevant information, not every original detail. This makes compaction different from durable memory. Important facts, decisions, and restart state should still be written to authoritative artifacts rather than entrusted only to a long chat.
+
+**Questions to investigate:** What exactly does the Codex client expose about current token usage and context composition? What triggers automatic compaction, and what evidence of it is visible? Which information survives reliably, which becomes vague, and how do chat history, project context, repository files, prompt caching, and saved memory differ from the model's active context?
+
+**Possible lab:** Before and after a deliberately long, tool-heavy task, record the visible context/token indicators, ask the agent to state its active assumptions and sources, and test recall of (a) a fact mentioned only in chat and (b) the same fact written to a durable project file. Treat the result as client- and model-specific evidence, not a universal guarantee.
+
+**Official reference:** [OpenAI model guidance on compaction](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.2)
+
+## 3. Autonomy and judgment
+
+Planning and reasoning effort should be proportionate to uncertainty and risk. The sandbox, permissions, and explicit approvals set the safe execution envelope; a plan is valuable when it reduces an expensive mistake, not when it creates ceremony.
+
+**Project connections:** the architecture spike is read-only before Xcode or application code; GitHub and Xcode actions require explicit approval.
+
+## 4. Collaboration and durable decisions
+
+Git/GitHub makes changes reviewable. Architecture decision records preserve why a consequential choice was made. Self-review, independent review, worktrees, and parallel agents provide distinct checks, but only when the work is genuinely independent.
+
+**Project connections:** the first commit and pull request make the bootstrap reviewable; the Notes-spike result becomes an ADR in Exercise 03.
+
+### Subagents
+
+A subagent is a delegated agent working in its own agent thread on a bounded part of the parent agent's task. Separate threads can keep noisy exploration, logs, and intermediate reasoning out of the main context; parallel agents can reduce elapsed time when workstreams are genuinely independent. The parent still owns decomposition, coordination, synthesis, and verification. Because each subagent performs its own model and tool work, delegation usually consumes more total tokens and can add coordination or edit-conflict costs.
+
+Start with an explicit prompt that states the division of work, each agent's scope and constraints, whether the parent should wait for all results, and the exact evidence or summary each agent must return. Read-heavy exploration, test analysis, triage, and independent review are safer first uses than concurrent edits to shared files.
+
+Codex currently documents three built-in agent roles: `default`, `worker`, and `explorer`. It does not document `anonymous` as a built-in role; an ad hoc subagent without a custom configuration is better understood as prompt-level delegation. Reusable custom agents are standalone TOML files in `~/.codex/agents/` for personal scope or `.codex/agents/` for project scope, with required `name`, `description`, and `developer_instructions` fields and optional model, reasoning, sandbox, MCP, and Skill settings.
+
+Subagent work should remain inspectable and steerable. In the CLI, `/agent` switches among active agent threads; supported app interfaces expose running subagents in a background-agent panel. The user can inspect progress, steer or stop a subagent, and open its thread rather than treating delegation as invisible execution.
+
+**Questions to investigate:** What context does a child inherit from its parent, and what does it receive only through its task prompt? When is a built-in role enough, and when does a custom TOML agent earn its maintenance cost? How should permissions, models, reasoning effort, token cost, and shared-file ownership be allocated across agents?
+
+**Possible lab:** Give two read-only `explorer` subagents independent questions about this repository, inspect both threads, then have the parent synthesize their evidence. Compare this with a single-agent run for elapsed time, total token use, context cleanliness, duplicated work, and answer quality. A later lab can define one narrow project-scoped custom agent only if repeated use reveals a stable role.
+
+**Official reference:** [Codex subagents documentation](https://developers.openai.com/codex/multi-agent)
+
+## 5. Advanced capabilities and scale
+
+MCP can provide authorized, authoritative live context. A Skill can package a proven repeated procedure. Cloud delegation can isolate a bounded task for review. Scheduled automation belongs only after a manual workflow is stable and its failure evidence is understood.
+
+**Project connections:** these are optional labs, deliberately after the core workflow is stable.
+
+## Research seed
+
+This map is seeded from the tutorial's core topics: agent loops and harnesses; repository orientation; durable context; task framing; risk-scaled planning; reasoning effort; permission boundaries; Git/GitHub; acceptance criteria and fixtures; artifact verification; ADRs; self-review and independent review; decomposition, worktrees, and parallel agents; MCP; Skills; cloud delegation; and stabilized-before-scheduled automation.
+
+## Incoming ideas
+
+Add an entry only when it is useful to think with.
+
+### Source title — date
+
+**Link:** <https://example.com>  
+**Idea in my words:**  
+**Connects to:**  
+**Question, counterfactual, or possible project test:**  
+**Disposition:** incorporated / parked / test later
+
+## Optional map check-ins
+
+Good times for a short check-in are after the Notes architecture spike, after the resolver work, after review/worktree work, or whenever an external source changes a live question. A check-in may be summarized in `LEARNING_LOG.md` if you want it preserved as a portfolio example.
