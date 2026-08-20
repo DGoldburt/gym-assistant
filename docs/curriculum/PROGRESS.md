@@ -1,13 +1,13 @@
 # Tutorial Progress
 
 Current exercise: 01
-Current task: Task A — Repository, Git, and product orientation
-Current task state: not started
-Task completion condition: pass `STOP / REVIEW — Orientation`
-Completed tasks: none
-Remaining tasks: Task A — Repository, Git, and product orientation; Task B — Create the local and remote repository; Task C — Initial architecture-spike plan; Task D — Prepare the first pull request; Task E — Merge and synchronize
-Most recent checkpoint: none
-Relevant skills: orient, frame-work, set-boundaries
+Current task: Task D — Prepare the first pull request
+Current task state: in progress — approved `PLAN-001` recorded; complete diff review, commit, push, and pull-request creation remain
+Task completion condition: pass `STOP / REVIEW — First pull request`
+Completed tasks: Task A — Repository, Git, and product orientation; Task B — Create the local and remote repository; Task C — Initial architecture-spike plan
+Remaining tasks: Task D — Prepare the first pull request; Task E — Merge and synchronize
+Most recent checkpoint: `STOP / REVIEW — Spike plan` (passed)
+Relevant skills: collaborate, record-decisions, verify
 
 ## Completed
 
@@ -27,18 +27,22 @@ Relevant skills: orient, frame-work, set-boundaries
 
 ## Current notes
 
-- This is the reusable starter state. When distributed as a source archive, it begins as an ordinary local folder without Git history.
-- Repository state, Git tooling, author configuration, GitHub tooling, `.gitignore`, and Xcode must be inspected during Task A rather than assumed.
-- No learner decisions, checkpoint evidence, or reflections have been recorded.
-- Task A is read-only: do not initialize Git, create a GitHub repository, install Xcode, or create application code.
+- The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
+- Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI remains uninstalled.
+- Local and remote `main` contain clean starter history: root commit `4161f6f` plus reusable harness update `5b62442`. The immutable tag `tutorial-start-v1` still resolves to the original clean root.
+- The current local branch is `tutorial/exercise-01`; learner-specific Task A state and subsequent curriculum-record changes are local working-tree changes and have not been pushed.
+- Full Xcode 26.6 is now installed and selected as the active developer directory. This happened after Task A and does not advance the tutorial; Exercise 02 still owns verification of the toolchain and the Notes-integration mechanism gate.
+- Task A orientation, Task B repository, and Task C planning evidence are recorded in `LEARNING_LOG.md`.
+- Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
+- The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
 
 ## Relevant durable context
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: none
-- Active durable plan: none yet
+- Approved learning evidence: `LEARNING_LOG.md` — 2026-08-18, Exercise 01, Task A; 2026-08-19, Exercise 01, Tasks B–C
+- Active durable plan: `PLANS.md` — `PLAN-001`, approved and not yet executed
 
 ## Next action
 
-Open Exercise 01 and complete only Task A. Inspect the repository without editing it, then stop at `STOP / REVIEW — Orientation` for the learner's review and teach-back.
+Open Exercise 01 and complete only Task D. Review the complete documentation-only diff, commit it as `docs: complete tutorial exercise 01`, push `tutorial/exercise-01`, and ask the user to open the pull request in GitHub's web interface.

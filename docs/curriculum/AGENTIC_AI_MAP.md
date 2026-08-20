@@ -4,7 +4,8 @@ This is a living mental map of agentic-AI practices, capabilities, and questions
 
 ## Current orientation
 
-No learner-specific orientation has been recorded yet. At the first approved map check-in, replace this paragraph with a short account of the learner's current interests, experience, open questions, and preferred ways to test new agentic-AI ideas.
+I read Simon Willison's newsletter, follow the r/codex community on Reddit, and notice new Codex capabilities in changelogs and OpenAI announcements. I may want to consider a new agentic-AI concept, agentic-coding pattern, or Codex feature in the context of my existing mental map, what I'm coding currently, or what I've coded already, such as the Gym Assistant tutorial. I enjoy interrogating these concepts and considering how I can test them or what I could have done differently if I had known them earlier. I'm motivated by learning how to use new product features in Codex and capabilities in agentic AI, especially enterprise-grade ones—how the professionals do it.
+I am learning to direct coding agents while building a low-friction Apple Notes companion for strength-program writing. I value bounded autonomy, durable context, evidence over unsupported claims, and product interactions that are genuinely faster for a coach. I have used repository orientation, task framing, risk-scaled planning, approval boundaries, and Git/GitHub collaboration; I have also compared planning modes and the effect of durable planning guidance.
 
 ## How to use this map
 
@@ -90,7 +91,7 @@ MCP can provide authorized, authoritative live context. A Skill can package a pr
 
 ## Research seed
 
-This map is seeded from the tutorial's core topics: agent loops and harnesses; repository orientation; durable context; task framing; risk-scaled planning; reasoning effort; permission boundaries; Git/GitHub; acceptance criteria and fixtures; artifact verification; ADRs; self-review and independent review; decomposition, worktrees, and parallel agents; MCP; Skills; cloud delegation; and stabilized-before-scheduled automation.
+This map was seeded from the **Codex research** conversation (`chatgpt-conversation://6a81f3fd-582c-83e8-b8e8-62ab9944080e`), captured on 2026-08-19. The ideas from that conversation are represented across the five areas above: agent loops and harnesses; repository orientation; durable context; task framing; risk-scaled planning; reasoning effort; permission boundaries; Git/GitHub; acceptance criteria and fixtures; artifact verification; ADRs; self-review and independent review; decomposition, worktrees, and parallel agents; MCP; Skills; cloud delegation; and stabilized-before-scheduled automation.
 
 ## Incoming ideas
 
