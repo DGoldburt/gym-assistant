@@ -2,7 +2,7 @@
 
 Current exercise: 01
 Current task: Task D — Prepare the first pull request
-Current task state: in progress — approved `PLAN-001` recorded; complete diff review, commit, push, and pull-request creation remain
+Current task state: in progress — approved `PLAN-001` recorded and learner branch pushed; pull-request creation and review remain
 Task completion condition: pass `STOP / REVIEW — First pull request`
 Completed tasks: Task A — Repository, Git, and product orientation; Task B — Create the local and remote repository; Task C — Initial architecture-spike plan
 Remaining tasks: Task D — Prepare the first pull request; Task E — Merge and synchronize
@@ -29,8 +29,8 @@ Relevant skills: collaborate, record-decisions, verify
 
 - The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
 - Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI remains uninstalled.
-- Local and remote `main` contain clean starter history: root commit `4161f6f` plus reusable harness update `5b62442`. The immutable tag `tutorial-start-v1` still resolves to the original clean root.
-- The current local branch is `tutorial/exercise-01`; learner-specific Task A state and subsequent curriculum-record changes are local working-tree changes and have not been pushed.
+- Local and remote `main` contain clean starter history: root commit `4161f6f`, reusable harness update `5b62442`, and reusable ExecPlan-storage update `590c78d`. The immutable tag `tutorial-start-v1` still resolves to the original clean root.
+- The current local branch is `tutorial/exercise-01`; its learner-specific Task A–C evidence, progress, skills, map orientation, and approved `PLAN-001` are committed and pushed. No pull request has been opened yet.
 - Full Xcode 26.6 is now installed and selected as the active developer directory. This happened after Task A and does not advance the tutorial; Exercise 02 still owns verification of the toolchain and the Notes-integration mechanism gate.
 - Task A orientation, Task B repository, and Task C planning evidence are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
@@ -45,4 +45,4 @@ Relevant skills: collaborate, record-decisions, verify
 
 ## Next action
 
-Open Exercise 01 and complete only Task D. Review the complete documentation-only diff, commit it as `docs: complete tutorial exercise 01`, push `tutorial/exercise-01`, and ask the user to open the pull request in GitHub's web interface.
+Open Exercise 01 and complete only Task D. Have the user open the pushed `tutorial/exercise-01` pull request against `main`, inspect its complete documentation-only diff and checks, and answer the checkpoint teach-back before any merge.
