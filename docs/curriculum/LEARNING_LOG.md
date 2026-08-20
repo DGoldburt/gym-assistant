@@ -330,3 +330,36 @@ Tested the bounded Apple Notes interaction through two approved native mechanism
 **Next time / revisit**
 
 In Exercise 03, record the decision to retain the Notes adapter, the failed Automator alternative, the successful AppKit evidence, the timing-proxy limitation, the awkward shortcut, the identical-text ambiguity, and falsifiable revisit triggers in an ADR without turning the spike into product architecture.
+
+### 2026-08-20 — Exercise 03 — Notes integration architecture decision
+
+**Skills strengthened**
+
+- `record-decisions` — Demonstrated
+- `verify` — Demonstrated
+- `collaborate` — Demonstrated
+
+**What I did**
+
+Converted the approved Exercise 02 result into ADR 001, synchronized the architecture overview, and kept the durable decision separate from the experimental procedure and full-fidelity evidence.
+
+**Evidence**
+
+- Pushed `tutorial/exercise-02`, merged it into `learner/main` as `968f6c7`, pushed and fast-forward verified the integration branch, and created `tutorial/exercise-03` from that exact commit.
+- Created `docs/decisions/001-notes-integration.md` with Context, Decision, Evidence, Alternatives considered, Consequences, Known limitations, and Revisit triggers.
+- Recorded the decision to retain Apple Notes through an AppKit Service adapter while keeping resolver and domain logic independent and treating the spike as disposable evidence rather than production code.
+- Recorded the failed Automator alternative, the rejected companion-editor alternative, and why a third integration mechanism was not investigated.
+- Preserved the macOS-version, fixed-list, distribution, shortcut, identical-text feedback, timing-proxy, and sample-duration limitations.
+- Added quantitative, integrity, compatibility, usability, and distribution revisit triggers, plus an explicit rule to abandon the Notes companion when a triggered problem cannot be corrected inside the adapter without weakening product principles or acceptance gates.
+- Updated `docs/ARCHITECTURE.md` to distinguish the validated Notes adapter direction from downstream domain boundaries that remain hypotheses.
+- `git diff --check` passed and the ADR's evidence links resolve to the completed plan and spike evidence.
+
+**My reflection**
+
+> The ADR persists the architecture decision and summarizes the evidence supporting it. The experiment plan records the intended procedure, acceptance gates, and recovery rules, while the evidence log preserves the observations and measurements in full fidelity so the decision can be inspected later.
+>
+> The Notes decision is falsifiable, but its revisit triggers use different kinds of evidence. Performance, integrity, and focus can be tested mechanically. A change from “quick and painless” to actively avoiding the interaction is subjective and cannot be fully automated, but it is still meaningful product evidence that requires deliberate human reassessment. I reviewed the alternatives, consequences, limitations, and revisit triggers and believe ADR 001 accurately records the decision.
+
+**Next time / revisit**
+
+Begin Exercise 04 with design only: settle stable exercise identity, display text, aliases, ownership constraints, indexes, migration strategy, examples, and tradeoffs before generating persistence code.

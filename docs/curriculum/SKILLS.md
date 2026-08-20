@@ -47,8 +47,9 @@ Turn intended behavior into fixtures, tests, manual artifacts, and reproducible 
 
 ## record-decisions — Preserve durable technical judgment
 
-**Confidence:** Not yet used  
+**Confidence:** Demonstrated
 Record consequential decisions, evidence, tradeoffs, and revisit triggers outside chat.
+**Project example:** Exercise 03 — translated the Notes spike into ADR 001 with alternatives, consequences, limitations, and quantitative plus human revisit triggers.
 
 ## review — Challenge work from more than one perspective
 
