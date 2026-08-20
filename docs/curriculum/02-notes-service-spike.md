@@ -30,7 +30,7 @@ A keyboard shortcut should be investigated if practical.
 
 ## Task A — Investigate the mechanism and toolchain
 
-Read `PLAN-001` from `PLANS.md`. Without installing software or creating an app, Codex should:
+Read `PLAN-001` from `docs/exec-plans/PLAN-001-notes-interaction-spike.md`, using `PLANS.md` only as its maintenance convention. Without installing software or creating an app, Codex should:
 
 1. inspect macOS version, developer-directory selection, `xcodebuild`, Swift availability, and existing project state
 2. use current authoritative documentation to compare supported integration mechanisms

@@ -49,7 +49,7 @@ Exercise 01 assumes the bootstrap may begin as an ordinary local folder. It teac
 - `docs/curriculum/AGENTIC_AI_MAP.md` is a living mental map for the research ideas, project connections, and useful outside reading.
 - `docs/curriculum/LEARNING_LOG.md` stores append-only portfolio evidence and first-person reflections.
 - `docs/curriculum/PROGRESS.md` stays compact and records only the current course location.
-- `PLANS.md` persists approved, multi-session plans when planning is justified by risk or uncertainty.
+- `PLANS.md` defines the ExecPlan convention; approved multi-session plans live as separate files under `docs/exec-plans/`.
 
 Skills use Not yet used → Used with guidance → Demonstrated, with Revisit used when evidence exposes a gap. Demonstrated always requires approved reflection plus observable evidence.
 
