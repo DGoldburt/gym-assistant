@@ -6,11 +6,11 @@ This file describes how to store approved plans that must survive beyond one Cod
 
 This document describes the requirements for an execution plan ("ExecPlan"), a design document that a coding agent can follow to deliver a working feature or system change. Treat the reader as a complete beginner to this repository: they have only the current working tree and the single ExecPlan file you provide. There is no memory of prior plans and no external context.
 
-`PLANS.md` is a project convention, not a special Codex filename. Codex reads it when `AGENTS.md`, `PROGRESS.md`, or the current task points to it. Interactive Plan mode is used to investigate and make decisions without changing tracked files; an approved result may then be recorded here for future sessions.
+`PLANS.md` is the project convention for ExecPlans, not the storage location for individual plans and not a special Codex filename. Codex reads it when `AGENTS.md`, `PROGRESS.md`, or the current task points to it. Interactive Plan mode is used to investigate and make decisions without changing tracked files; an approved result is then recorded as a separate Markdown file under `docs/exec-plans/`.
 
 ## When a durable plan is appropriate
 
-Use this file when work:
+Create a separate ExecPlan under `docs/exec-plans/` when work:
 
 - spans multiple checkpoints or sessions
 - contains architecture or migration decisions
@@ -19,7 +19,7 @@ Use this file when work:
 
 Keep a small, obvious task in its task prompt instead of adding ceremony here.
 
-For a planning A/B experiment, use the same convention and requested sections in both candidate drafts. Keep both drafts read-only and out of this file until the user chooses or synthesizes an approved plan; only that approved result is recorded as an active plan.
+For a planning A/B experiment, use the same convention and requested sections in both candidate drafts. Keep both drafts read-only and out of `docs/exec-plans/` until the user chooses or synthesizes an approved plan; record only that approved result as its own plan file.
 
 ## How to use ExecPlans and PLANS.md
 
@@ -181,6 +181,6 @@ If you follow the guidance above, a single, stateless agent -- or a human novice
 
 When you revise a plan, you must ensure your changes are comprehensively reflected across all sections, including the living document sections, and you must write a note at the bottom of the plan describing the change and the reason why. ExecPlans must describe not just the what but the why for almost everything.
 
-## Active plans
+## Plan storage
 
-None yet. Exercise 01 will add the first approved architecture-spike plan.
+Store each approved ExecPlan as a separate Markdown file under `docs/exec-plans/`. Use an identifier and short description in the filename, such as `PLAN-001-notes-interaction-spike.md`. Keep `PLANS.md` limited to the reusable convention so an agent can read planning guidance without loading every active or completed plan.

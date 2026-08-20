@@ -143,16 +143,16 @@ Teach back:
 1. Why are we intentionally willing to write disposable code?
 2. What single architectural question will the spike answer?
 3. What observable evidence will determine whether the interaction is acceptable?
-4. Why did this task justify Plan mode and a durable `PLANS.md` entry, while a tiny mechanical edit might not?
+4. Why did this task justify Plan mode and a durable ExecPlan following the `PLANS.md` convention, while a tiny mechanical edit might not?
 5. What did the A/B comparison show about when you would choose Plan mode versus a regular prompt, given that both followed the same `PLANS.md` convention?
 
-Codex drafts a concise first-person reflection covering the relevant skills and the A/B conclusion. Preserve links or reproducible summaries of both drafts as learning evidence. Do not write either draft into `PLANS.md`, write the reflection, or update progress until the user explicitly confirms the reflection and checkpoint.
+Codex drafts a concise first-person reflection covering the relevant skills and the A/B conclusion. Preserve links or reproducible summaries of both drafts as learning evidence. Do not create `PLAN-001` under `docs/exec-plans/`, write the reflection, or update progress until the user explicitly confirms the reflection and checkpoint.
 
 ## Task D — Prepare the first pull request
 
 Only after the spike-plan reflection and checkpoint are explicitly approved:
 
-1. Record the approved spike as `PLAN-001` in `PLANS.md`.
+1. Record the approved spike as `docs/exec-plans/PLAN-001-notes-interaction-spike.md`, following the convention in `PLANS.md`.
 2. Append the approved Exercise 01 evidence and first-person reflection to `LEARNING_LOG.md`.
 3. Update only the skill-confidence states justified by that evidence in `SKILLS.md`.
 4. Review the complete diff, confirm the relevant skills are named clearly, and confirm every checkpoint states what the user must inspect, explain, decide, or test.
