@@ -41,8 +41,9 @@ Use commits, branches, remotes, pull requests, reviews, merges, and synchronizat
 
 ## verify — Build an evidence-producing delivery loop
 
-**Confidence:** Not yet used
+**Confidence:** Demonstrated
 Turn intended behavior into fixtures, tests, manual artifacts, and reproducible checks that let an agent correct itself.
+**Project example:** Exercise 02 Task C — preserved failed mechanisms and automation calibration, then combined runtime measurements, integrity assertions, and repeated learner judgment to pass the Notes interaction gate.
 
 ## record-decisions — Preserve durable technical judgment
 

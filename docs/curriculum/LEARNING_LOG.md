@@ -239,3 +239,94 @@ Merged pull request #1 into the personal integration branch, fast-forwarded loca
 **Next time / revisit**
 
 Create `tutorial/exercise-02` from synchronized `learner/main` before starting the read-only mechanism and toolchain investigation.
+
+### 2026-08-19 — Exercise 02 — Task A: Mechanism and tooling gate
+
+**Skills strengthened**
+
+- `orient` — Demonstrated
+- `frame-work` — Used with guidance
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Inspected the active macOS and Xcode environment, compared the two mechanisms bounded by `PLAN-001`, and approved an Automator Quick Action as the smallest mechanism worth testing before any implementation.
+
+**Evidence**
+
+- Created `tutorial/exercise-02` from clean, synchronized `learner/main`; no Xcode project, Swift package, or Swift source existed.
+- Verified macOS 26.6 (`25G72`), Xcode 26.6 (`17F113`), Swift 6.3.3, the selected full-Xcode developer directory, and the macOS SDK.
+- Verified that Automator 2.10, Shortcuts 7.0, and Notes 4.13 are installed.
+- Apple's Automator documentation explicitly supports Text or Rich Text input with “Output replaces selected text”; current macOS documentation supports Services-menu keyboard shortcuts.
+- The installed `Choose from List` Automator action accepts strings, displays a choice dialog, and returns the selected string.
+- The fallback AppKit Service-provider mechanism has a documented pasteboard round trip, but requires a macOS app target and has more activation, signing, and distribution surface.
+- Approved scope: test an Automator Quick Action on macOS 26.6 with the three hard-coded exercise choices, keyboard invocation, replacement on choice, and unchanged text on cancellation. Fall back to one minimal AppKit Service provider only if the Quick Action fails.
+- Preserved as experiment uncertainties: Apple Notes selection transfer, chooser focus, Return/Escape behavior, exact cancellation, focus restoration, permissions, and cold/warm latency.
+
+**My reflection**
+
+> I approved an Automator Quick Action as the smallest mechanism worth testing because Apple’s documented selected-text replacement, macOS Services keyboard invocation, and the installed Choose from List action provide a credible route to the required workflow. The actual spike still needs to prove Notes-specific selection transfer, replacement, cancellation, focus restoration, permissions, and latency.
+>
+> Xcode was deferred because tool installation should follow from an architecture requirement, not be treated as generic Codex setup. The investigation showed that the selected Automator mechanism does not require Xcode; the already-installed Xcode environment is relevant only if we must fall back to an AppKit Service provider.
+
+**Next time / revisit**
+
+Record the approved mechanism and verified prerequisites in `PLAN-001`, while preserving the Notes-specific behavior as unresolved until the actual experiment.
+
+### 2026-08-19 — Exercise 02 — Task B: Implementation readiness
+
+**Skills strengthened**
+
+- `verify` — Used with guidance
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Reverified the already-installed developer environment, reconciled `PLAN-001` with the approved three-choice Automator mechanism, and approved the environment for implementation without adding unrelated tools.
+
+**Evidence**
+
+- Verified macOS 26.6 (`25G72`), Xcode 26.6 (`17F113`), `/Applications/Xcode.app/Contents/Developer`, Apple Swift 6.3.3, the default Swift compiler, and the macOS 26.5 SDK.
+- Verified Automator 2.10, Shortcuts 7.0, and Notes 4.13.
+- Confirmed that the selected Automator Quick Action requires no Xcode capability; the installed macOS app toolchain is ready only if the approved AppKit Service-provider fallback becomes necessary.
+- Updated `PLAN-001` with the approved mechanism, three-choice behavioral contract, verified prerequisites, fallback boundary, trial expectations, and revision history.
+- `git diff --check` passed, and no workflow, Xcode project, dependency, or product implementation existed at the checkpoint.
+
+**My reflection**
+
+> Codex verified that the installed environment is ready for both the selected Automator Quick Action and the fallback AppKit Service-provider mechanism. The available tools establish implementation readiness, but they cannot prove that the real Apple Notes interaction meets its acceptance criteria. Only the experiment can establish its performance and other runtime behavior, including selection replacement, cancellation, focus restoration, and reliability.
+
+**Next time / revisit**
+
+Build only the disposable Quick Action and judge it through the actual Apple Notes workflow rather than treating tool availability as proof of interaction quality.
+
+### 2026-08-20 — Exercise 02 — Task C: Apple Notes interaction architecture gate
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Tested the bounded Apple Notes interaction through two approved native mechanisms, preserved the failed Automator evidence, implemented the AppKit Service-provider fallback, and judged the real keyboard workflow after functional, performance, integrity, cancellation, and focus verification.
+
+**Evidence**
+
+- The Automator Quick Action failed the complete interaction contract: its built-in list lacked usable cancellation, and the corrected AppleScript chooser did not appear reliably when invoked from Notes.
+- The AppKit fallback received selected Notes text, automatically focused a three-row chooser, supported arrow keys, Return, and Escape, replaced only the intended range, and returned focus to Notes.
+- The configured Control–Option–Command–G shortcut successfully invoked the service from Notes.
+- Five fresh-launch trials passed with a maximum 480.0 ms system-controlled latency, below the approved 3,000 ms limit.
+- Twenty resident trials passed with a 130.5 ms median and 192.9 ms nearest-rank p95, below the approved 1,000 ms and 2,000 ms limits.
+- Two cancellation checks left the selected text unchanged. All 27 accepted rows preserved the expected scratch-note range and returned Notes focus, with zero integrity or focus failures.
+- The automated timing endpoint used a documented one-frame settled proxy followed by independent UI assertions. Failed automation calibration attempts remained preserved separately rather than being relabeled or silently discarded.
+- The learner performed the real shortcut workflow repeatedly and judged it quick, painless, fast, and reliable enough to pass. The learner identified visually ambiguous identical-text replacement and the Control–Option–Command–G chord as UX limitations.
+- Durable evidence is in `spikes/notes-interaction/EVIDENCE.md`, `AUTOMATED_TRIALS.jsonl`, `AUTOMATION_CALIBRATION.jsonl`, and `PLAN-001`.
+
+**My reflection**
+
+> I would use this Notes interaction repeatedly because it is quick and painless. It felt fast and reliable enough to pass the acceptance gate. Replacing Front Squat with the identical text gives no visible confirmation, but the other replacement cases and recorded evidence demonstrate that the round trip works. The Control–Option–Command–G shortcut was the main source of friction and should be reconsidered. I want Exercise 03 to retain the Notes-adapter hypothesis. Working code alone is insufficient evidence because frictionless operation—not merely technical execution—is a central acceptance criterion for this workflow.
+
+**Next time / revisit**
+
+In Exercise 03, record the decision to retain the Notes adapter, the failed Automator alternative, the successful AppKit evidence, the timing-proxy limitation, the awkward shortcut, the identical-text ambiguity, and falsifiable revisit triggers in an ADR without turning the spike into product architecture.
