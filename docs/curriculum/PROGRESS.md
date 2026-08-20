@@ -41,7 +41,7 @@ Relevant skills: collaborate, record-decisions, verify
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
 - Approved learning evidence: `LEARNING_LOG.md` — 2026-08-18, Exercise 01, Task A; 2026-08-19, Exercise 01, Tasks B–C
-- Active durable plan: `PLANS.md` — `PLAN-001`, approved and not yet executed
+- Active durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`, approved and not yet executed
 
 ## Next action
 
