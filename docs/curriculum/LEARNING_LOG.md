@@ -209,3 +209,33 @@ Opened and inspected the first learner-progress pull request, using `learner/mai
 **Next time / revisit**
 
 Verify the merged remote result and synchronize local `learner/main` before beginning Exercise 02; recheck that reusable `main` remains learner-free.
+
+### 2026-08-19 — Exercise 01 — Task E: Merged and synchronized
+
+**Skills strengthened**
+
+- `collaborate` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Merged pull request #1 into the personal integration branch, fast-forwarded local `learner/main` to the reviewed GitHub result, and separately verified that reusable `main` remained learner-free.
+
+**Evidence**
+
+- GitHub merge commit `feb2e0c400f5229c5b00e067d4c8c69c5c12dd3f` has parents `2b4dbe1` (`learner/main` before merge) and `bff0558` (the final reviewed exercise head).
+- Local and remote `learner/main` both resolved to `feb2e0c` after `git pull --ff-only`; the working tree was clean.
+- Local and remote reusable `main` both remained at `2b4dbe1`.
+- The `main...learner/main` comparison contained exactly four learner-state files plus `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; reusable `main` contained only the shared `docs/exec-plans/README.md` in that folder.
+
+**My reflection**
+
+> I synchronized local `learner/main` with the pull request’s merged GitHub result so Exercise 02 will begin from the exact reviewed state with a clean working tree. If Exercise 01 changed the repository but those changes were not pulled into my integration branch, the next exercise would operate with incomplete or incorrect durable context.
+>
+> I also verified reusable `main` separately because synchronization alone does not prove that personal progress stayed isolated. `learner/main` now contains my approved plan, evidence, reflections, skills, and progress, while `main` remains a learner-free tutorial starting point.
+>
+> For Exercise 02, I can create `tutorial/exercise-02` from the synchronized `learner/main`. This preserves the same workflow: perform bounded exercise work on a reviewable branch, merge personal progress into `learner/main`, and keep reusable curriculum updates separate on `main`.
+
+**Next time / revisit**
+
+Create `tutorial/exercise-02` from synchronized `learner/main` before starting the read-only mechanism and toolchain investigation.

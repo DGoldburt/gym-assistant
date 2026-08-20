@@ -29,9 +29,9 @@ Use a lightweight prompt for mechanical work and a durable, read-only plan for c
 
 ## set-boundaries — Control autonomy safely
 
-**Confidence:** Used with guidance
+**Confidence:** Demonstrated
 Define what the agent may do, what requires explicit approval, and when it must stop for a human decision.  
-**Project example:** GitHub and Xcode remain explicit, user-controlled actions.
+**Project example:** Exercise 01 — caught the unsafe learner-to-`main` merge target, established `learner/main`, and verified reusable `main` remained learner-free after the personal progress merge.
 
 ## collaborate — Work through reviewable Git collaboration
 
