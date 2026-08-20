@@ -35,9 +35,9 @@ Define what the agent may do, what requires explicit approval, and when it must 
 
 ## collaborate — Work through reviewable Git collaboration
 
-**Confidence:** Used with guidance
+**Confidence:** Demonstrated
 Use commits, branches, remotes, pull requests, reviews, merges, and synchronization to make work inspectable.
-**Project example:** Exercise 01 Task B — clean starter commit and tag, private remote, and isolated learner branch.
+**Project example:** Exercise 01 Tasks B and D — published a clean starter separately, established `learner/main`, and inspected a learner-only pull request before merge.
 
 ## verify — Build an evidence-producing delivery loop
 

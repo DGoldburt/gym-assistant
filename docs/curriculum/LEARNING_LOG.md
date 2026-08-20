@@ -180,3 +180,32 @@ Compared a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt
 **Next time / revisit**
 
 When executing the spike, check whether the planned evidence is proportionate and measure system-controlled latency separately from human decision time. Revisit whether a more capable interviewing workflow improves consequential plans after defining a bounded comparison.
+
+### 2026-08-19 — Exercise 01 — Task D: First pull request
+
+**Skills strengthened**
+
+- `collaborate` — Demonstrated
+
+**What I did**
+
+Opened and inspected the first learner-progress pull request, using `learner/main` as the personal integration base while keeping reusable `main` free of learner state.
+
+**Evidence**
+
+- Pull request: <https://github.com/DGoldburt/gym-assistant/pull/1>
+- GitHub PR ref `refs/pull/1/head` resolved to exercise commit `bd900ec`; its synthetic merge commit `542a969` had base parent `2b4dbe1` (`learner/main`) and source parent `bd900ec` (`tutorial/exercise-01`).
+- The inspected comparison contained exactly four learner-state files plus `docs/exec-plans/PLAN-001-notes-interaction-spike.md`, with no application code or later-exercise implementation.
+- The learner inspected the commit history and available GitHub checks before approving this reflection.
+
+**My reflection**
+
+> I inspected PR #1 and confirmed that `learner/main` is the base, `tutorial/exercise-01` is the source, and the comparison contains only my learning records and approved `PLAN-001`. I reviewed the commit history, five-file diff, and available checks, and confirmed that no product code or later-exercise implementation is included.
+>
+> The commits already existed on the exercise branch before the pull request was opened. The pull request makes their combined changes, history, discussion, target branch, and automated checks explicit before they are merged into my persistent learner branch. A direct push to `learner/main` would not provide the same deliberate review boundary.
+>
+> My personal progress remains outside reusable `main` because `main` is the clean tutorial that a new learner can start from. `learner/main` accumulates my approved progress, while reusable curriculum improvements are prepared and reviewed separately on `main`.
+
+**Next time / revisit**
+
+Verify the merged remote result and synchronize local `learner/main` before beginning Exercise 02; recheck that reusable `main` remains learner-free.
