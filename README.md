@@ -41,7 +41,7 @@ Future direction, deliberately **not implemented in the initial tutorial**:
 
 At the start of work and at every checkpoint, Codex should show a compact tutorial dashboard: current exercise and task, what completes that task, completed and remaining tasks, a rough estimate of time to the next checkpoint, and the scope guard. A task has one terminal `STOP / REVIEW` checkpoint; when you pass it, that task is complete. See `docs/curriculum/EXERCISE_BLUEPRINT.md` for the durable exercise conventions.
 
-Exercise 01 assumes the bootstrap may begin as an ordinary local folder. It teaches when to use `git init`, `git clone`, and `git switch`/`checkout`, then creates the first local commit, private GitHub repository, and pull request. Exercise 02 investigates the macOS integration mechanism and handles full Xcode setup only after the tooling/architecture checkpoint.
+Exercise 01 assumes the bootstrap may begin as an ordinary local folder. It teaches when to use `git init`, `git clone`, and `git switch`/`checkout`, then creates the first local commit, private GitHub repository, and pull request. Reusable tutorial updates remain on `main`; personal progress accumulates on `learner/main`, with `tutorial/exercise-*` branches reviewed into that learner branch. Exercise 02 investigates the macOS integration mechanism and handles full Xcode setup only after the tooling/architecture checkpoint.
 
 ## Agentic-AI learning record
 
