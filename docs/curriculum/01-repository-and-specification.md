@@ -81,7 +81,8 @@ Only after the orientation checkpoint is approved:
 7. Show the commit hash, log, and clean working-tree evidence.
 8. Have the user create an empty private `gym-assistant` repository in GitHub's web interface without adding a README, license, or `.gitignore`.
 9. Add the GitHub-provided HTTPS URL as `origin`, verify it, and push `main`.
-10. Create and switch to `tutorial/exercise-01` for the remaining exercise artifacts.
+10. Create and push `learner/main` from that clean `main` commit as the persistent integration branch for personal tutorial progress.
+11. Create and switch to `tutorial/exercise-01` from `learner/main` for the remaining exercise artifacts.
 
 Do not install GitHub CLI. Do not store credentials in repository files.
 
@@ -91,9 +92,9 @@ After the repository and release workflow exists, evaluate publishing a versione
 
 ### STOP / REVIEW — First commit and remote
 
-Inspect the local commit hash, `main` branch, `origin` URL, clean status before branching, and the private GitHub repository page. Decide whether the remote contains exactly the bootstrap commit and no accidental files or secrets.
+Inspect the local commit hash, `main` and `learner/main` branches, `origin` URL, clean status before branching, and the private GitHub repository page. Decide whether both remote branches initially contain exactly the bootstrap commit and no accidental files or secrets, and confirm that future learner progress will not merge into reusable `main`.
 
-Teach back: What information exists only locally, what was sent to GitHub by the push, and why will the next work happen on a branch?
+Teach back: What information exists only locally, what was sent to GitHub by the push, and why will personal work move through an exercise branch into `learner/main` rather than `main`?
 
 Do not merge or advance the exercise yet.
 
@@ -158,15 +159,15 @@ Only after the spike-plan reflection and checkpoint are explicitly approved:
 4. Review the complete diff, confirm the relevant skills are named clearly, and confirm every checkpoint states what the user must inspect, explain, decide, or test.
 5. Commit the branch with message `docs: complete tutorial exercise 01`.
 6. Push `tutorial/exercise-01`.
-7. Have the user open a GitHub pull request titled `docs: complete tutorial exercise 01`.
+7. Have the user open a GitHub pull request titled `docs: complete tutorial exercise 01`, with `learner/main` as the base and `tutorial/exercise-01` as the source.
 
-The pull request must contain the approved plan, learning evidence, justified skill-confidence changes, and progress transition.
+The pull request must contain the approved plan, learning evidence, justified skill-confidence changes, and progress transition. It must not target reusable `main`.
 
 ### STOP / REVIEW — First pull request
 
-In GitHub's web interface, inspect every changed file, the commit history, target branch, source branch, and available checks. Confirm that the PR contains documentation and learning evidence only, with no application code or later-exercise work.
+In GitHub's web interface, inspect every changed file, the commit history, target branch, source branch, and available checks. Confirm that the base is `learner/main`, the source is `tutorial/exercise-01`, and the PR contains documentation and learning evidence only, with no application code or later-exercise work.
 
-Teach back: What did the pull request make reviewable that a direct push to `main` would not have made as explicit?
+Teach back: What did the pull request make reviewable that a direct push to `learner/main` would not have made as explicit, and why must this personal progress remain outside reusable `main`?
 
 Codex drafts a final PR-review reflection. Do not write it yet. Passing this checkpoint completes Task D.
 
@@ -179,12 +180,13 @@ Only after the first-pull-request checkpoint is passed:
 3. Commit that small documentation delta and push it to the same pull request.
 4. Reinspect the final pull-request diff and checks.
 5. Have the user merge the approved pull request in GitHub's web interface.
-6. Switch the local repository back to `main`, synchronize it, and verify that local `main` contains the merged progress transition and learning evidence.
+6. Switch the local repository to `learner/main`, synchronize it, and verify that local `learner/main` contains the merged progress transition and learning evidence.
+7. Verify that reusable `main` still contains no learner progress, and create future exercise branches from `learner/main`.
 
 ### STOP / REVIEW — Merged and synchronized
 
-Inspect the merged pull request, local `main`, and synchronization evidence. Confirm that Exercise 01's approved plan, learning evidence, and progress transition are present on `main`, and that no product code or later-exercise work was merged.
+Inspect the merged pull request, local `learner/main`, reusable `main`, and synchronization evidence. Confirm that Exercise 01's approved plan, learning evidence, and progress transition are present on `learner/main`; confirm that reusable `main` contains none of that personal state; and confirm that no product code or later-exercise work was merged.
 
-Teach back: Why does this final synchronization check matter before starting Exercise 02?
+Teach back: Why does synchronizing `learner/main` and rechecking reusable `main` matter before starting Exercise 02?
 
 Codex drafts a final Exercise 01 reflection. After the user passes this checkpoint and confirms the reflection, append the evidence, update only justified skill-confidence states, and update `PROGRESS.md` to mark Exercise 01 complete and point to Exercise 02 Task A.
