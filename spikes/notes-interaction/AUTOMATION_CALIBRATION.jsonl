@@ -1,0 +1,2 @@
+{"id":"C1","kind":"cold-replacement","inputCategory":"SL RDL","shortcutToReadyMs":371.56396484375,"decisionMs":274.22998046875,"confirmToVisibleMs":32.93994140625,"systemMs":404.50390625,"fullMs":678.73388671875,"exactOutput":true,"sameNoteAndRange":true,"focusReturned":true,"anomaly":null,"result":"pass"}
+{"id":"C2","kind":"cold-replacement","inputCategory":"SL RDL","anomaly":"Error: application_launched was not observed within 500ms","result":"fail"}
