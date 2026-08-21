@@ -402,3 +402,35 @@ Reviewed and materially simplified the proposed exercise-library model before pe
 **Next time / revisit**
 
 Implement only the approved persistence surface and verify the no-orphan, exact-lookup, idempotency, and conflict constraints against the actual schema before adding resolver or history behavior.
+
+### 2026-08-21 — Exercise 04 — Task B: Persistence verification
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `frame-work` — Demonstrated
+
+**What I did**
+
+Translated the approved exercise-identity design into a minimal Swift and SQLite persistence layer, inspected the generated schema, and verified both valid workflows and invalid ownership states before adding resolver behavior.
+
+**Evidence**
+
+- Added explicit `ExerciseID`, `ExerciseNameID`, `Exercise`, `ExerciseName`, provenance, result, and domain-error types in `GymAssistantCore`.
+- Added schema version 1 with `exercise` and `exercise_name` tables, timestamp and non-empty checks, normalized-name uniqueness, provenance constraints, ownership indexes, and foreign keys.
+- Enabled and verified SQLite foreign-key enforcement whenever `ExerciseLibrary` opens a connection.
+- Implemented atomic exercise-plus-preferred-name creation, confirmed-name addition, same-owner idempotency, exact normalized-name lookup, preferred-name lookup, and explicit cross-owner conflicts.
+- Used a required deferred composite foreign key from `(Exercise.id, Exercise.preferredNameID)` to `(ExerciseName.exerciseID, ExerciseName.id)` so an exercise cannot commit without an existing preferred name that it owns.
+- Inspected the generated database directly with SQLite and confirmed schema version 1, the composite foreign key, normalized-name uniqueness, and supporting indexes.
+- Added six tests covering creation, adding and resolving a name, same-owner idempotency, conflicting ownership, orphan rejection, and rejection of a preferred name owned by another exercise.
+- The first test run exposed exact floating-point timestamp equality in two assertions. The assertions were narrowed to identity, ownership, and name behavior without weakening a product or schema constraint; the full rerun passed 6/6.
+- Kept the normalizer deliberately minimal and did not add fuzzy matching, semantic inference, variants, program/client context, history, or deletion behavior.
+- Synchronized `docs/ARCHITECTURE.md` with the implemented persistence boundary.
+
+**My reflection**
+
+> The approved design became machine-verifiable through several cooperating layers. The migration creates the actual tables, indexes, foreign keys, uniqueness rules, and checks. SQLite constraints protect persisted integrity, including rejecting an exercise without an existing preferred name that it owns. The `ExerciseLibrary` transactional API coordinates valid multi-row operations atomically and returns explicit domain conflicts. The tests do not enforce production behavior themselves; they prove that the schema and API accept valid creation, aliasing, and exact lookup while rejecting orphan and conflicting ownership states. This showed me how a reviewed design decision becomes executable at the schema, API, and verification layers rather than merely being restated in tests.
+
+**Next time / revisit**
+
+Define resolver behavior as reviewed fixtures before writing matching code, with particular attention to dangerous false merges and meaningful exercise modifiers.

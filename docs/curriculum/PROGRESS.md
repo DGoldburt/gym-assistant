@@ -1,20 +1,20 @@
 # Tutorial Progress
 
-Current exercise: 04
-Current task: Task B — Implement the approved persistence model
+Current exercise: 05
+Current task: Task A — Create resolver fixture categories
 Current task state: not started
-Task completion condition: pass Exercise 04 Task B `STOP / REVIEW — Persistence verification`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Task A: Design only
-Remaining tasks: Exercise 04 — Task B: Implement the approved persistence model
-Most recent checkpoint: Exercise 04 Task A `STOP / REVIEW` (passed)
-Relevant skills: orient, frame-work, plan
+Task completion condition: pass Exercise 05 Task A `STOP / REVIEW`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B
+Remaining tasks: Exercise 05 — Task A: Create fixture categories; Task B: Add a fixture runner
+Most recent checkpoint: Exercise 04 Task B `STOP / REVIEW — Persistence verification` (passed)
+Relevant skills: frame-work, verify
 
 ## Completed
 
 - [x] 01 — Repository, Git/GitHub, and specification
 - [x] 02 — Apple Notes Service architecture spike
 - [x] 03 — Review and commit the architecture decision
-- [ ] 04 — Exercise library data model
+- [x] 04 — Exercise library data model
 - [ ] 05 — Resolver fixtures before resolver code
 - [ ] 06 — Deterministic normalization and alias lookup
 - [ ] 07 — Fuzzy candidate generation and human confirmation
@@ -46,6 +46,8 @@ Relevant skills: orient, frame-work, plan
 - The approved deferred composite foreign key rejects orphan exercises, nonexistent preferred names, and preferred names owned by another exercise. A separate canonical-name role, contextual ownership, variants, program/client context, taxonomy, and history remain explicitly outside Task B.
 - A read-only review of all 57 Notes in the Strength Training folder informed evidence-backed future directions without adding required fields to the initial model.
 - Local reusable `main` includes approved success-criteria review guidance at `64bfe51`; local `learner/main` and the current exercise branch are synchronized with it. Nothing from that reusable update was pushed.
+- Exercise 04 Task B implemented the approved model as a minimal Swift package backed by SQLite. Six tests pass for creation, confirmed-name lookup, idempotency, conflicting ownership, orphan rejection, and wrong-owner preferred-name rejection.
+- The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -60,4 +62,4 @@ Relevant skills: orient, frame-work, plan
 
 ## Next action
 
-Begin Exercise 04 Task B by inspecting the approved model and existing project structure, then create only the persistence layer, migration, and tests for exercise creation, adding a confirmed name, exact normalized-name lookup, conflicting ownership, and the approved no-orphan invariant. Stop at the persistence-verification checkpoint before adding resolver or history behavior.
+Begin Exercise 05 Task A by creating and reviewing machine-readable `MUST_MATCH`, `MUST_NOT_MATCH`, and `SUGGEST_REVIEW` resolver fixtures with realistic strength-training names and meaningful modifiers. Do not implement fuzzy matching yet.

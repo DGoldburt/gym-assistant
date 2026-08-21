@@ -1,6 +1,6 @@
 # Architecture
 
-Status: the Notes adapter direction is validated by ADR 001; downstream domain boundaries remain design hypotheses that will evolve through the tutorial.
+Status: the Notes adapter direction is validated by ADR 001. The initial exercise-identity persistence boundary is implemented; resolver, blocks, tendencies, and client history remain design hypotheses that will evolve through the tutorial.
 
 ## Architectural principle
 
@@ -45,10 +45,14 @@ The adapter direction is accepted in [ADR 001](decisions/001-notes-integration.m
 
 ### Exercise library
 Responsibilities:
-- canonical exercise records
-- preferred display names
-- aliases
-- durable user-confirmed identity relationships
+- stable opaque exercise identity
+- one required, owned preferred display name per exercise
+- durable confirmed names that act as aliases
+- globally unambiguous exact normalized-name ownership
+
+The initial Swift package persists this boundary in SQLite. A deferred composite foreign key prevents an exercise from committing without an existing preferred name owned by that exercise. Human-facing output uses the preferred name, optionally with a short UUID prefix for diagnostic disambiguation; bare or name-derived IDs are not the ordinary interface.
+
+The library's current normalizer is deliberately minimal and supports only the exact-lookup persistence contract. Fuzzy similarity, semantic alias inference, contextual ownership, variant relationships, program/client context, taxonomy, and history remain outside this boundary.
 
 ### Resolver
 Responsibilities:
