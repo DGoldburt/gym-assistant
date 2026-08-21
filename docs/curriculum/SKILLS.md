@@ -17,9 +17,9 @@ Inspect the repository, instructions, architecture, tooling, and uncertainty bef
 
 ## frame-work — Frame a bounded task
 
-**Confidence:** Used with guidance
+**Confidence:** Demonstrated
 State the outcome, relevant context, constraints, verification evidence, and stopping condition before work begins.  
-**Project example:** Exercise 01's bounded Notes-integration spike.
+**Project example:** Exercise 04 Task A — challenged an initially larger model, tightened the accepted success criteria to stable identity plus preferred and alias names, and preserved variants, context, taxonomy, and history only as explicit future directions.
 
 ## plan — Plan in proportion to risk
 

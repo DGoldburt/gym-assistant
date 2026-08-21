@@ -83,6 +83,14 @@ Subagent work should remain inspectable and steerable. In the CLI, `/agent` swit
 
 **Official reference:** [Codex subagents documentation](https://developers.openai.com/codex/multi-agent)
 
+### Learner check-in — visible agent coordination — 2026-08-21
+
+I was surprised by the coordination I observed between an agent and a sub-thread in the ApplyPilot project. The parent sent a correction to the other task, the sub-thread acknowledged the constraint, and it changed course. The exchange felt less like an invisible tool invocation and more like two co-workers talking back and forth.
+
+![A Codex task displaying a message sent from another task and the receiving task's acknowledgment](assets/subagent-coordination-check-in.jpg)
+
+This makes inspectability and steerability feel concrete: delegation is not just parallel execution, but an observable coordination loop. A useful future test is to compare that conversational visibility with the quality and cost of single-agent work and with subagents that return only a final result.
+
 ## 5. Advanced capabilities and scale
 
 MCP can provide authorized, authoritative live context. A Skill can package a proven repeated procedure. Cloud delegation can isolate a bounded task for review. Scheduled automation belongs only after a manual workflow is stable and its failure evidence is understood.

@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 04
-Current task: Task A — Design the exercise library model
+Current task: Task B — Implement the approved persistence model
 Current task state: not started
-Task completion condition: pass Exercise 04 Task A `STOP / REVIEW`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision
-Remaining tasks: Exercise 04 — Task A: Design only; Task B: Implement after approval
-Most recent checkpoint: Exercise 03 `STOP / REVIEW` (passed)
+Task completion condition: pass Exercise 04 Task B `STOP / REVIEW — Persistence verification`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Task A: Design only
+Remaining tasks: Exercise 04 — Task B: Implement the approved persistence model
+Most recent checkpoint: Exercise 04 Task A `STOP / REVIEW` (passed)
 Relevant skills: orient, frame-work, plan
 
 ## Completed
@@ -42,6 +42,10 @@ Relevant skills: orient, frame-work, plan
 - The Exercise 02 architecture gate passed. The learner would use the interaction repeatedly and chose to retain the Notes-adapter hypothesis while carrying forward the awkward shortcut and identical-text replacement ambiguity as limitations.
 - Exercise 03 accepted ADR 001: retain Notes through an AppKit Service adapter, keep domain/resolver logic independent, reject Automator for the initial mechanism, and revisit or abandon the approach using explicit quantitative and human triggers.
 - `docs/ARCHITECTURE.md` now identifies the Notes adapter direction as validated while leaving downstream domain boundaries as tutorial hypotheses.
+- Exercise 04 Task A approved a minimal `Exercise` identity with an opaque UUID and required owned `preferredNameID`, plus durable `ExerciseName` records with globally unique normalized keys and workflow-supplied provenance.
+- The approved deferred composite foreign key rejects orphan exercises, nonexistent preferred names, and preferred names owned by another exercise. A separate canonical-name role, contextual ownership, variants, program/client context, taxonomy, and history remain explicitly outside Task B.
+- A read-only review of all 57 Notes in the Strength Training folder informed evidence-backed future directions without adding required fields to the initial model.
+- Local reusable `main` includes approved success-criteria review guidance at `64bfe51`; local `learner/main` and the current exercise branch are synchronized with it. Nothing from that reusable update was pushed.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -56,4 +60,4 @@ Relevant skills: orient, frame-work, plan
 
 ## Next action
 
-Begin Exercise 04 Task A with a design-only exercise-library proposal covering entities, keys, constraints, indexes, migration strategy, examples, and tradeoffs. Do not generate a migration or persistence code before the design checkpoint passes.
+Begin Exercise 04 Task B by inspecting the approved model and existing project structure, then create only the persistence layer, migration, and tests for exercise creation, adding a confirmed name, exact normalized-name lookup, conflicting ownership, and the approved no-orphan invariant. Stop at the persistence-verification checkpoint before adding resolver or history behavior.

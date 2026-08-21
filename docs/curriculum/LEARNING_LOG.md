@@ -363,3 +363,42 @@ Converted the approved Exercise 02 result into ADR 001, synchronized the archite
 **Next time / revisit**
 
 Begin Exercise 04 with design only: settle stable exercise identity, display text, aliases, ownership constraints, indexes, migration strategy, examples, and tradeoffs before generating persistence code.
+
+### 2026-08-21 — Exercise 04 — Task A: Exercise library model design
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `orient` — Demonstrated
+- `plan` — Demonstrated
+
+**What I did**
+
+Reviewed and materially simplified the proposed exercise-library model before persistence, used read-only evidence from the existing Apple Notes library to separate present identity needs from future program and client concepts, and approved database-enforced ownership constraints.
+
+**Evidence**
+
+- Reviewed the proposed entities, keys, constraints, indexes, examples, migration path, and tradeoffs before generating persistence code.
+- Reduced `Exercise` to an opaque stable UUID, a required owned `preferredNameID`, and timestamps; all human-readable vocabulary is stored as durable `ExerciseName` records.
+- Rejected a separate canonical-name role because the current workflow needs stable identity, one preferred display name, and confirmed aliases, with no demonstrated consumer for a formal taxonomy name.
+- Chose preferred-name-plus-short-UUID diagnostics such as `Front Squat · 8E22A4D3` instead of name-derived identifiers or bare UUIDs in ordinary human interaction.
+- Preserved normalized display text separately from its deterministic lookup key so cosmetic differences can be deduplicated without treating fuzzy or semantic similarity as authoritative ownership.
+- Approved global normalized-name uniqueness, idempotent same-owner additions, explicit cross-owner conflicts, workflow-supplied provenance, and no initial hard-delete API.
+- Identified that an application-only invariant could permit an orphan `Exercise`; corrected the design with a required deferred composite foreign key that verifies the preferred name exists and belongs to the same exercise at transaction commit.
+- Opened and inspected all 57 Apple Notes in the Strength Training folder read-only. Program context, progressions, movement patterns, equipment/loading distinctions, source attribution, and client constraints were recorded only as evidence-backed future directions marked `do not implement now`.
+- Added an approved optional Agentic-AI Map check-in about visible coordination between an agent and a sub-thread, with the supplied screenshot preserved as evidence.
+- Approved reusable guidance requiring agents to question potentially under- or over-scoped success criteria, especially opportunities to make them narrower or more specific, without changing criteria absent explicit approval.
+- Prepared and inspected that reusable guidance separately against clean `main`; after an accidental push was retracted, committed it locally only and synchronized local `learner/main` and the current exercise branch without pushing.
+- `git diff --check` passed for the approved design, learning artifacts, and reusable guidance candidate.
+
+**My reflection**
+
+> Before generating the migration, I settled the model’s identity, naming, normalization, uniqueness, conflict, provenance, and lifecycle decisions. I chose an opaque UUID as canonical exercise identity, with exactly one preferred `ExerciseName` for display and other confirmed names as aliases. I deliberately omitted a separate canonical-name role because no current product behavior needs it.
+>
+> I was surprised that this review cycle materially simplified the model. In the past, discussion sometimes expanded durable instructions and made them more confusing. A review or planning cycle can move in either direction, which makes it worth proceeding slowly at consequential design points. The new `AGENTS.md` guidance should encourage future reviews to inspect whether success criteria should expand or can become narrower or more specific, with particular attention to simplification, although whether it consistently produces simplification remains to be seen.
+>
+> Reviewing these decisions before persistence is cheaper because mistakes are still document changes. After seeding data, the same changes could require collision handling, backfills, ownership repair, and migrations. I also learned to preserve evidence-backed future directions without expanding the current model or changing its success criteria.
+
+**Next time / revisit**
+
+Implement only the approved persistence surface and verify the no-orphan, exact-lookup, idempotency, and conflict constraints against the actual schema before adding resolver or history behavior.
