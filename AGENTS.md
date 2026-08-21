@@ -17,6 +17,7 @@
 
 - Make the smallest change that satisfies the current exercise.
 - Do not implement later curriculum exercises early.
+- When a proposed model or architecture expansion does not materially affect the current task's approved product success criteria, push back on implementing it now. Discussion and clearly labeled future directions or `do not implement` decision entries have a lower evidence threshold than changes to the active specification. When discussion suggests the success criteria may be under- or over-scoped, prompt the user with questions to inspect them; surface materially necessary expansion, but give particular attention to opportunities to narrow the criteria or make them more specific. Do not broaden, weaken, or reinterpret product success criteria unless the user explicitly approves the change.
 - Prefer explicit domain types over loosely structured dictionaries/strings.
 - Keep UI adapters separate from exercise-library and resolver logic.
 - Add tests for non-trivial behavior.
