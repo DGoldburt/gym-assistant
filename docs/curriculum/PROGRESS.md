@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 05
-Current task: Task B — Add a fixture runner
+Current exercise: 06
+Current task: Implement deterministic normalization and alias lookup
 Current task state: not started
-Task completion condition: pass Exercise 05 Task B `STOP / REVIEW — Fixture runner`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Task A: Create fixture categories
-Remaining tasks: Exercise 05 — Task B: Add a fixture runner
-Most recent checkpoint: Exercise 05 Task A `STOP / REVIEW` (passed)
-Relevant skills: frame-work, verify
+Task completion condition: pass Exercise 06 `STOP / REVIEW`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B
+Remaining tasks: Exercise 06 — deterministic stages and fixture verification
+Most recent checkpoint: Exercise 05 Task B `STOP / REVIEW — Fixture runner` (passed)
+Relevant skills: verify
 
 ## Completed
 
@@ -15,7 +15,7 @@ Relevant skills: frame-work, verify
 - [x] 02 — Apple Notes Service architecture spike
 - [x] 03 — Review and commit the architecture decision
 - [x] 04 — Exercise library data model
-- [ ] 05 — Resolver fixtures before resolver code
+- [x] 05 — Resolver fixtures before resolver code
 - [ ] 06 — Deterministic normalization and alias lookup
 - [ ] 07 — Fuzzy candidate generation and human confirmation
 - [ ] 08 — Frictionless new-exercise workflow
@@ -49,6 +49,7 @@ Relevant skills: frame-work, verify
 - Exercise 04 Task B implemented the approved model as a minimal Swift package backed by SQLite. Six tests pass for creation, confirmed-name lookup, idempotency, conflicting ownership, orphan rejection, and wrong-owner preferred-name rejection.
 - The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
 - Exercise 05 Task A approved 37 resolver fixtures: 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW`. They protect confirmed alias ownership, narrowly scoped cosmetic normalization, meaningful programming modifiers, and one-time confirmation for likely misspellings.
+- Exercise 05 Task B added a deliberately failing fixture runner. Its no-resolver baseline reports 17 passes, zero false merges, 10 missed expected matches, and 10 candidate-ranking failures; eight package tests pass, including a controlled all-false-merge classification test.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -63,4 +64,4 @@ Relevant skills: frame-work, verify
 
 ## Next action
 
-Begin Exercise 05 Task B by adding a fixture runner that reports passes, false merges, missed expected matches, and candidate-ranking failures. The runner may fail because resolver behavior is not implemented; do not implement the normalizer or matcher yet.
+Begin Exercise 06 by implementing only deterministic resolver stages, then compare the 37-case fixture report before and after. Leave uncertain cases unresolved and do not implement fuzzy candidate inference.

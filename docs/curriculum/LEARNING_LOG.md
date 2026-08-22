@@ -468,3 +468,35 @@ Defined and reviewed the resolver's expected safe matches, dangerous false merge
 **Next time / revisit**
 
 Build a fixture runner whose failure categories make false merges, missed expected matches, and ranking failures legible before implementing resolver behavior.
+
+### 2026-08-22 — Exercise 05 — Task B: Fixture runner
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `frame-work` — Demonstrated
+
+**What I did**
+
+Built an executable fixture harness before resolver implementation so missing capabilities and dangerous regressions produce distinct, actionable evidence.
+
+**Evidence**
+
+- Added a typed decoder for the 37 machine-readable resolver fixtures and explicit input, observation, failure, and report domain types.
+- Added a `ResolverFixtureResolving` boundary so the harness can evaluate an unimplemented resolver now and deterministic or fuzzy resolver stages later without changing the exam.
+- Added classifications for passes, false merges, missed expected matches, and candidate-ranking failures.
+- The deliberate no-resolver baseline reports 37 total cases: 17 passes, zero false merges, 10 missed expected matches, and 10 candidate-ranking failures.
+- Every failed fixture prints its stable ID, category, expected result, and observed result rather than contributing only to a generic total.
+- A controlled harness test that returns the same incorrect automatic match for every query reports all 37 cases as false merges, establishing severity precedence over missed-match or ranking categories.
+- The complete Swift package passes eight tests across the persistence and fixture-harness suites.
+- `git diff --check` passed, and no normalizer, exact resolver, fuzzy matcher, or candidate ranker was implemented.
+
+**My reflection**
+
+> A deliberately failing harness reveals which resolver capabilities are missing before those capabilities are implemented. The current baseline shows that the absence of a resolver safely avoids all 17 dangerous automatic merges, while clearly identifying 10 missed expected matches and 10 missing candidate rankings.
+>
+> As resolver development proceeds, the same fixture exam can benchmark progress without losing sight of regressions. Its categorized output distinguishes ordinary missing behavior from pathological behavior, especially false merges that silently assign the wrong stable exercise identity. A generic failure count would not tell a future agent what capability to add, what previously safe behavior it broke, or which failure deserves the highest priority.
+
+**Next time / revisit**
+
+Use the unchanged fixture exam to constrain deterministic normalization and alias lookup, preferring unresolved ambiguity over an incorrect identity merge.
