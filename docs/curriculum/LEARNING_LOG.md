@@ -434,3 +434,37 @@ Translated the approved exercise-identity design into a minimal Swift and SQLite
 **Next time / revisit**
 
 Define resolver behavior as reviewed fixtures before writing matching code, with particular attention to dangerous false merges and meaningful exercise modifiers.
+
+### 2026-08-22 — Exercise 05 — Task A: Resolver fixture categories
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `verify` — Demonstrated
+
+**What I did**
+
+Defined and reviewed the resolver's expected safe matches, dangerous false merges, and ambiguous review candidates before implementing normalization or matching behavior.
+
+**Evidence**
+
+- Created a machine-readable schema-versioned fixture set with 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW` cases; JSON validation passed and all 37 IDs are unique.
+- Limited automatic matching to explicitly confirmed names plus an approved deterministic contract for case, whitespace, and trailing sentence `.` or `!` normalization.
+- Explicitly protected meaningful punctuation in names such as `1.5-Rep Squat`, `A1`, and slash-separated alternatives.
+- Added dangerous false-merge boundaries for unilateral assistance, movement pattern, stance, pause, range of motion, body position, support, loading implement, grip, banded loading, anti-rotation intent, line-of-pull angle, plane of motion, target contact, and lever-length progression.
+- Kept ambiguous vocabulary and likely spelling errors in `SUGGEST_REVIEW`. A new misspelling requires one confirmation; afterward its durable alias resolves automatically.
+- Preserved `Copenhagen` as the standard spelling and used `Coppenhagen` only as an intentional typo fixture.
+- Created a human-readable review artifact synchronized with the machine-readable cases.
+- Implemented no fixture runner, normalizer, fuzzy matcher, or candidate-ranking behavior during Task A.
+
+**My reflection**
+
+> I defined dangerous false merges before writing the matcher so they become ground truth for implementation and testing. The fixtures distinguish confirmed aliases and narrowly scoped cosmetic normalization from similarities that require review. Case, whitespace, and trailing sentence periods or exclamation points may normalize away, but punctuation is not generally disposable because it can carry meaning in names such as 1.5-Rep Squat, A1, and slash-separated alternatives.
+>
+> I was particularly surprised that B-Stance RDL and Single-Leg Romanian Deadlift correctly remain separate: assisted versus unassisted execution and degrees of assistance are meaningful for long-running progressions even when names are highly similar. The final exam also protects plane of motion, target-contact intent, lever-length progression, grip, banded loading, anti-rotation intent, and line-of-pull angle. Defining these dangerous cases creates ground truth that can direct and test the matcher before its implementation.
+>
+> Ambiguous Copenhagen examples clarify the boundary between candidate generation and durable identity. Short-Lever Copenhagen Plank, Copenhagen, and the intentional Coppenhagen typo may produce Copenhagen Plank as a review candidate, but none establishes ownership without confirmation. Even a high-confidence spelling correction requires confirmation the first time; afterward, the confirmed misspelling is a durable alias and resolves automatically, keeping future friction low.
+
+**Next time / revisit**
+
+Build a fixture runner whose failure categories make false merges, missed expected matches, and ranking failures legible before implementing resolver behavior.

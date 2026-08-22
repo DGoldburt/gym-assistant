@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 05
-Current task: Task A — Create resolver fixture categories
+Current task: Task B — Add a fixture runner
 Current task state: not started
-Task completion condition: pass Exercise 05 Task A `STOP / REVIEW`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B
-Remaining tasks: Exercise 05 — Task A: Create fixture categories; Task B: Add a fixture runner
-Most recent checkpoint: Exercise 04 Task B `STOP / REVIEW — Persistence verification` (passed)
+Task completion condition: pass Exercise 05 Task B `STOP / REVIEW — Fixture runner`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Task A: Create fixture categories
+Remaining tasks: Exercise 05 — Task B: Add a fixture runner
+Most recent checkpoint: Exercise 05 Task A `STOP / REVIEW` (passed)
 Relevant skills: frame-work, verify
 
 ## Completed
@@ -48,6 +48,7 @@ Relevant skills: frame-work, verify
 - Local reusable `main` includes approved success-criteria review guidance at `64bfe51`; local `learner/main` and the current exercise branch are synchronized with it. Nothing from that reusable update was pushed.
 - Exercise 04 Task B implemented the approved model as a minimal Swift package backed by SQLite. Six tests pass for creation, confirmed-name lookup, idempotency, conflicting ownership, orphan rejection, and wrong-owner preferred-name rejection.
 - The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
+- Exercise 05 Task A approved 37 resolver fixtures: 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW`. They protect confirmed alias ownership, narrowly scoped cosmetic normalization, meaningful programming modifiers, and one-time confirmation for likely misspellings.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -62,4 +63,4 @@ Relevant skills: frame-work, verify
 
 ## Next action
 
-Begin Exercise 05 Task A by creating and reviewing machine-readable `MUST_MATCH`, `MUST_NOT_MATCH`, and `SUGGEST_REVIEW` resolver fixtures with realistic strength-training names and meaningful modifiers. Do not implement fuzzy matching yet.
+Begin Exercise 05 Task B by adding a fixture runner that reports passes, false merges, missed expected matches, and candidate-ranking failures. The runner may fail because resolver behavior is not implemented; do not implement the normalizer or matcher yet.

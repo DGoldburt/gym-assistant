@@ -35,6 +35,30 @@ An agent is more useful when it can act, observe objective feedback, correct its
 
 **Project connections:** the Notes spike must be repeatedly tested in the real workflow; resolver fixtures and the verification harness come later.
 
+### Bounded decision-review loops
+
+The review loop described in Ryan Lopopolo's [Harness engineering](https://openai.com/index/harness-engineering/) article is useful as a persistence structure—self-review, specific independent reviews, response to findings, and bounded iteration—not as a demand that every reviewer agree. Requiring unanimity gives reviewers an accidental veto, can reward superficial consensus, and risks endless waiting. Every blocking finding instead needs an explicit disposition: accept and revise, reject with evidence, defer as a future direction, or escalate as a human judgment.
+
+A review budget should scale with four factors:
+
+- **Consequence:** What product, user, safety, privacy, or architectural harm could a mistake cause?
+- **Reversibility:** Can the choice be cheaply undone, or would it require migrations, data repair, external coordination, or broken compatibility?
+- **Uncertainty:** How weak is the evidence, and how much genuine disagreement or novelty remains?
+- **Blast radius:** Is the decision local, or does it affect shared interfaces, persisted data, many future changes, or external systems?
+
+Low-risk, reversible, local decisions usually need self-review and automated checks. Medium-risk decisions earn one independent review and one revision cycle. High-risk decisions—especially changes to success criteria, persisted identity, privacy/security, or hard-to-reverse architecture—earn two focused reviewers and at most two cycles before unresolved judgments return to the user.
+
+The operating pattern is **background review, foreground gate**: evidence collection and read-only specialist reviews may run asynchronously while unrelated work continues, but the decision cannot cross its implementation, migration, commit, or external-action boundary until findings are synthesized. Agent agreement is evidence, not authority; value judgments and changes to product success criteria remain human decisions.
+
+If this procedure proves useful, `AGENTS.md` should contain only a short trigger pointing to `docs/DECISIONS_REVIEW.md`. The complete packet template, reviewer roles, risk tiers, finding format, review budget, and stop conditions belong in that deeper procedure rather than being copied wholesale into the context entry point.
+
+**Manual trial plan — two or three consequential decisions:**
+
+1. Choose a live medium- or high-risk decision and write a one-page packet: decision, success criteria, alternatives, evidence, assumptions, consequences, reversibility, and unresolved questions.
+2. Assign one product/minimality review and, for high risk, one failure-mode review. Keep them read-only and ask only for blocking findings, observations, and questions tied to the packet.
+3. Have the author disposition every blocking finding, revise once, and run one targeted re-review only when a blocker changed. Stop at the risk-tier budget; do not wait for unanimity.
+4. Record time spent, useful findings, duplicated noise, unresolved human judgments, and whether the decision improved. Repeat on two or three decisions before deciding whether a durable `docs/DECISIONS_REVIEW.md` procedure is justified.
+
 ## 2. Context and task framing
 
 An agent needs the right amount of durable context in the right place: product truth, agent rules, architecture decisions, plans, and current task instructions serve different jobs. A well-framed task names outcome, context, constraints, verification, and stopping conditions.
