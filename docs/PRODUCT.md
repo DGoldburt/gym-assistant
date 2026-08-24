@@ -31,22 +31,35 @@ Potential interaction:
 
 ## Exercise identity
 
-These may refer to one canonical exercise:
+Each exercise has a stable, opaque exercise ID. That ID is the canonical identity
+and does not change when the exercise's names change.
 
-- SL RDL
-- 1-leg RDL
-- single leg Romanian deadlift
-- Single Leg RDL
+An exercise may own multiple user-confirmed aliases. All aliases have the same
+identity relationship to the exercise, but exactly one is marked as the preferred
+alias. The product uses that preferred alias as the exercise's default display name
+in Apple Notes and other user-facing output.
 
-Canonical identity example:
+Example:
 
-    Single-Leg Romanian Deadlift
+Stable exercise ID:
 
-Preferred display name might still be:
+    8E22A4D3-…
 
-    SL RDL
+Confirmed aliases:
 
-Canonical identity and preferred display text are separate concepts.
+- `SL RDL` — preferred
+- `1-leg RDL`
+- `single leg Romanian deadlift`
+- `Single-Leg RDL`
+
+Changing which alias is preferred changes only the default display text. It does
+not create a new exercise, change the stable exercise ID, or remove the former
+preferred alias.
+
+New wording becomes an alias only through explicit user confirmation. Cosmetic
+normalization may make equivalent formatting resolve consistently, but similarity,
+abbreviation expansion, or fuzzy matching must not establish an alias relationship
+by itself.
 
 ## Non-goals for initial MVP
 

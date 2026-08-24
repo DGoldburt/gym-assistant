@@ -30,6 +30,21 @@
 - Do not initialize Git, create a remote repository, push, open or merge a pull request, install Xcode, or perform another external/stateful setup action unless the current approved tutorial task explicitly reaches that action.
 - When writing complex features or significant refactors, use an ExecPlan (as described in ./PLANS.md) from design to implementation.
 
+## Git lifecycle
+
+### Learner work
+
+- Before starting a numbered exercise, synchronize `learner/main` with reusable `main`, then create a fresh `tutorial/exercise-NN` branch from `learner/main`. Do not carry a previous exercise branch forward.
+- After each task checkpoint and reflection are approved, update the justified learning artifacts and `PROGRESS.md`, run the relevant verification, inspect the candidate diff for credentials and unintended private material, then commit and push one coherent checkpoint.
+- After the final checkpoint in an exercise, run the exercise's full verification, open a pull request into `learner/main`, review and merge it, synchronize local `learner/main`, and create a fresh branch for the next exercise.
+- Do not merge unapproved task work, later-exercise work, or reusable starter changes directly into `learner/main`.
+
+### Reusable work
+
+- Prepare each approved shared-harness, curriculum, or product-documentation update in a clean worktree based on `main`. Inspect its complete candidate diff for learner progress, reflections, identity, private links, credentials, and unrelated files before committing or pushing.
+- Use a commit boundary for one coherent approved update, not mechanically for every conversation. Do not commit rejected drafts or incomplete exploration. If an approved update remains incomplete at handoff, report its worktree path, current status, and remaining work so it is not mistaken for finished work.
+- Once reviewed, commit and push the reusable update promptly. Then synchronize `learner/main` and the active exercise branch with the new `main` before retaining or adding dependent learner state.
+
 ## Durable context map
 
 - `PLANS.md` — durable planning convention.
@@ -62,6 +77,6 @@ When asked to continue the tutorial:
 14. At the start of tutorial work, before substantive work, and before every checkpoint, Codex surfaces the following dashboard: the current exercise and task, current task progress, next step, next checkpoint, a rough time estimate to the next checkpoint, and relevant skill or skills (rarer). State the next step as the learner's next concrete activity in ordinary language, not merely as a task title, status label, or description of Codex's internal execution plan. Time estimates are planning aids rather than promises and can separate learner time, agent time, and external setup or waiting time when relevant. The envelope for this dashboard should be as compact as possible and be the first thing returned - use a single fenced code block labeled as `md` that begins and ends with triple backticks. Do not nest additional triple-backtick code fences inside to avoid prematurely closing the dashboard's code fence.
 15. Offer optional map check-ins at the milestones named in `AGENTIC_AI_MAP.md` or when the user brings an external source. They never block tutorial progress. Preserve a check-in in `LEARNING_LOG.md` only when the user asks or explicitly approves.
 16. Before asking the learner to approve a decision, restate the complete proposed decision, the concrete artifact or state it refers to, its consequences, and any meaningful alternative. Keep blocking or handoff prompts self-contained; do not rely on shorthand such as "the recommended baseline" whose meaning appeared only in earlier commentary.
-17. Whenever the shared learning harness or an exercise changes after learner state exists, prepare a separate reusable update against clean `main` and inspect its complete candidate diff for personal progress, reflections, identity, private links, and credentials before committing or pushing it. Never copy the learner versions of `PROGRESS.md`, `SKILLS.md`, or `LEARNING_LOG.md` wholesale into `main`; apply only intentional template/schema changes from the clean starter side, and exclude learner-specific orientation or sources from `AGENTIC_AI_MAP.md`. Commit and push only reviewed reusable files to `main`; never merge learner progress into it. Use `learner/main` as the persistent integration branch for personal tutorial state, target exercise pull requests there, and synchronize both `learner/main` and the current exercise branch with reusable `main` updates before retaining or adding learner state. Keep existing starter tags immutable; publish a new tag for a later starter version rather than moving an earlier tag.
+17. Apply the Git lifecycle above whenever the shared learning harness or an exercise changes after learner state exists. Never copy learner versions of `PROGRESS.md`, `SKILLS.md`, or `LEARNING_LOG.md` wholesale into `main`; apply only intentional template or schema changes from the clean starter side, and exclude learner-specific orientation or sources from `AGENTIC_AI_MAP.md`. Keep existing starter tags immutable; publish a new tag for a later starter version rather than moving an earlier tag.
 
 When the user asks to change the curriculum itself, the current-exercise-only reading restriction does not prevent inspecting the curriculum files necessary for that maintenance task. Curriculum maintenance must not silently advance tutorial progress.
