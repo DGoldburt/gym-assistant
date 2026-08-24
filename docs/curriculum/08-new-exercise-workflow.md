@@ -71,3 +71,51 @@ Inspect the recorded timing/interaction counts, screenshots or logs, saved recor
 Teach back: Which part of the manual evidence would an automated unit test fail to capture?
 
 After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 09.
+
+## Curriculum amendment — product-direction review before advancement
+
+This amendment is additive: Tasks A and B above remain unchanged. After Task B's
+reflection and checkpoint are approved and recorded, continue to Task C below
+instead of advancing immediately to Exercise 09.
+
+The amendment exists because product discovery conducted while Exercise 08 was
+current showed that exercise identity and new-exercise creation are enabling
+capabilities, but keyboard retrieval during program composition is the more direct
+route to the primary outcome of writing programs faster.
+
+## Task C — Review and approve the assistant-use-case redirection
+
+Inspect the completed new-exercise workflow in both documentation and code. Name
+where the selected-text interaction, application workflow, library writes, and
+resolver safety boundary now live, and verify that finishing this slice did not
+silently turn a search selection into an alias relationship.
+
+Then inspect the complete redirection package:
+
+- the primary writing workflow and product horizons in `docs/PRODUCT.md`
+- the evidence, opportunities, candidate solutions, and Now/Next/Later boundaries
+  in `docs/OPPORTUNITY_SOLUTION_TREE.md`
+- the post-acceptance no-selection extension recorded in ADR 001
+- the corresponding boundary description in `docs/ARCHITECTURE.md`
+- Exercise 09's keyboard autocomplete scope
+- Exercise 10's reusable identity-review and personal-library import scope
+- Exercise 11's field-evidence-gated reuse of search-query transformations
+
+The review must distinguish three things: selecting an existing exercise for
+insertion, confirming that user-entered wording is an alias, and creating a new
+exercise. It must also confirm that completed-program hygiene, movement-pattern
+search, pairings, blocks, programming tendencies, client context, and load history
+remain preserved future opportunities rather than requirements of autocomplete.
+
+### STOP / REVIEW — Redirection package
+
+Inspect the complete candidate diff and the finished new-exercise behavior. Decide
+whether the package accurately preserves both the larger product and the bounded
+next slice, and approve or revise the package before Exercise 09 begins.
+
+Teach back: Why can exercise identity remain foundational even though identity
+resolution is no longer the primary interaction for writing a program?
+
+After the user approves the reflection and checkpoint, append the approved evidence
+and reflection, update only justified skill confidence, update `PROGRESS.md`, and
+advance to Exercise 09.

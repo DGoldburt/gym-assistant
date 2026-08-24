@@ -16,8 +16,9 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 
 - [x] (2026-08-24T17:34:04Z) Inspected the branch, worktree, and uncommitted-change topology without modifying learner state.
 - [x] (2026-08-24T17:34:04Z) Obtained approval for the steady-state branch policy and the one-time stabilization scope.
-- [ ] Preserve the complete mixed working state on a local-only recovery branch.
-- [ ] Inventory and classify every commit, file, and overlapping hunk into reusable, approved learner, or unapproved work.
+- [x] (2026-08-24) Preserved the complete learner working state in local-only commit `6dab70d` on `recovery/pre-stabilization-2026-08-24`.
+- [x] (2026-08-24) Preserved the dirty reusable candidate in local-only commit `aaa56dc` on `recovery/reusable-candidate-2026-08-24`.
+- [ ] Inventory and classify every commit, file, and overlapping hunk into reusable, approved learner, or unapproved work. Reusable classification is complete; learner classification remains in progress.
 - [ ] Review, verify, commit, and push coherent reusable updates to `main`.
 - [ ] Assemble and verify the approved learner catch-up branch through Exercise 08 Task A.
 - [ ] Review and merge the catch-up branch into `learner/main`.
@@ -29,6 +30,7 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 - The active branch is still named `tutorial/exercise-03`, although committed and uncommitted work has advanced well beyond Exercise 03. This makes the branch name an unreliable indicator of scope.
 - Reusable updates and learner-specific progress coexist in dirty worktrees. File-level copying is not always sufficient because a single file can contain changes from more than one classification.
 - Local `main` and `learner/main` are ahead of their remote counterparts, so remote state is not a safe recovery source for all completed work.
+- The reusable candidate included a starter-form `PROGRESS.md`, but restoring a learner-ledger file wholesale would violate the repository's safety rule. It was excluded because no separately justified schema change was identified.
 
 ## Decision Log
 
@@ -140,6 +142,9 @@ Initial evidence, captured 2026-08-24:
 - Active learner branch: `tutorial/exercise-03` at `51601eb`, six commits ahead of `learner/main`, with mixed uncommitted work.
 - Detached reusable candidate: `/private/tmp/gym-assistant-product-identity-main`, containing the approved product-identity clarification plus this approved maintenance guidance.
 - Existing dirty `main` worktree: `/private/tmp/gym-assistant-agents-main`; preserve it until fully classified.
+- Initial reusable policy commit: `7533fe2`, pushed to `origin/main`.
+- Learner recovery snapshot: `6dab70d`, local only.
+- Reusable-candidate recovery snapshot: `aaa56dc`, local only.
 
 Append concise evidence here during execution, including recovery commit, reusable commits, verification summaries, pull request target and result, final branch tips, and retained cleanup items.
 

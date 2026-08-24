@@ -1,4 +1,4 @@
-# Exercise 12 — Independent Review + Parallel Worktrees
+# Exercise 13 — Independent Review + Parallel Worktrees
 
 ## Why we're doing this
 
@@ -54,7 +54,7 @@ Teach back: Why can a separate context notice risks that the implementing contex
 Pick 2-3 independent small enhancements, for example:
 - keyboard navigation
 - favorites
-- block ranking tests
+- autocomplete ranking edge cases
 
 Run them in separate worktrees.
 
@@ -76,7 +76,7 @@ Inspect each worktree's scope, branch, diff, verification output, overlap, and r
 
 Teach back: What makes two tasks safe to run in parallel, and what responsibilities remain with the human supervisor?
 
-After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 13.
+After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 14.
 
 ## Optional map check-in
 

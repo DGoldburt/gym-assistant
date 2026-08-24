@@ -49,6 +49,7 @@
 
 - `PLANS.md` — durable planning convention.
 - `docs/PRODUCT.md` — product truth and scope
+- `docs/OPPORTUNITY_SOLUTION_TREE.md` — desired outcome, researched opportunities, candidate solutions, and Now/Next/Later horizons
 - `docs/ARCHITECTURE.md` — current system boundaries
 - `docs/decisions/` — durable architecture decisions and evidence
 - `docs/curriculum/PROGRESS.md` — exact tutorial location and next action

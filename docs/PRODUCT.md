@@ -4,9 +4,10 @@
 
 Help the user write strength-training programs faster while keeping Apple Notes as the main programming workspace.
 
-## Core workflow
+## Core workflows
 
-The user writes naturally in Notes.
+The user writes naturally in Notes. The companion should help while the program is
+being composed and should not require a complete draft before it becomes useful.
 
 Example:
 
@@ -20,14 +21,20 @@ Example:
 
 The companion tool should help at the point of writing, not only after the program is complete.
 
-Potential interaction:
+Primary writing interaction:
 
-1. User types or selects text in Notes.
-2. User invokes a macOS Service / Quick Action / keyboard shortcut.
-3. The companion tool receives the selected text.
-4. It searches or resolves against the exercise library.
-5. User chooses an existing exercise, links an alias, or creates a new exercise.
-6. The tool returns useful text to Notes with minimal interruption.
+1. The user places the cursor where an exercise should appear without first typing
+   or selecting exercise text.
+2. The user invokes the companion with a keyboard shortcut.
+3. The companion focuses a search field immediately.
+4. The user types a short query, chooses an existing exercise without a mouse, and
+   inserts its preferred display name at the original Notes cursor.
+
+Selected-text and post-program interactions remain useful secondary workflows.
+They can resolve wording already present in a note, link a confirmed alias, create
+a genuinely new exercise, or review unmatched exercise text after a program has
+been written. Choosing an autocomplete result for insertion does not by itself
+confirm an alias or create an exercise-identity relationship.
 
 ## Exercise identity
 
@@ -61,6 +68,32 @@ normalization may make equivalent formatting resolve consistently, but similarit
 abbreviation expansion, or fuzzy matching must not establish an alias relationship
 by itself.
 
+## Exercise-library trust and hygiene
+
+Autocomplete is only as useful as the exercise identities behind its results. If
+aliases are imported as separate exercises, the immediate symptom may be confusing
+near-duplicate search results. Later, the same mistake can fragment blocks,
+exercise attributes, programming frequency, recent exposure, client history, and
+load history across identities that should have been one.
+
+The product therefore needs a reusable exercise-identity review workflow. Given
+observed exercise wording and its source evidence, the workflow may let the user:
+
+- link the wording to an existing exercise as a confirmed name;
+- create a genuinely new exercise and choose its preferred display name;
+- affirm that similar exercises should remain separate;
+- defer an uncertain decision without losing the observation.
+
+Candidate scores, deterministic transformations, and AI-extracted source material
+may help surface possibilities, but none may establish identity without user
+confirmation. AI preparation of source data should preserve observed wording and
+provenance rather than produce a supposedly cleaned canonical library.
+
+The personal-library import is the first use of this review workflow. Later
+adapters may send it unmatched wording from a completed-program review or possible
+duplicates from a manual library audit. Those adapters should reuse the identity
+review rather than implement separate alias-decision systems.
+
 ## Non-goals for initial MVP
 
 - replacing Apple Notes with a custom editor
@@ -70,7 +103,19 @@ by itself.
 - nutrition programming
 - implementing client performance/load history
 
-## Future direction
+## Product horizons
+
+The current and next slices should establish low-friction library maintenance,
+keyboard-first retrieval of known exercises, and a trustworthy personal-library
+import through the reusable identity-review workflow. Later slices may help the
+user search by programming intent, select complementary exercises, insert reusable
+blocks, and review a completed program for unmatched exercise wording.
+
+These horizons preserve the larger product direction without adding their scope
+to the active slice. The evidence, opportunities, candidate solutions, and current
+horizon assignments live in [the Opportunity Solution Tree](OPPORTUNITY_SOLUTION_TREE.md).
+
+## Longer-term data direction
 
 A later system should be able to associate:
 
