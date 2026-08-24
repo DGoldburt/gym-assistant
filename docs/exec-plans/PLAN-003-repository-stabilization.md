@@ -18,11 +18,11 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 - [x] (2026-08-24T17:34:04Z) Obtained approval for the steady-state branch policy and the one-time stabilization scope.
 - [x] (2026-08-24) Preserved the complete learner working state in local-only commit `6dab70d` on `recovery/pre-stabilization-2026-08-24`.
 - [x] (2026-08-24) Preserved the dirty reusable candidate in local-only commit `aaa56dc` on `recovery/reusable-candidate-2026-08-24`.
-- [ ] Inventory and classify every commit, file, and overlapping hunk into reusable, approved learner, or unapproved work. Reusable classification is complete; learner classification remains in progress.
-- [ ] Review, verify, commit, and push coherent reusable updates to `main`.
-- [ ] Assemble and verify the approved learner catch-up branch through Exercise 08 Task A.
-- [ ] Review and merge the catch-up branch into `learner/main`.
-- [ ] Create the correct fresh exercise branch and restore only the next unapproved task there.
+- [x] (2026-08-24) Classified reusable work, approved learner work through Exercise 08 Task A, and unapproved Exercise 08 Task B work. Mixed files received hunk-level review.
+- [x] (2026-08-24) Reviewed, verified, committed, and pushed reusable updates `7533fe2` and `5c11c50` to `main`.
+- [x] (2026-08-24) Assembled and verified the approved learner catch-up branch through Exercise 08 Task A.
+- [x] (2026-08-24) Merged catch-up pull request #2 into `learner/main`, then removed one detected Task B query through corrective pull request #3.
+- [ ] Create the correct fresh exercise branch and restore only the next unapproved task there. The clean `tutorial/exercise-08` branch exists at corrected `learner/main`; restoration waits for the running Task B task to reach a stable human checkpoint.
 - [ ] Confirm that worktrees, branches, remotes, and progress records agree.
 
 ## Surprises & Discoveries
@@ -31,6 +31,8 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 - Reusable updates and learner-specific progress coexist in dirty worktrees. File-level copying is not always sufficient because a single file can contain changes from more than one classification.
 - Local `main` and `learner/main` are ahead of their remote counterparts, so remote state is not a safe recovery source for all completed work.
 - The reusable candidate included a starter-form `PROGRESS.md`, but restoring a learner-ledger file wholesale would violate the repository's safety rule. It was excluded because no separately justified schema change was identified.
+- A post-merge audit found that `ExerciseLibrary.swift` combined approved Exercise 06 normalization with the Task B-only `allPreferredNames()` query. Pull request #3 removed the unapproved query, and the full approved test and fixture suites still passed.
+- GitHub CLI 2.98.0 was installed and authenticated even though `PROGRESS.md` said it was unavailable. The durable note was corrected, and pull requests were managed with the CLI.
 
 ## Decision Log
 
@@ -48,6 +50,10 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 
 - Decision: Preserve the complete dirty state in a local-only recovery snapshot before classification. Do not push that snapshot unless a later full privacy review explicitly approves it.
   Rationale: The snapshot makes classification recoverable while preventing unapproved or private material from reaching the remote.
+  Date: 2026-08-24
+
+- Decision: Let the existing Exercise 08 Task B task remain in its recovery worktree until its human shortcut check reaches a stable checkpoint, while creating a separate clean `tutorial/exercise-08` worktree from corrected `learner/main`.
+  Rationale: Moving the active task's files underneath it would risk losing or splitting live evidence; the clean destination can receive the final reviewed Task B delta afterward.
   Date: 2026-08-24
 
 ## Outcomes & Retrospective
@@ -143,8 +149,12 @@ Initial evidence, captured 2026-08-24:
 - Detached reusable candidate: `/private/tmp/gym-assistant-product-identity-main`, containing the approved product-identity clarification plus this approved maintenance guidance.
 - Existing dirty `main` worktree: `/private/tmp/gym-assistant-agents-main`; preserve it until fully classified.
 - Initial reusable policy commit: `7533fe2`, pushed to `origin/main`.
+- Reusable curriculum update: `5c11c50`, pushed to `origin/main`.
 - Learner recovery snapshot: `6dab70d`, local only.
 - Reusable-candidate recovery snapshot: `aaa56dc`, local only.
+- Learner catch-up pull request: #2, merged as `49f2f21`.
+- Task B leakage correction: pull request #3, merged as `81793d9`.
+- Clean active-exercise destination: `/private/tmp/gym-assistant-exercise-08-branch` on `tutorial/exercise-08` at `81793d9`.
 
 Append concise evidence here during execution, including recovery commit, reusable commits, verification summaries, pull request target and result, final branch tips, and retained cleanup items.
 
