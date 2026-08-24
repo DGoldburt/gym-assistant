@@ -660,3 +660,33 @@ Turned “frictionless” into a measurable creation contract and removed fields
 **Next time / revisit**
 
 Implement and manually test the four approved workflow cases, measuring actions, timing, saved identity, returned text, and focus rather than relying only on unit tests.
+
+### 2026-08-24 — Exercise 08 — Task B: New-exercise workflow evidence
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `frame-work` — Demonstrated
+
+**What I did**
+
+Implemented the bounded Notes workflow, tested its four required identity outcomes, and used real UI and reboot evidence to distinguish passing domain logic from a usable product installation.
+
+**Evidence**
+
+- Added a reusable core workflow and a separate AppKit Notes Service adapter for exact matches, reviewable candidates, explicit linking, and one-field exercise creation.
+- The package passed 22 tests across six suites; the unchanged 37-case resolver exam retained zero false merges and zero protected-candidate leaks.
+- Manually tested obvious-existing, ambiguous, truly-new, and mistaken-new-link cases in a disposable Notes note, recording returned text, saved records, focus, actions, and latency.
+- The new-exercise path required two Returns and no typing, and returned 22.7 ms after save confirmation against the approved 500 ms target.
+- Manual testing found and corrected a wrong-window focus bug that unit tests did not exercise.
+- A computer restart proved that registration from `/private/tmp` was not a durable installation: Gym Assistant disappeared from Notes Services and Keyboard Shortcuts.
+- Installed the provider persistently at `/Users/dan/Applications/Gym Assistant.app`, embedded the `⌃⌥⌘G` Service shortcut, refreshed registration, and restarted Notes.
+- The learner manually confirmed that Gym Assistant appeared in Notes Services and that the physical shortcut worked.
+
+**My reflection**
+
+> I learned that unit tests could verify the workflow logic, but they could not capture the real macOS UI and integration problems around the shortcut. Manual testing—and especially restarting the computer—revealed whether the Service remained installed, appeared in Notes and Keyboard Settings, and actually responded to the physical shortcut. The evidence needed to match the product interaction, not only the underlying code.
+
+**Next time / revisit**
+
+Treat persistent installation, host-application discovery, physical input, focus return, and reboot behavior as separate acceptance evidence from core workflow tests.

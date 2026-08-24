@@ -42,6 +42,12 @@ Must not own:
 
 The adapter direction is accepted in [ADR 001](decisions/001-notes-integration.md). The Exercise 02 spike validates the AppKit Service/pasteboard interaction shape but is not production code. Packaging, signing, distribution, shortcut design, and identical-text feedback remain open implementation concerns.
 
+The Exercise 08 `GymAssistantNotesService` executable is the first adapter wired
+to the real core workflow and Application Support SQLite library. For selected
+text it performs deterministic bypass, explicit identity review through a Link
+Existing action, and same-panel new-exercise creation. It does not implement the
+later no-selection autocomplete/search extension.
+
 ### Exercise library
 Responsibilities:
 - stable opaque exercise identity

@@ -208,6 +208,17 @@ public final class ExerciseLibrary {
         )
     }
 
+    public func allPreferredNames() throws -> [ExerciseName] {
+        try queryNames(
+            """
+            SELECT n.id, n.exercise_id, n.text, n.normalized_text, n.provenance, n.created_at
+            FROM exercise e
+            JOIN exercise_name n ON n.exercise_id = e.id AND n.id = e.preferred_name_id
+            ORDER BY n.normalized_text, n.id
+            """
+        )
+    }
+
     private func migrate() throws {
         try transaction {
             try execute(
@@ -269,6 +280,27 @@ public final class ExerciseLibrary {
         if result == SQLITE_DONE { return nil }
         guard result == SQLITE_ROW else { throw databaseError() }
 
+        return try decodeName(statement)
+    }
+
+    private func queryNames(_ sql: String, bindings: [Binding] = []) throws -> [ExerciseName] {
+        let statement = try prepare(sql, bindings: bindings)
+        defer { sqlite3_finalize(statement) }
+
+        var names: [ExerciseName] = []
+        while true {
+            switch sqlite3_step(statement) {
+            case SQLITE_ROW:
+                names.append(try decodeName(statement))
+            case SQLITE_DONE:
+                return names
+            default:
+                throw databaseError()
+            }
+        }
+    }
+
+    private func decodeName(_ statement: OpaquePointer) throws -> ExerciseName {
         guard
             let idText = columnText(statement, 0), let id = UUID(uuidString: idText),
             let exerciseIDText = columnText(statement, 1), let exerciseID = UUID(uuidString: exerciseIDText),

@@ -8,10 +8,16 @@ let package = Package(
     products: [
         .library(name: "GymAssistantCore", targets: ["GymAssistantCore"]),
         .executable(name: "ResolverFixtureRunner", targets: ["ResolverFixtureRunner"]),
+        .executable(name: "GymAssistantNotesService", targets: ["GymAssistantNotesService"]),
     ],
     targets: [
         .target(name: "GymAssistantCore", linkerSettings: [.linkedLibrary("sqlite3")]),
         .executableTarget(name: "ResolverFixtureRunner", dependencies: ["GymAssistantCore"]),
+        .executableTarget(
+            name: "GymAssistantNotesService",
+            dependencies: ["GymAssistantCore"],
+            linkerSettings: [.linkedFramework("AppKit")]
+        ),
         .testTarget(name: "GymAssistantCoreTests", dependencies: ["GymAssistantCore"]),
     ]
 )

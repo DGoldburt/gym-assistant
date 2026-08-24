@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 08
-Current task: Task B — Implement and manually test the new-exercise workflow
+Current task: Task C — Review and approve the assistant-use-case redirection
 Current task state: not started
-Task completion condition: pass Exercise 08 Task B `STOP / REVIEW — Workflow evidence`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Task A
-Remaining tasks: Exercise 08 — Task B
-Most recent checkpoint: Exercise 08 Task A `STOP / REVIEW` (passed)
+Task completion condition: pass Exercise 08 Task C `STOP / REVIEW — Redirection package`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–B
+Remaining tasks: Exercise 08 — Task C
+Most recent checkpoint: Exercise 08 Task B `STOP / REVIEW — Workflow evidence` (passed)
 Relevant skills: verify, set-boundaries
 
 ## Completed
@@ -29,9 +29,9 @@ Relevant skills: verify, set-boundaries
 ## Current notes
 
 - The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
-- Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI 2.98.0 is installed and authenticated as `DGoldburt` over SSH.
-- Local and remote `main` contain learner-free reusable history through curriculum update `5c11c50`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
-- `learner/main` is the persistent integration target for personal tutorial progress. Pull request #2 is the reviewed catch-up containing approved learner work through Exercise 08 Task A; Task B remains outside it.
+- Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI remains uninstalled.
+- Local and remote `main` contain learner-free reusable history through branch-model update `2b4dbe1`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
+- Local and remote `learner/main` contain merged pull-request commit `feb2e0c` and are the persistent integration target for personal tutorial progress.
 - Pull request #1 merged the reviewed `tutorial/exercise-01` state into `learner/main`; local synchronization was verified with a clean working tree.
 - `tutorial/exercise-02` was pushed and merged into `learner/main` as `968f6c7`; local and remote `learner/main` were synchronized before creating local `tutorial/exercise-03` from that exact commit. Reusable `main` remains learner-free at `2b4dbe1`.
 - Exercise 02 Task A verified macOS 26.6, Xcode 26.6, Swift 6.3.3, the selected full-Xcode developer directory, and the macOS SDK without installing or creating anything.
@@ -46,7 +46,7 @@ Relevant skills: verify, set-boundaries
 - Exercise 04 Task A approved a minimal `Exercise` identity with an opaque UUID and required owned `preferredNameID`, plus durable `ExerciseName` records with globally unique normalized keys and workflow-supplied provenance.
 - The approved deferred composite foreign key rejects orphan exercises, nonexistent preferred names, and preferred names owned by another exercise. A separate canonical-name role, contextual ownership, variants, program/client context, taxonomy, and history remain explicitly outside Task B.
 - A read-only review of all 57 Notes in the Strength Training folder informed evidence-backed future directions without adding required fields to the initial model.
-- Reusable success-criteria, Git-lifecycle, product-direction, and curriculum updates are published on `main` and synchronized into the learner catch-up.
+- Local reusable `main` includes approved success-criteria review guidance at `64bfe51`; local `learner/main` and the current exercise branch are synchronized with it. Nothing from that reusable update was pushed.
 - Exercise 04 Task B implemented the approved model as a minimal Swift package backed by SQLite. Six tests pass for creation, confirmed-name lookup, idempotency, conflicting ownership, orphan rejection, and wrong-owner preferred-name rejection.
 - The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
 - Exercise 05 Task A approved 37 resolver fixtures: 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW`. They protect confirmed alias ownership, narrowly scoped cosmetic normalization, meaningful programming modifiers, and one-time confirmation for likely misspellings.
@@ -56,6 +56,8 @@ Relevant skills: verify, set-boundaries
 - Exercise 07 Task B implemented review-only candidate ranking. The complete 37-case fixture report passes with 10/10 deterministic matches, 17/17 protected exclusions, 10/10 expected top suggestions, and zero false merges or protected-candidate leaks; all 16 package tests pass.
 - Exercise 07 Task C persists only accepted suggestions as `userConfirmed` aliases. Accepted, rejected, and repeated-acceptance paths are covered by the standard regression suite; all 18 package tests and the unchanged 37-case resolver exam pass.
 - Exercise 08 Task A approved a two-action, zero-required-typing new-exercise budget with one `Name` field, exact normalized-match bypass, edited-name-only persistence, automatic Notes focus restoration, and a 500 ms save-to-return target.
+- Exercise 08 Task B implemented and manually tested the four approved Notes workflows. Twenty-two package tests and the 37-case resolver exam pass; the two-action creation path returned 22.7 ms after confirmation.
+- Manual testing corrected wrong-window focus behavior and proved that temporary LaunchServices registration was not a durable installation. Gym Assistant is now installed under the user Applications folder with an embedded `⌃⌥⌘G` Service shortcut; the learner confirmed the Notes Services entry and physical shortcut work.
 - Product discovery reframed the primary writing interaction around keyboard
   autocomplete from an empty Notes cursor. Exercise 08 remains append-only: its
   new-exercise workflow still completes first, followed by a Task C review of the
@@ -75,4 +77,4 @@ Relevant skills: verify, set-boundaries
 
 ## Next action
 
-Begin Exercise 08 Task B by implementing and manually testing the obvious-existing, ambiguous, truly-new, and mistaken-new-link cases. Record actions, timing, saved records, returned Notes text, focus, and friction points.
+Begin Exercise 08 Task C by inspecting the completed new-exercise boundaries and the full assistant-use-case redirection package before Exercise 09 begins.
