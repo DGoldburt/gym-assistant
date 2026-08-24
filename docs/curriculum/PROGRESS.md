@@ -30,8 +30,8 @@ Relevant skills: verify, set-boundaries
 
 - The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
 - Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI 2.98.0 is installed and authenticated as `DGoldburt` over SSH.
-- Local and remote `main` contain learner-free reusable history through branch-model update `2b4dbe1`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
-- Local and remote `learner/main` contain merged pull-request commit `feb2e0c` and are the persistent integration target for personal tutorial progress.
+- Local and remote `main` contain learner-free reusable history through curriculum update `5c11c50`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
+- `learner/main` is the persistent integration target for personal tutorial progress. Pull request #2 is the reviewed catch-up containing approved learner work through Exercise 08 Task A; Task B remains outside it.
 - Pull request #1 merged the reviewed `tutorial/exercise-01` state into `learner/main`; local synchronization was verified with a clean working tree.
 - `tutorial/exercise-02` was pushed and merged into `learner/main` as `968f6c7`; local and remote `learner/main` were synchronized before creating local `tutorial/exercise-03` from that exact commit. Reusable `main` remains learner-free at `2b4dbe1`.
 - Exercise 02 Task A verified macOS 26.6, Xcode 26.6, Swift 6.3.3, the selected full-Xcode developer directory, and the macOS SDK without installing or creating anything.
@@ -46,7 +46,7 @@ Relevant skills: verify, set-boundaries
 - Exercise 04 Task A approved a minimal `Exercise` identity with an opaque UUID and required owned `preferredNameID`, plus durable `ExerciseName` records with globally unique normalized keys and workflow-supplied provenance.
 - The approved deferred composite foreign key rejects orphan exercises, nonexistent preferred names, and preferred names owned by another exercise. A separate canonical-name role, contextual ownership, variants, program/client context, taxonomy, and history remain explicitly outside Task B.
 - A read-only review of all 57 Notes in the Strength Training folder informed evidence-backed future directions without adding required fields to the initial model.
-- Local reusable `main` includes approved success-criteria review guidance at `64bfe51`; local `learner/main` and the current exercise branch are synchronized with it. Nothing from that reusable update was pushed.
+- Reusable success-criteria, Git-lifecycle, product-direction, and curriculum updates are published on `main` and synchronized into the learner catch-up.
 - Exercise 04 Task B implemented the approved model as a minimal Swift package backed by SQLite. Six tests pass for creation, confirmed-name lookup, idempotency, conflicting ownership, orphan rejection, and wrong-owner preferred-name rejection.
 - The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
 - Exercise 05 Task A approved 37 resolver fixtures: 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW`. They protect confirmed alias ownership, narrowly scoped cosmetic normalization, meaningful programming modifiers, and one-time confirmation for likely misspellings.
