@@ -70,6 +70,7 @@ public enum ResolverFixtureFailureKind: String, Sendable {
     case falseMerge = "FALSE_MERGE"
     case missedExpectedMatch = "MISSED_EXPECTED_MATCH"
     case candidateRankingFailure = "CANDIDATE_RANKING_FAILURE"
+    case protectedCandidateLeak = "PROTECTED_CANDIDATE_LEAK"
 }
 
 public struct ResolverFixtureFailure: Equatable, Sendable {
@@ -86,6 +87,7 @@ public struct ResolverFixtureReport: Sendable {
     public var falseMerges: Int { count(.falseMerge) }
     public var missedExpectedMatches: Int { count(.missedExpectedMatch) }
     public var candidateRankingFailures: Int { count(.candidateRankingFailure) }
+    public var protectedCandidateLeaks: Int { count(.protectedCandidateLeak) }
     public var succeeded: Bool { failures.isEmpty }
 
     private func count(_ kind: ResolverFixtureFailureKind) -> Int {
@@ -138,6 +140,12 @@ public struct ResolverFixtureHarness: Sendable {
                     fixtureID: fixture.id,
                     kind: .falseMerge,
                     detail: "Protected \(fixture.protectedModifier); automatically matched \(automaticMatch.debugDescription)."
+                ))
+            } else if observation.rankedCandidates.contains(fixture.candidatePreferredName) {
+                failures.append(.init(
+                    fixtureID: fixture.id,
+                    kind: .protectedCandidateLeak,
+                    detail: "Protected \(fixture.protectedModifier); conflicting candidate \(fixture.candidatePreferredName.debugDescription) was suggested."
                 ))
             } else {
                 passes += 1

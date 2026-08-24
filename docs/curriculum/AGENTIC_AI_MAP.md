@@ -35,6 +35,12 @@ An agent is more useful when it can act, observe objective feedback, correct its
 
 **Project connections:** the Notes spike must be repeatedly tested in the real workflow; resolver fixtures and the verification harness come later.
 
+### Learner check-in — fixtures reveal uncertainty — 2026-08-22
+
+I learned that uncertainty is difficult to define abstractly; it became visible when I inspected concrete fixtures. Cases such as B-Stance RDL versus Kickstand RDL prompted useful investigation of exercise vocabulary, data relationships, and desired product behavior. In my vocabulary, I concluded that those names refer to the same exercise, but the agent could not safely assume that relationship before review.
+
+An agent should surface plausible uncertainty so the human can express the intended domain semantics. However, agents may not recognize every uncertain case, and humans may not recognize one until examples make it concrete. While the data model, fixtures, and resolver semantics are still developing, the harness should bias toward reviewable or unresolved outcomes. Confirmed experience can then progressively convert uncertainty into durable knowledge without allowing early guesses to corrupt identity.
+
 ### Bounded decision-review loops
 
 The review loop described in Ryan Lopopolo's [Harness engineering](https://openai.com/index/harness-engineering/) article is useful as a persistence structure—self-review, specific independent reviews, response to findings, and bounded iteration—not as a demand that every reviewer agree. Requiring unanimity gives reviewers an accidental veto, can reward superficial consensus, and risks endless waiting. Every blocking finding instead needs an explicit disposition: accept and revise, reject with evidence, defer as a future direction, or escalate as a human judgment.

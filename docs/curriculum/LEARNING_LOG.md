@@ -500,3 +500,163 @@ Built an executable fixture harness before resolver implementation so missing ca
 **Next time / revisit**
 
 Use the unchanged fixture exam to constrain deterministic normalization and alias lookup, preferring unresolved ambiguity over an incorrect identity merge.
+
+### 2026-08-22 — Exercise 06: Deterministic normalization and alias lookup
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+
+**What I did**
+
+Implemented the resolver's deterministic slice against the unchanged fixture exam, improving required matches without weakening any protected non-match.
+
+**Evidence**
+
+- Added exact and normalized lookup across confirmed exercise names, returning the exercise's preferred display name on a match.
+- Limited cosmetic normalization to case, whitespace, and one trailing period or exclamation point.
+- Preserved meaningful punctuation in `1.5-Rep Squat`, `A1`, and slash-separated alternatives.
+- Required abbreviations and corrected spellings to exist as confirmed names before they can establish deterministic identity; no fuzzy matching, spell correction, semantic inference, or candidate generation was added.
+- Improved the 37-case fixture report from 17 to 27 passes, reduced missed expected matches from 10 to zero, retained zero false merges, and left all 10 review-candidate rankings deliberately unresolved for Exercise 07.
+- Preserved all 17 `MUST_NOT_MATCH` protections.
+- The Swift package passed 12 tests across three suites, and `git diff --check` passed.
+
+**My reflection**
+
+> I learned that an incorrect automatic merge is the resolver's most severe pathology because it durably associates an alias with an exercise that is not actually the same exercise. Leaving uncertainty unresolved preserves meaning and allows later review. The fixture loop constrained the implementation by supplying concrete ground truth for what “good” means and automatically verifying the resolver against it.
+
+**Next time / revisit**
+
+Use similarity only to rank reviewable candidates; do not allow a score, abbreviation guess, or spelling correction to establish durable exercise identity.
+
+### 2026-08-22 — Exercise 07 — Task A: Fuzzy candidate scoring proposal
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `frame-work` — Demonstrated
+
+**What I did**
+
+Reviewed and tightened the boundary for fuzzy candidate ranking before implementing it.
+
+**Evidence**
+
+- Approved token overlap, edit similarity, phrase containment, narrow linguistic equivalence, exercise-family overlap, and cosmetic word-order or punctuation tolerance as possible ranking evidence.
+- Kept automatic resolution limited to durable confirmed-name knowledge; a similarity score may rank candidates but cannot create identity.
+- Strengthened false-positive protection: candidates with conflicting protected modifiers must be excluded rather than merely ranked lower.
+- Protected laterality and assistance, position, loading implement, grip, angle and line of pull, range/tempo/pause, support and target contact, plane of motion, lever length and progression, banded loading, and anti-rotation intent.
+- Chose safe duplication over a tempting false merge and deferred duplicate detection and merging to a separate future workflow.
+- Preserved the approved contract in `docs/design/FUZZY_CANDIDATE_SCORING.md`; numerical weights and thresholds remain hypotheses for Task B fixture calibration.
+
+**My reflection**
+
+> I learned that similarity is useful for ranking candidates, but it should never create canonical exercise identity because an incorrect identity relationship is a critical error that is hard to reverse. Candidates with conflicting protected modifiers should be excluded entirely so the interface does not tempt me to merge meaningfully different exercises. I would rather create two exercises and later evaluate them through a separate duplicate-review and merge workflow.
+
+**Next time / revisit**
+
+Implement the smallest candidate generator that can rank the approved review fixtures while proving that protected-modifier conflicts never enter the candidate list.
+
+### 2026-08-22 — Exercise 07 — Task B: Candidate generation
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+
+**What I did**
+
+Implemented a review-only candidate generator and strengthened the fixture harness so it detects protected conflicts anywhere in the suggestion list.
+
+**Evidence**
+
+- Ranked a supplied candidate vocabulary using token overlap, edit similarity, phrase containment, and a small explicit review-only equivalence vocabulary.
+- Kept automatic resolution entirely in the deterministic confirmed-name path; candidate scores never create identity.
+- Implemented protected-modifier exclusion for the approved movement, assistance, position, loading, grip, angle, range, support, plane, progression, and intent boundaries.
+- Added `PROTECTED_CANDIDATE_LEAK` as a distinct harness failure because merely suggesting a `MUST_NOT_MATCH` exercise violates the approved chooser contract.
+- The 37-case report passes completely: 10/10 deterministic automatic matches, 17/17 protected exclusions, 10/10 expected top suggestions, zero false merges, zero missed matches, zero ranking failures, and zero protected-candidate leaks.
+- Added focused tests for likely spelling differences, single-arm wording, the approved unqualified Copenhagen suggestion, and representative protected conflicts.
+- The Swift package passed 16 tests across four suites, and `git diff --check` passed.
+- Candidate discovery across persisted exercises, comprehensive exercise semantics, score calibration as probability, and confirmation persistence remain unimplemented.
+
+**My reflection**
+
+> The fixture results demonstrate that the candidate generator produces useful rankings without silently establishing identity. I reconsidered Short-Lever Copenhagen Plank → Copenhagen Plank and concluded that it is useful as a reviewable suggestion because the unqualified name does not itself assert a conflicting lever length. The resolver still requires confirmation before creating an alias.
+>
+> A high rate of correct top suggestions would not make the generator safe if it also surfaced `MUST_NOT_MATCH` candidates. Protected conflicts appearing anywhere in the suggestion list could tempt an incorrect merge, so the fixture harness must verify both zero automatic false merges and zero protected-candidate leaks.
+
+**Next time / revisit**
+
+Persist only an explicitly accepted suggestion, then prove that its next lookup travels through deterministic confirmed-name resolution rather than fuzzy inference.
+
+### 2026-08-22 — Exercise 07 — Task C: Persist user confirmation
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+
+**What I did**
+
+Implemented an explicit confirmation boundary and verified that acceptance, rejection, and repeated acceptance produce different, durable outcomes.
+
+**Evidence**
+
+- Added explicit accept and reject decision types around the existing ownership-checked exercise-name persistence API.
+- Acceptance stores the entered wording with `userConfirmed` provenance against the selected stable exercise identity.
+- Verified `Coppenhagen` begins as a review suggestion for Copenhagen Plank, becomes a persisted alias only after acceptance, and then resolves through normalized exact lookup.
+- Verified rejecting `Paloff Press` creates no alias, leaves exact lookup empty, and preserves the wording as a reviewable suggestion on a later query.
+- Verified repeated acceptance with a normalized spelling returns the same alias ID, owner, normalized text, and provenance rather than creating a duplicate.
+- Each confirmation test uses and removes a unique temporary SQLite database, and both tests are part of the standard regression suite.
+- The full package passes 18 tests across five suites. The unchanged 37-case resolver exam still passes with zero false merges and zero protected-candidate leaks.
+- A failed full-value equality assertion revealed SQLite timestamp precision as irrelevant to alias idempotency; the final assertion checks the stable identity and ownership contract directly.
+
+**My reflection**
+
+> On the first lookup, the entered wording had no durable relationship to an exercise, so similarity could only produce a reviewable candidate. After I explicitly accepted the suggestion, a user-confirmed alias was persisted against the stable exercise identity. The next lookup therefore returned an exact deterministic match without relying on fuzzy inference. Rejecting a suggestion created no alias and left future queries reviewable. This behavior is part of the repeatable regression suite, and repeated acceptance is idempotent: it returns the same durable alias rather than creating a duplicate.
+
+**Next time / revisit**
+
+Use this confirmation boundary in a low-friction workflow that also lets the coach create a genuinely new exercise without leaving the programming flow.
+
+### 2026-08-22 — Optional map check-in: Fixtures reveal uncertainty
+
+**Connection**
+
+Concrete resolver fixtures made uncertain domain semantics visible in a way that abstract discussion did not. The resulting review refined both exercise vocabulary and product behavior without granting similarity authority over identity.
+
+**My reflection**
+
+> I learned that uncertainty is difficult to define abstractly; it became visible when I inspected concrete fixtures. Cases such as B-Stance RDL versus Kickstand RDL prompted useful investigation of exercise vocabulary, data relationships, and desired product behavior. In my vocabulary, I concluded that those names refer to the same exercise, but the agent could not safely assume that relationship before review.
+>
+> An agent should surface plausible uncertainty so the human can express the intended domain semantics. However, agents may not recognize every uncertain case, and humans may not recognize one until examples make it concrete. While the data model, fixtures, and resolver semantics are still developing, the harness should bias toward reviewable or unresolved outcomes. Confirmed experience can then progressively convert uncertainty into durable knowledge without allowing early guesses to corrupt identity.
+
+### 2026-08-24 — Exercise 08 — Task A: New-exercise interaction budget
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `verify` — Demonstrated
+
+**What I did**
+
+Turned “frictionless” into a measurable creation contract and removed fields and inferred data that were not required to create one stable exercise identity.
+
+**Evidence**
+
+- Approved a same-panel workflow with one field labeled `Name`, prefilled from the selected Notes text.
+- A genuinely new exercise using the prefilled name requires at most two deliberate actions after results appear, zero required typing, one inline transition, no mouse, automatic focus restoration, and no more than 500 ms from save confirmation to return.
+- Editing the proposed name stores only the edited wording; discarded source text is not silently preserved as an alias.
+- A new exercise initially has one `ExerciseName`, which is necessarily preferred without exposing that model concept in the creation UI.
+- An exact normalized existing name bypasses candidate scoring and creation, performs no write, and returns the exercise's preferred display name. Database uniqueness remains a defensive backstop.
+- When an exercise later gains a confirmed alias, keeping the current preferred name remains the low-friction default, with an optional future choice to promote the new alias.
+- Equipment, movement pattern, variants, tags, programming context, descriptions, history, client data, and manually entered provenance remain outside the creation form.
+- Rejected one-action creation because it removes the only chance to correct the proposed name and makes mistaken duplicate creation easier.
+
+**My reflection**
+
+> Defining “frictionless” as a measurable interaction budget gives the coding agent a target that can be implemented and tested. For a genuinely new exercise, the approved workflow allows at most two deliberate actions, requires no typing when the prefilled name is accepted, uses one inline transition, requires no mouse, and returns focus to Notes within a 500 ms save-to-return target.
+>
+> The creation UI exposes only “Name.” Editing it replaces the proposed wording rather than preserving discarded text as an alias. An exact normalized existing name bypasses creation without writing to the database. Preferred-name choice becomes relevant only when an exercise later gains another confirmed alias, where keeping the current preferred name should remain the low-friction default.
+
+**Next time / revisit**
+
+Implement and manually test the four approved workflow cases, measuring actions, timing, saved identity, returned text, and focus rather than relying only on unit tests.

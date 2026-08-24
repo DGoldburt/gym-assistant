@@ -1,6 +1,11 @@
 # Architecture
 
-Status: the Notes adapter direction is validated by ADR 001. The initial exercise-identity persistence boundary is implemented; resolver, blocks, tendencies, and client history remain design hypotheses that will evolve through the tutorial.
+Status: the Notes adapter direction is validated by ADR 001. The initial
+exercise-identity persistence boundary, deterministic confirmed-name resolution,
+candidate generation, and explicit suggestion confirmation are implemented.
+Keyboard autocomplete, reusable exercise-identity review, personal-library import,
+search-query transformations, blocks, tendencies, and client history remain later
+slices or design hypotheses.
 
 ## Architectural principle
 
@@ -46,7 +51,11 @@ Responsibilities:
 
 The initial Swift package persists this boundary in SQLite. A deferred composite foreign key prevents an exercise from committing without an existing preferred name owned by that exercise. Human-facing output uses the preferred name, optionally with a short UUID prefix for diagnostic disambiguation; bare or name-derived IDs are not the ordinary interface.
 
-The library's current normalizer is deliberately minimal and supports only the exact-lookup persistence contract. Fuzzy similarity, semantic alias inference, contextual ownership, variant relationships, program/client context, taxonomy, and history remain outside this boundary.
+The library's current normalizer is deliberately minimal and supports only the
+exact-lookup persistence contract. Fuzzy similarity may rank review candidates but
+cannot establish identity. Semantic alias inference, contextual ownership, variant
+relationships, program/client context, taxonomy, and history remain outside this
+boundary.
 
 ### Resolver
 Responsibilities:
@@ -55,6 +64,24 @@ Responsibilities:
 - candidate generation
 - confidence/ranking
 - distinguishing automatic matches from suggestions requiring confirmation
+
+The deterministic slice resolves only exact or cosmetically normalized confirmed
+names. Cosmetic normalization is limited to case, whitespace, and one trailing
+period or exclamation point; other punctuation remains meaningful. Abbreviations
+and corrected spellings establish identity only after they have been stored as
+confirmed names.
+
+The candidate-generation slice ranks a supplied candidate vocabulary using lexical
+similarity and a small, explicit review-only equivalence vocabulary. It never
+returns an automatic identity match. A protected-modifier policy excludes known
+conflicts from the review list, and the fixture harness reports a protected
+candidate leak separately from an automatic false merge.
+
+An explicit confirmation boundary turns an accepted suggestion into a
+`userConfirmed` exercise name through the library's existing ownership-checked
+persistence API. Rejection performs no write. The next lookup therefore uses the
+deterministic confirmed-name path rather than similarity. Candidate discovery
+across the persisted library remains outside this slice.
 
 The resolver supplies identity evidence about wording that already exists. It is
 separate from autocomplete search, which retrieves an exercise for insertion and

@@ -14,7 +14,39 @@ struct ResolverFixtureHarnessTests {
         #expect(report.falseMerges == 0)
         #expect(report.missedExpectedMatches == 10)
         #expect(report.candidateRankingFailures == 10)
+        #expect(report.protectedCandidateLeaks == 0)
         #expect(!report.succeeded)
+    }
+
+    @Test("Deterministic confirmed-name resolver clears expected matches without false merges")
+    func deterministicResolverReport() throws {
+        let document = try loadFixtureDocument()
+        let report = try ResolverFixtureHarness().evaluate(
+            document,
+            using: DeterministicFixtureResolver()
+        )
+
+        #expect(report.total == 37)
+        #expect(report.passes == 27)
+        #expect(report.falseMerges == 0)
+        #expect(report.missedExpectedMatches == 0)
+        #expect(report.candidateRankingFailures == 10)
+        #expect(report.protectedCandidateLeaks == 0)
+        #expect(!report.succeeded)
+    }
+
+    @Test("Candidate generator ranks review cases and excludes protected conflicts")
+    func candidateGeneratorReport() throws {
+        let document = try loadFixtureDocument()
+        let report = try ResolverFixtureHarness().evaluate(document, using: FixtureResolver())
+
+        #expect(report.total == 37)
+        #expect(report.passes == 37)
+        #expect(report.falseMerges == 0)
+        #expect(report.missedExpectedMatches == 0)
+        #expect(report.candidateRankingFailures == 0)
+        #expect(report.protectedCandidateLeaks == 0)
+        #expect(report.succeeded)
     }
 
     @Test("Wrong automatic decisions are classified as false merges")
@@ -28,6 +60,43 @@ struct ResolverFixtureHarnessTests {
         #expect(report.falseMerges == 37)
         #expect(report.missedExpectedMatches == 0)
         #expect(report.candidateRankingFailures == 0)
+    }
+}
+
+private struct DeterministicFixtureResolver: ResolverFixtureResolving {
+    private let resolver = DeterministicExerciseNameResolver()
+
+    func resolve(_ input: ResolverFixtureInput) throws -> ResolverFixtureObservation {
+        guard let knownExercise = input.knownExercise else {
+            return ResolverFixtureObservation()
+        }
+        guard try resolver.matchesConfirmedName(
+            query: input.query,
+            confirmedNames: knownExercise.confirmedNames
+        ) else {
+            return ResolverFixtureObservation()
+        }
+        return ResolverFixtureObservation(automaticMatch: knownExercise.preferredName)
+    }
+}
+
+private struct FixtureResolver: ResolverFixtureResolving {
+    private let resolver = DeterministicExerciseNameResolver()
+    private let candidateGenerator = ExerciseCandidateGenerator()
+
+    func resolve(_ input: ResolverFixtureInput) throws -> ResolverFixtureObservation {
+        if let knownExercise = input.knownExercise,
+           try resolver.matchesConfirmedName(
+               query: input.query,
+               confirmedNames: knownExercise.confirmedNames
+           ) {
+            return .init(automaticMatch: knownExercise.preferredName)
+        }
+
+        return .init(rankedCandidates: candidateGenerator.rank(
+            query: input.query,
+            candidates: input.candidatePreferredNames
+        ).map(\.preferredName))
     }
 }
 

@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 06
-Current task: Implement deterministic normalization and alias lookup
+Current exercise: 08
+Current task: Task B — Implement and manually test the new-exercise workflow
 Current task state: not started
-Task completion condition: pass Exercise 06 `STOP / REVIEW`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B
-Remaining tasks: Exercise 06 — deterministic stages and fixture verification
-Most recent checkpoint: Exercise 05 Task B `STOP / REVIEW — Fixture runner` (passed)
-Relevant skills: verify
+Task completion condition: pass Exercise 08 Task B `STOP / REVIEW — Workflow evidence`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Task A
+Remaining tasks: Exercise 08 — Task B
+Most recent checkpoint: Exercise 08 Task A `STOP / REVIEW` (passed)
+Relevant skills: verify, set-boundaries
 
 ## Completed
 
@@ -16,14 +16,15 @@ Relevant skills: verify
 - [x] 03 — Review and commit the architecture decision
 - [x] 04 — Exercise library data model
 - [x] 05 — Resolver fixtures before resolver code
-- [ ] 06 — Deterministic normalization and alias lookup
-- [ ] 07 — Fuzzy candidate generation and human confirmation
+- [x] 06 — Deterministic normalization and alias lookup
+- [x] 07 — Fuzzy candidate generation and human confirmation
 - [ ] 08 — Frictionless new-exercise workflow
-- [ ] 09 — Exercise blocks and insertion
-- [ ] 10 — Programming-history tendencies
-- [ ] 11 — Verification harness and agentic manual testing
-- [ ] 12 — Independent review and worktrees
-- [ ] 13 — Future client-history architecture (design only)
+- [ ] 09 — Keyboard autocomplete from an empty Notes cursor
+- [ ] 10 — Exercise identity review and personal-library import
+- [ ] 11 — Reuse conservative transformations in autocomplete (only if field use justifies continuing)
+- [ ] 12 — Verification harness and agentic manual testing
+- [ ] 13 — Independent review and worktrees
+- [ ] 14 — Future client-history architecture (design only)
 
 ## Current notes
 
@@ -50,6 +51,16 @@ Relevant skills: verify
 - The generated schema was inspected directly: schema version 1 contains the approved tables, normalized-name uniqueness, supporting indexes, and deferred composite preferred-name foreign key. Resolver and history behavior remain unimplemented.
 - Exercise 05 Task A approved 37 resolver fixtures: 10 `MUST_MATCH`, 17 `MUST_NOT_MATCH`, and 10 `SUGGEST_REVIEW`. They protect confirmed alias ownership, narrowly scoped cosmetic normalization, meaningful programming modifiers, and one-time confirmation for likely misspellings.
 - Exercise 05 Task B added a deliberately failing fixture runner. Its no-resolver baseline reports 17 passes, zero false merges, 10 missed expected matches, and 10 candidate-ranking failures; eight package tests pass, including a controlled all-false-merge classification test.
+- Exercise 06 implemented exact and cosmetically normalized lookup across confirmed names. The fixture report now has 27 passes, zero false merges, zero missed expected matches, and 10 deliberately unresolved candidate-ranking failures; all 12 package tests pass.
+- Exercise 07 Task A approved similarity as ranking evidence only. Candidates with conflicting protected modifiers must be excluded, while possible duplicates remain separate until a future explicit duplicate-review and merge workflow.
+- Exercise 07 Task B implemented review-only candidate ranking. The complete 37-case fixture report passes with 10/10 deterministic matches, 17/17 protected exclusions, 10/10 expected top suggestions, and zero false merges or protected-candidate leaks; all 16 package tests pass.
+- Exercise 07 Task C persists only accepted suggestions as `userConfirmed` aliases. Accepted, rejected, and repeated-acceptance paths are covered by the standard regression suite; all 18 package tests and the unchanged 37-case resolver exam pass.
+- Exercise 08 Task A approved a two-action, zero-required-typing new-exercise budget with one `Name` field, exact normalized-match bypass, edited-name-only persistence, automatic Notes focus restoration, and a 500 ms save-to-return target.
+- Product discovery reframed the primary writing interaction around keyboard
+  autocomplete from an empty Notes cursor. Exercise 08 remains append-only: its
+  new-exercise workflow still completes first, followed by a Task C review of the
+  redirection package before Exercise 09 begins. The package is drafted but has not
+  passed that future checkpoint.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -64,4 +75,4 @@ Relevant skills: verify
 
 ## Next action
 
-Begin Exercise 06 by implementing only deterministic resolver stages, then compare the 37-case fixture report before and after. Leave uncertain cases unresolved and do not implement fuzzy candidate inference.
+Begin Exercise 08 Task B by implementing and manually testing the obvious-existing, ambiguous, truly-new, and mistaken-new-link cases. Record actions, timing, saved records, returned Notes text, focus, and friction points.
