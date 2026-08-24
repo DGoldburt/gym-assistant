@@ -35,6 +35,36 @@ An agent is more useful when it can act, observe objective feedback, correct its
 
 **Project connections:** the Notes spike must be repeatedly tested in the real workflow; resolver fixtures and the verification harness come later.
 
+### Learner check-in — fixtures reveal uncertainty — 2026-08-22
+
+I learned that uncertainty is difficult to define abstractly; it became visible when I inspected concrete fixtures. Cases such as B-Stance RDL versus Kickstand RDL prompted useful investigation of exercise vocabulary, data relationships, and desired product behavior. In my vocabulary, I concluded that those names refer to the same exercise, but the agent could not safely assume that relationship before review.
+
+An agent should surface plausible uncertainty so the human can express the intended domain semantics. However, agents may not recognize every uncertain case, and humans may not recognize one until examples make it concrete. While the data model, fixtures, and resolver semantics are still developing, the harness should bias toward reviewable or unresolved outcomes. Confirmed experience can then progressively convert uncertainty into durable knowledge without allowing early guesses to corrupt identity.
+
+### Bounded decision-review loops
+
+The review loop described in Ryan Lopopolo's [Harness engineering](https://openai.com/index/harness-engineering/) article is useful as a persistence structure—self-review, specific independent reviews, response to findings, and bounded iteration—not as a demand that every reviewer agree. Requiring unanimity gives reviewers an accidental veto, can reward superficial consensus, and risks endless waiting. Every blocking finding instead needs an explicit disposition: accept and revise, reject with evidence, defer as a future direction, or escalate as a human judgment.
+
+A review budget should scale with four factors:
+
+- **Consequence:** What product, user, safety, privacy, or architectural harm could a mistake cause?
+- **Reversibility:** Can the choice be cheaply undone, or would it require migrations, data repair, external coordination, or broken compatibility?
+- **Uncertainty:** How weak is the evidence, and how much genuine disagreement or novelty remains?
+- **Blast radius:** Is the decision local, or does it affect shared interfaces, persisted data, many future changes, or external systems?
+
+Low-risk, reversible, local decisions usually need self-review and automated checks. Medium-risk decisions earn one independent review and one revision cycle. High-risk decisions—especially changes to success criteria, persisted identity, privacy/security, or hard-to-reverse architecture—earn two focused reviewers and at most two cycles before unresolved judgments return to the user.
+
+The operating pattern is **background review, foreground gate**: evidence collection and read-only specialist reviews may run asynchronously while unrelated work continues, but the decision cannot cross its implementation, migration, commit, or external-action boundary until findings are synthesized. Agent agreement is evidence, not authority; value judgments and changes to product success criteria remain human decisions.
+
+If this procedure proves useful, `AGENTS.md` should contain only a short trigger pointing to `docs/DECISIONS_REVIEW.md`. The complete packet template, reviewer roles, risk tiers, finding format, review budget, and stop conditions belong in that deeper procedure rather than being copied wholesale into the context entry point.
+
+**Manual trial plan — two or three consequential decisions:**
+
+1. Choose a live medium- or high-risk decision and write a one-page packet: decision, success criteria, alternatives, evidence, assumptions, consequences, reversibility, and unresolved questions.
+2. Assign one product/minimality review and, for high risk, one failure-mode review. Keep them read-only and ask only for blocking findings, observations, and questions tied to the packet.
+3. Have the author disposition every blocking finding, revise once, and run one targeted re-review only when a blocker changed. Stop at the risk-tier budget; do not wait for unanimity.
+4. Record time spent, useful findings, duplicated noise, unresolved human judgments, and whether the decision improved. Repeat on two or three decisions before deciding whether a durable `docs/DECISIONS_REVIEW.md` procedure is justified.
+
 ## 2. Context and task framing
 
 An agent needs the right amount of durable context in the right place: product truth, agent rules, architecture decisions, plans, and current task instructions serve different jobs. A well-framed task names outcome, context, constraints, verification, and stopping conditions.
@@ -82,6 +112,14 @@ Subagent work should remain inspectable and steerable. In the CLI, `/agent` swit
 **Possible lab:** Give two read-only `explorer` subagents independent questions about this repository, inspect both threads, then have the parent synthesize their evidence. Compare this with a single-agent run for elapsed time, total token use, context cleanliness, duplicated work, and answer quality. A later lab can define one narrow project-scoped custom agent only if repeated use reveals a stable role.
 
 **Official reference:** [Codex subagents documentation](https://developers.openai.com/codex/multi-agent)
+
+### Learner check-in — visible agent coordination — 2026-08-21
+
+I was surprised by the coordination I observed between an agent and a sub-thread in the ApplyPilot project. The parent sent a correction to the other task, the sub-thread acknowledged the constraint, and it changed course. The exchange felt less like an invisible tool invocation and more like two co-workers talking back and forth.
+
+![A Codex task displaying a message sent from another task and the receiving task's acknowledgment](assets/subagent-coordination-check-in.jpg)
+
+This makes inspectability and steerability feel concrete: delegation is not just parallel execution, but an observable coordination loop. A useful future test is to compare that conversational visibility with the quality and cost of single-agent work and with subagents that return only a final result.
 
 ## 5. Advanced capabilities and scale
 
