@@ -1,4 +1,4 @@
-# Exercise 11 — Verification Harness + Agentic Manual Testing
+# Exercise 12 — Verification Harness + Agentic Manual Testing
 
 ## Why we're doing this
 
@@ -81,4 +81,4 @@ Inspect the self-review findings, the final diff, and the rerun verification evi
 
 Teach back: How does self-review complement automated checks and manual artifacts rather than replace them?
 
-After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 12.
+After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 13.
