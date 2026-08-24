@@ -10,7 +10,7 @@ After completion, another learner can start from a clean, privacy-reviewed `main
 
 ## Plan Status
 
-Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening pull requests, and merging remain explicit plan steps and must pause for the reviews named below; the user approved committing and pushing the initial reusable update and proceeding with this plan on 2026-08-24.
+Approved and completed on 2026-08-24. The reusable and learner histories are stabilized, Exercise 08 work is on its correct branch, and recovery branches remain intentionally local pending separate cleanup approval.
 
 ## Progress
 
@@ -22,8 +22,8 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 - [x] (2026-08-24) Reviewed, verified, committed, and pushed reusable updates `7533fe2` and `5c11c50` to `main`.
 - [x] (2026-08-24) Assembled and verified the approved learner catch-up branch through Exercise 08 Task A.
 - [x] (2026-08-24) Merged catch-up pull request #2 into `learner/main`, then removed one detected Task B query through corrective pull request #3.
-- [ ] Create the correct fresh exercise branch and restore only the next unapproved task there. The clean `tutorial/exercise-08` branch exists at corrected `learner/main`; restoration waits for the running Task B task to reach a stable human checkpoint.
-- [ ] Confirm that worktrees, branches, remotes, and progress records agree.
+- [x] (2026-08-24) Restored the completed and approved Task B checkpoint onto `tutorial/exercise-08`, verified it, committed it as `29c543b`, and pushed the branch.
+- [x] (2026-08-24) Confirmed that `main`, `learner/main`, `tutorial/exercise-08`, their remotes, the tutorial progress record, and retained recovery branches agree.
 
 ## Surprises & Discoveries
 
@@ -58,7 +58,13 @@ Approved on 2026-08-24. Execution is in progress. Committing, pushing, opening p
 
 ## Outcomes & Retrospective
 
-Not yet executed. On completion, record the final branch tips, pull requests or merge commits, verification results, intentionally retained local recovery material, and any policy adjustment learned from the stabilization.
+The reusable starter line is clean and published. Pull request #2 recovered approved learner work through Exercise 08 Task A into `learner/main`; pull request #3 transparently removed a Task B-only query caught by the post-merge audit. The completed Task B checkpoint is committed and pushed on `tutorial/exercise-08`, where `PROGRESS.md` names Task C as next.
+
+The final Exercise 08 candidate passed 22 Swift tests across six suites, the 37-case resolver exam with zero false merges and zero protected-candidate leaks, signed Service bundle verification, and property-list validation. The physical shortcut and persistent installation evidence were approved in the learning ledger before migration.
+
+Local recovery branches `recovery/pre-stabilization-2026-08-24` and `recovery/reusable-candidate-2026-08-24` remain as deliberate rollback points. They were never pushed. The old catch-up and corrective branches remain available locally and remotely until separately reviewed for cleanup; no starter tag moved.
+
+The main process lesson was that file-level classification can still leak later-task behavior when a shared implementation file spans exercises. Future recovery reviews should compare individual symbols and hunks against the approved checkpoint, then repeat that classification after merge rather than relying only on the pre-merge file list.
 
 ## Context and Orientation
 
@@ -154,7 +160,10 @@ Initial evidence, captured 2026-08-24:
 - Reusable-candidate recovery snapshot: `aaa56dc`, local only.
 - Learner catch-up pull request: #2, merged as `49f2f21`.
 - Task B leakage correction: pull request #3, merged as `81793d9`.
-- Clean active-exercise destination: `/private/tmp/gym-assistant-exercise-08-branch` on `tutorial/exercise-08` at `81793d9`.
+- Initial clean active-exercise destination: `/private/tmp/gym-assistant-exercise-08-branch` on `tutorial/exercise-08`, created from corrected learner tip `81793d9`.
+- Completed Task B checkpoint: `29c543b`, pushed to `origin/tutorial/exercise-08`; `PROGRESS.md` now points to Exercise 08 Task C.
+- Final verification: 22/22 Swift tests, 37/37 resolver fixtures, zero false merges, zero protected-candidate leaks, valid signed Service bundle, and valid `Info.plist`.
+- Final pre-closure integration tip: `learner/main` and `origin/learner/main` at `2f0d709`; the plan-closure commit from `main` is synchronized after this record is published.
 
 Append concise evidence here during execution, including recovery commit, reusable commits, verification summaries, pull request target and result, final branch tips, and retained cleanup items.
 
