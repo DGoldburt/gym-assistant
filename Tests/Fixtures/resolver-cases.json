@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "normalizationAssumptions": [
+    "Case differences do not establish distinct exercise identity.",
+    "Leading, trailing, and repeated whitespace do not establish distinct exercise identity.",
+    "A trailing period or exclamation point used as sentence punctuation does not establish distinct exercise identity.",
+    "No other punctuation, abbreviation, spelling, or semantic transformation is assumed unless a confirmed name explicitly supplies it; punctuation remains meaningful in names such as 1.5-Rep Squat, A1, and slash-separated alternatives."
+  ],
+  "categories": {
+    "MUST_MATCH": [
+      {
+        "id": "known-alias-sl-rdl",
+        "query": "SL RDL",
+        "exercise": {
+          "preferredName": "Single-Leg Romanian Deadlift",
+          "confirmedNames": ["Single-Leg Romanian Deadlift", "SL RDL"]
+        },
+        "basis": "confirmedAlias",
+        "reason": "A durable, explicitly confirmed alias should resolve to its owner."
+      },
+      {
+        "id": "known-alias-one-leg-rdl",
+        "query": "1-leg RDL",
+        "exercise": {
+          "preferredName": "Single-Leg Romanian Deadlift",
+          "confirmedNames": ["Single-Leg Romanian Deadlift", "1-leg RDL"]
+        },
+        "basis": "confirmedAlias",
+        "reason": "The numeric wording is authoritative only because it is already confirmed."
+      },
+      {
+        "id": "normalized-known-alias-single-leg-rdl",
+        "query": "  single   leg rdl ",
+        "exercise": {
+          "preferredName": "Single-Leg Romanian Deadlift",
+          "confirmedNames": ["Single Leg RDL"]
+        },
+        "basis": "deterministicNormalization",
+        "reason": "Case and repeated whitespace should not defeat an exact confirmed-name lookup."
+      },
+      {
+        "id": "normalized-front-squat",
+        "query": " FRONT   SQUAT ",
+        "exercise": {
+          "preferredName": "Front Squat",
+          "confirmedNames": ["Front Squat"]
+        },
+        "basis": "deterministicNormalization",
+        "reason": "Capitalization and spacing are cosmetic differences."
+      },
+      {
+        "id": "known-alias-db-floor-press",
+        "query": "DB Floor Press",
+        "exercise": {
+          "preferredName": "Dumbbell Floor Press",
+          "confirmedNames": ["Dumbbell Floor Press", "DB Floor Press"]
+        },
+        "basis": "confirmedAlias",
+        "reason": "The abbreviation is safe only after confirmation."
+      },
+      {
+        "id": "known-alias-kb-deadlift",
+        "query": "KB Deadlift",
+        "exercise": {
+          "preferredName": "Kettlebell Deadlift",
+          "confirmedNames": ["Kettlebell Deadlift", "KB Deadlift"]
+        },
+        "basis": "confirmedAlias",
+        "reason": "The equipment abbreviation is already owned by this exercise."
+      },
+      {
+        "id": "known-alias-one-arm-row",
+        "query": "1-arm DB Row",
+        "exercise": {
+          "preferredName": "One-Arm Dumbbell Row",
+          "confirmedNames": ["One-Arm Dumbbell Row", "1-arm DB Row"]
+        },
+        "basis": "confirmedAlias",
+        "reason": "Numeric and equipment abbreviations require durable confirmation."
+      },
+      {
+        "id": "normalized-chin-up",
+        "query": "chin-up",
+        "exercise": {
+          "preferredName": "Chin-Up",
+          "confirmedNames": ["Chin-Up"]
+        },
+        "basis": "deterministicNormalization",
+        "reason": "Case alone does not establish a different identity."
+      },
+      {
+        "id": "normalized-terminal-exclamation-front-squat",
+        "query": "Front Squat!",
+        "exercise": {
+          "preferredName": "Front Squat",
+          "confirmedNames": ["Front Squat"]
+        },
+        "basis": "deterministicNormalization",
+        "reason": "A trailing exclamation point used as sentence punctuation is cosmetic."
+      },
+      {
+        "id": "normalized-terminal-period-front-squat",
+        "query": "Front Squat.",
+        "exercise": {
+          "preferredName": "Front Squat",
+          "confirmedNames": ["Front Squat"]
+        },
+        "basis": "deterministicNormalization",
+        "reason": "A trailing period used as sentence punctuation is cosmetic."
+      }
+    ],
+    "MUST_NOT_MATCH": [
+      {
+        "id": "bilateral-rdl-versus-single-leg-rdl",
+        "query": "RDL",
+        "candidatePreferredName": "Single-Leg Romanian Deadlift",
+        "protectedModifier": "single-leg",
+        "reason": "Removing the unilateral modifier changes the exercise."
+      },
+      {
+        "id": "b-stance-versus-single-leg-rdl",
+        "query": "B-Stance RDL",
+        "candidatePreferredName": "Single-Leg Romanian Deadlift",
+        "protectedModifier": "stance",
+        "reason": "Assisted staggered stance and fully unilateral execution should retain separate identities."
+      },
+      {
+        "id": "single-leg-squat-versus-single-leg-rdl",
+        "query": "Single-Leg Squat",
+        "candidatePreferredName": "Single-Leg Romanian Deadlift",
+        "protectedModifier": "movement-pattern",
+        "reason": "Shared unilateral wording must not override squat-versus-hinge identity."
+      },
+      {
+        "id": "paused-versus-unpaused-back-squat",
+        "query": "Paused Back Squat",
+        "candidatePreferredName": "Back Squat",
+        "protectedModifier": "paused",
+        "reason": "A prescribed pause is meaningful programming information."
+      },
+      {
+        "id": "deficit-versus-standard-deadlift",
+        "query": "Deficit Deadlift",
+        "candidatePreferredName": "Deadlift",
+        "protectedModifier": "deficit",
+        "reason": "The range-of-motion modifier must not be discarded."
+      },
+      {
+        "id": "incline-versus-flat-db-press",
+        "query": "Incline Dumbbell Bench Press",
+        "candidatePreferredName": "Dumbbell Bench Press",
+        "protectedModifier": "incline",
+        "reason": "Bench angle changes the exercise and its programming intent."
+      },
+      {
+        "id": "half-kneeling-versus-standing-landmine-press",
+        "query": "Half-Kneeling Landmine Press",
+        "candidatePreferredName": "Standing Landmine Press",
+        "protectedModifier": "half-kneeling",
+        "reason": "Body position is not cosmetic wording."
+      },
+      {
+        "id": "strict-press-versus-push-press",
+        "query": "Strict Press",
+        "candidatePreferredName": "Push Press",
+        "protectedModifier": "technique",
+        "reason": "Leg drive distinguishes the movement identities."
+      },
+      {
+        "id": "chest-supported-versus-bent-over-row",
+        "query": "Chest-Supported Row",
+        "candidatePreferredName": "Bent-Over Row",
+        "protectedModifier": "support-position",
+        "reason": "External torso support changes loading and execution."
+      },
+      {
+        "id": "goblet-versus-barbell-front-squat",
+        "query": "Goblet Squat",
+        "candidatePreferredName": "Barbell Front Squat",
+        "protectedModifier": "loading-implement",
+        "reason": "Similar anterior loading does not make the implements interchangeable identities."
+      },
+      {
+        "id": "supinated-versus-neutral-grip-row",
+        "query": "Supinated-Grip Row",
+        "candidatePreferredName": "Neutral-Grip Row",
+        "protectedModifier": "grip",
+        "reason": "Grip orientation changes joint position and muscular emphasis and must remain available to programming history."
+      },
+      {
+        "id": "banded-versus-unbanded-deadbug",
+        "query": "Banded Deadbug",
+        "candidatePreferredName": "Deadbug",
+        "protectedModifier": "banded-resistance",
+        "reason": "Added band resistance or assistance is meaningful progression information."
+      },
+      {
+        "id": "banded-anti-rotation-versus-banded-deadbug",
+        "query": "Banded Anti-Rotation Deadbug",
+        "candidatePreferredName": "Banded Deadbug",
+        "protectedModifier": "anti-rotation",
+        "reason": "Sharing a band and base position does not erase the anti-rotation demand."
+      },
+      {
+        "id": "high-to-low-versus-low-to-high-cable-fly",
+        "query": "High-to-Low Cable Fly",
+        "candidatePreferredName": "Low-to-High Cable Fly",
+        "protectedModifier": "line-of-pull-angle",
+        "reason": "Cable direction changes the line of pull even though neither exercise uses a bench angle."
+      },
+      {
+        "id": "lateral-versus-reverse-lunge",
+        "query": "Lateral Lunge",
+        "candidatePreferredName": "Reverse Lunge",
+        "protectedModifier": "plane-of-motion",
+        "reason": "Frontal-plane and sagittal-plane movement must remain distinct."
+      },
+      {
+        "id": "box-squat-versus-squat-to-target",
+        "query": "Box Squat",
+        "candidatePreferredName": "Squat to Target",
+        "protectedModifier": "target-contact-intent",
+        "reason": "Weight transfer to a box and merely contacting a depth target encode different execution intent."
+      },
+      {
+        "id": "short-lever-versus-long-lever-copenhagen-plank",
+        "query": "Short-Lever Copenhagen Plank",
+        "candidatePreferredName": "Long-Lever Copenhagen Plank",
+        "protectedModifier": "lever-length-progression",
+        "reason": "Lever length changes adductor loading and progression level."
+      }
+    ],
+    "SUGGEST_REVIEW": [
+      {
+        "id": "kickstand-versus-b-stance-rdl",
+        "query": "Kickstand RDL",
+        "candidatePreferredNames": ["B-Stance RDL"],
+        "reason": "The terms are often related, but coach usage may distinguish them."
+      },
+      {
+        "id": "australian-row-versus-aussie-pull-up",
+        "query": "Australian Row",
+        "candidatePreferredNames": ["Aussie Pull-up"],
+        "reason": "The names may describe the same horizontal bodyweight pull, but ownership requires confirmation."
+      },
+      {
+        "id": "bulgarian-versus-rear-foot-elevated-split-squat",
+        "query": "Bulgarian Split Squat",
+        "candidatePreferredNames": ["Rear-Foot-Elevated Split Squat"],
+        "reason": "Common usage overlaps, but setup conventions can differ."
+      },
+      {
+        "id": "paloff-typo-versus-pallof-press",
+        "query": "Paloff Press",
+        "candidatePreferredNames": ["Pallof Press"],
+        "reason": "A likely misspelling is a useful candidate but not authoritative identity."
+      },
+      {
+        "id": "nordic-hamstring-curl-versus-nordic-curl",
+        "query": "Nordic Hamstring Curl",
+        "candidatePreferredNames": ["Nordic Curl"],
+        "reason": "These commonly overlap, but the library must learn the relationship through confirmation."
+      },
+      {
+        "id": "landmine-rainbow-versus-landmine-rotation",
+        "query": "Landmine Rainbow",
+        "candidatePreferredNames": ["Landmine Rotation"],
+        "reason": "Informal naming may overlap while technique expectations differ."
+      },
+      {
+        "id": "short-lever-copenhagen-versus-copenhagen-plank",
+        "query": "Short-Lever Copenhagen Plank",
+        "candidatePreferredNames": ["Copenhagen Plank"],
+        "reason": "An unqualified Copenhagen Plank does not establish long-lever identity unless that relationship was explicitly defined."
+      },
+      {
+        "id": "single-arm-versus-one-arm-overhead-carry",
+        "query": "Single-Arm Overhead Carry",
+        "candidatePreferredNames": ["One-Arm Overhead Carry"],
+        "reason": "The wording is plausibly synonymous, but only confirmation should establish the durable alias."
+      },
+      {
+        "id": "copenhagen-shorthand-versus-copenhagen-plank",
+        "query": "Copenhagen",
+        "candidatePreferredNames": ["Copenhagen Plank"],
+        "reason": "The query likely omits a suffix, but omission alone must not establish identity."
+      },
+      {
+        "id": "coppenhagen-typo-versus-copenhagen-plank",
+        "query": "Coppenhagen",
+        "candidatePreferredNames": ["Copenhagen Plank"],
+        "reason": "The query likely combines an omitted suffix with a misspelling. It requires confirmation once; if confirmed, the misspelling becomes a durable alias and resolves automatically thereafter."
+      }
+    ]
+  }
+}
