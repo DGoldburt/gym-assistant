@@ -1,4 +1,4 @@
-# Exercise 11 — Reuse Conservative Transformations in Autocomplete
+# Exercise 11 — Extend Conservative Transformations in Autocomplete
 
 ## Why we're doing this
 
@@ -7,10 +7,11 @@ may find that compact programming vocabulary still requires avoidable typing or
 confirmed aliases. Examples might include `KB` and `kettlebell`, or `SL`,
 `single-leg`, and `1-leg`.
 
-Exercise 10 already introduced conservative deterministic transformations as one
-review signal inside the exercise-identity review mechanism. This exercise happens
-only if field evidence justifies continuing development, and reuses that mechanism
-to improve autocomplete rather than creating a second transformation system.
+The shared candidate-ranking component already makes transformations accepted as
+identity-review evidence available to autocomplete. This exercise happens only if
+field evidence justifies continuing development and considers the smallest new
+transformation set worth adding through that shared mechanism rather than creating
+a second transformation system.
 
 ## Codex skill
 
@@ -47,9 +48,10 @@ If baseline autocomplete is already useful enough, pause development instead.
 ## Task A — Approve reuse in autocomplete
 
 Use evidence from real autocomplete searches and the Exercise 10 review vocabulary
-to propose the smallest transformation set worth reusing. For every transformation,
-show intended matches, protected non-matches, token boundaries, punctuation
-behavior, ranking impact, and the reason it is conservative enough for search.
+to propose the smallest additional transformation set worth introducing. For every
+transformation, show intended matches, protected non-matches, token boundaries,
+punctuation behavior, ranking impact, and the reason it is conservative enough for
+search.
 
 Include fixtures for collisions and modifiers. In particular, prove that expanding
 a short token cannot erase meaningful distinctions such as bilateral versus
@@ -66,13 +68,13 @@ behavior remains understandable.
 Teach back: Why is `KB` helping retrieve `Kettlebell RDL` different from declaring
 that every occurrence of `KB` is a confirmed name for that exercise?
 
-## Task B — Connect the shared transformations to autocomplete
+## Task B — Extend the shared transformations
 
-Connect the transformation component established for Exercise 10 identity review
-to autocomplete ranking through an explicit search-only interface. Reuse low-level
-normalization utilities where their contracts match, but do not route transformed
-queries through the library's exact alias-ownership path or duplicate its
-transformation vocabulary.
+Add the approved transformations to the shared candidate-ranking component through
+an explicit policy. Autocomplete may use evidence that is more permissive than
+identity review, but it must not duplicate similarity mechanics or transformation
+vocabulary. Do not route transformed queries through the library's exact
+alias-ownership path.
 
 Run the unchanged Exercise 09 search and Notes workflow evidence, then add the
 approved compact queries. Compare result ordering and keystrokes before and after
