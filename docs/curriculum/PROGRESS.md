@@ -1,12 +1,12 @@
 # Tutorial Progress
 
-Current exercise: 08
-Current task: Task C — Review and approve the assistant-use-case redirection
+Current exercise: 09
+Current task: Task B — Implement existing-name search
 Current task state: not started
-Task completion condition: pass Exercise 08 Task C `STOP / REVIEW — Redirection package`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–B
-Remaining tasks: Exercise 08 — Task C
-Most recent checkpoint: Exercise 08 Task B `STOP / REVIEW — Workflow evidence` (passed)
+Task completion condition: pass Exercise 09 Task B `STOP / REVIEW — Search evidence`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Task A
+Remaining tasks: Exercise 09 — Tasks B–C
+Most recent checkpoint: Exercise 09 Task A `STOP / REVIEW — Autocomplete contract` (passed)
 Relevant skills: verify, set-boundaries
 
 ## Completed
@@ -18,7 +18,7 @@ Relevant skills: verify, set-boundaries
 - [x] 05 — Resolver fixtures before resolver code
 - [x] 06 — Deterministic normalization and alias lookup
 - [x] 07 — Fuzzy candidate generation and human confirmation
-- [ ] 08 — Frictionless new-exercise workflow
+- [x] 08 — Frictionless new-exercise workflow
 - [ ] 09 — Keyboard autocomplete from an empty Notes cursor
 - [ ] 10 — Exercise identity review and personal-library import
 - [ ] 11 — Reuse conservative transformations in autocomplete (only if field use justifies continuing)
@@ -58,11 +58,22 @@ Relevant skills: verify, set-boundaries
 - Exercise 08 Task A approved a two-action, zero-required-typing new-exercise budget with one `Name` field, exact normalized-match bypass, edited-name-only persistence, automatic Notes focus restoration, and a 500 ms save-to-return target.
 - Exercise 08 Task B implemented and manually tested the four approved Notes workflows. Twenty-two package tests and the 37-case resolver exam pass; the two-action creation path returned 22.7 ms after confirmation.
 - Manual testing corrected wrong-window focus behavior and proved that temporary LaunchServices registration was not a durable installation. Gym Assistant is now installed under the user Applications folder with an embedded `⌃⌥⌘G` Service shortcut; the learner confirmed the Notes Services entry and physical shortcut work.
-- Product discovery reframed the primary writing interaction around keyboard
-  autocomplete from an empty Notes cursor. Exercise 08 remains append-only: its
-  new-exercise workflow still completes first, followed by a Task C review of the
-  redirection package before Exercise 09 begins. The package is drafted but has not
-  passed that future checkpoint.
+- Exercise 08 Task C approved the product redirection: keyboard autocomplete from
+  an empty Notes cursor is the primary writing interaction, while selected-text
+  linking and creation remain separate identity workflows.
+- ADR 001 now records the no-selection adapter extension and explicitly prevents
+  autocomplete selection from creating aliases or exercises. Exercise 08's
+  creation description is synchronized with the approved single-`Name` behavior.
+- Exercise identity remains foundational because autocomplete depends on a clean,
+  complete library, but inserting a search result does not establish identity
+  knowledge. Later hygiene, movement search, pairings, blocks, tendencies, client
+  context, and load history remain deferred.
+- Exercise 09 Task A approved identity-deduplicated autocomplete with preferred-name
+  rows, keyboard alias expansion, exact unmatched-query insertion, and read-only
+  fuzzy ranking. Search performs no identity writes, and vocabulary transformations
+  such as `KB` to `kettlebell` remain field-evidence-gated.
+- The approved interaction and measurable latency, integrity, keystroke, and human
+  usefulness gates are preserved in `PLAN-004-keyboard-autocomplete.md`.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -77,4 +88,5 @@ Relevant skills: verify, set-boundaries
 
 ## Next action
 
-Begin Exercise 08 Task C by inspecting the completed new-exercise boundaries and the full assistant-use-case redirection package before Exercise 09 begins.
+Begin Exercise 09 Task B by implementing the approved read-only search boundary and
+its automated ranking, alias, duplicate-suppression, and persistence-safety evidence.

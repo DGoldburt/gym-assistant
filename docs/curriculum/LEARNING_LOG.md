@@ -690,3 +690,85 @@ Implemented the bounded Notes workflow, tested its four required identity outcom
 **Next time / revisit**
 
 Treat persistent installation, host-application discovery, physical input, focus return, and reboot behavior as separate acceptance evidence from core workflow tests.
+
+### 2026-08-24 — Exercise 08 — Task C: Assistant-use-case redirection
+
+**Skills strengthened**
+
+- `set-boundaries` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Reviewed the completed selected-text workflow against a redirection package that
+makes empty-cursor keyboard autocomplete the primary program-writing interaction,
+while preserving exercise identity as a separate foundational capability.
+
+**Evidence**
+
+- Located the selected-text interaction in `GymAssistantNotesService`, application
+  coordination in `ExerciseNameWorkflow`, and authoritative identity writes in
+  `ExerciseLibrary`.
+- Verified exact lookup performs no write, explicit Link Existing confirmation
+  creates an alias, and Create writes one exercise with one required name.
+- Confirmed Exercise 09 autocomplete retrieves existing identities for insertion
+  without establishing an alias or creating an exercise.
+- Preserved reusable identity review and personal-library import in Exercise 10,
+  with search-query transformations gated by field evidence in Exercise 11.
+- Kept completed-program hygiene, movement-pattern search, pairings, blocks,
+  programming tendencies, client context, and load history outside autocomplete.
+- Review found and corrected two contradictions: ADR 001 now explicitly records
+  the no-selection adapter extension, and Exercise 08 now describes the approved
+  single-`Name` creation behavior rather than the superseded canonical-name and
+  automatic-alias proposal.
+
+**My reflection**
+
+> I learned that redirecting the primary interaction does not make the foundational domain model less important. Exercise identity remains foundational because autocomplete depends on a clean and complete library; otherwise its results will become confusing or incomplete. At the same time, selecting an autocomplete result only expresses intent to insert an existing exercise—it does not confirm an alias or create identity knowledge.
+
+**Next time / revisit**
+
+Define the empty-cursor autocomplete interaction and ranking contract without
+granting search selection authority to write exercise identity.
+
+### 2026-08-24 — Exercise 09 — Task A: Autocomplete contract
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Defined a measurable keyboard autocomplete contract that retrieves preferred and
+confirmed exercise names without treating incomplete search queries as identity
+knowledge.
+
+**Evidence**
+
+- Approved empty-cursor invocation, automatic query focus, keyboard navigation,
+  exact insertion at the original cursor, cancellation integrity, and Notes focus
+  restoration.
+- Top-level results are deduplicated by stable exercise identity; Right Arrow
+  exposes confirmed aliases so either the preferred name or a deliberate alias can
+  be inserted without changing library ownership or preference.
+- An unmatched query can be inserted exactly with Return while performing no
+  identity write, preserving programming flow until later reconciliation.
+- Ranking orders exact, prefix, token-prefix, lexical, and lowest-priority fuzzy
+  evidence while excluding protected fuzzy conflicts and deferring vocabulary
+  transformations such as `KB` to `kettlebell`.
+- Approved fresh-launch, warm, query-update, insertion, cancellation, integrity,
+  identity-safety, keystroke-savings, and human-usefulness gates.
+- Preserved selected-text cancellation as evidence for a possible later
+  replacement-search interaction without adding it to Exercise 09.
+
+**My reflection**
+
+> I learned that selecting an autocomplete result confirms what I want inserted, but it does not prove that my query is another name for that exercise. The query may be incomplete—such as `sl`, `fro`, or `db fl`—and exists only to retrieve a useful result. Keeping search read-only lets fuzzy matches and partial queries improve speed without corrupting exercise identity. Confirmed aliases remain deliberate library knowledge, while unmatched query text can still be inserted so an incomplete library does not interrupt programming.
+
+**Next time / revisit**
+
+Implement the approved search behind an Apple Notes-independent boundary and prove
+its ranking, duplicate suppression, alias visibility, determinism, and zero-write
+behavior before changing the Notes adapter.
