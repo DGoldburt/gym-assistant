@@ -29,7 +29,8 @@ Relevant skills: verify, set-boundaries
 ## Current notes
 
 - The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
-- Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`; GitHub CLI remains uninstalled.
+- Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`;
+  GitHub CLI 2.98.0 is installed through the local Miniconda environment.
 - Local and remote `main` contain learner-free reusable history through branch-model update `2b4dbe1`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
 - Local and remote `learner/main` contain merged pull-request commit `feb2e0c` and are the persistent integration target for personal tutorial progress.
 - Pull request #1 merged the reviewed `tutorial/exercise-01` state into `learner/main`; local synchronization was verified with a clean working tree.
