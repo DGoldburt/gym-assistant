@@ -49,6 +49,15 @@ This is a narrow terminal-punctuation allowlist, not a rule to strip all punctua
 
 These are the most costly category to get wrong: an automatic false merge would establish or reuse the wrong stable identity and could later contaminate history.
 
+`MUST_NOT_MATCH` governs automatic identity resolution and the ordinary fuzzy
+candidate list. It does not mean that a human may never confirm the two names as
+aliases. Exercise 10 adds a separate review-policy fixture axis: prescription-
+bearing differences such as short- versus long-lever Copenhagen may be surfaced
+and linked with explicit confirmation, while fixture-established identity
+conflicts such as lateral versus reverse lunge remain non-linkable. This preserves
+the original no-automatic-merge ground truth without conflating it with human
+review authority.
+
 ## SUGGEST_REVIEW — 10
 
 | Query | Candidate | Why confirmation remains necessary |

@@ -1,13 +1,13 @@
 # Tutorial Progress
 
 Current exercise: 10
-Current task: Task A — Prepare auditable source evidence from Strength Training Notes
+Current task: Task C — Import the personal library and test the useful product slice
 Current task state: not started
-Task completion condition: pass Exercise 10 Task A `STOP / REVIEW — Source-evidence boundary`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C
-Remaining tasks: Exercise 10 — Tasks A–C
-Most recent checkpoint: Exercise 09 Task C `STOP / REVIEW — Autocomplete evidence` (passed)
-Relevant skills: verify, set-boundaries
+Task completion condition: pass Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–B
+Remaining tasks: Exercise 10 — Task C
+Most recent checkpoint: Exercise 10 Task B `STOP / REVIEW — Identity-review evidence` (passed)
+Relevant skills: verify, set-boundaries, record-decisions
 
 ## Completed
 
@@ -88,6 +88,20 @@ Relevant skills: verify, set-boundaries
   result, an incremental `copp` ranking discontinuity, and Escape behavior that
   could leave a modal panel open past the Service timeout. Thirty-three tests and
   all 37 resolver fixtures pass; search remains read-only with zero identity writes.
+- Exercise 10 Task A reviewed all 56 currently visible Strength Training notes and
+  staged 1,891 private source observations representing 2,224 occurrences. All 158
+  ambiguous extraction rows received explicit boundary decisions; the original
+  wording, source evidence, and audit remain private and uncommitted. Four
+  cross-note samples matched Notes directly. The older durable count of 57 notes
+  remains a recorded coverage limitation, but the current source was accepted as
+  complete enough to proceed without making exercise-identity decisions.
+- Exercise 10 Task B implemented a source-adapter-independent identity-review core.
+  Exact confirmed names reuse identity without writes; transformations,
+  bidirectional lexical similarity, prescription differences, and identity
+  conflicts provide human-review evidence only. Staged observations support Link,
+  observation-text-only Create, and durable Defer; audit-only Keep Separate applies
+  to two existing IDs. Forty-three tests, all 37 resolver fixtures, and all six
+  review-policy fixtures pass with zero candidate-caused identity writes.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -102,6 +116,7 @@ Relevant skills: verify, set-boundaries
 
 ## Next action
 
-Begin Exercise 10 Task A by reviewing the guarded source-extraction prompt and
-preparing auditable, privacy-aware exercise wording evidence from Strength Training
-Notes without asking ChatGPT to decide exercise identity.
+Begin Exercise 10 Task C by building the narrow private-source import adapter,
+validating and previewing every reviewed decision before a transactional batch,
+then proving idempotent rerun behavior and testing the imported personal library
+through the existing Notes autocomplete workflow.

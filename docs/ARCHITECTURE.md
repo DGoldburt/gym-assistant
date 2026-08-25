@@ -3,9 +3,10 @@
 Status: the Notes adapter direction is validated by ADR 001. The initial
 exercise-identity persistence boundary, deterministic confirmed-name resolution,
 candidate generation, explicit suggestion confirmation, read-only autocomplete
-search, and empty-cursor Notes autocomplete interaction are implemented. Reusable
-exercise-identity review, personal-library import, search-query transformations,
-blocks, tendencies, and client history remain later slices or design hypotheses.
+search, empty-cursor Notes autocomplete interaction, and the reusable exercise-
+identity review core are implemented. Personal-library import, search-query
+transformations, blocks, tendencies, and client history remain later slices or
+design hypotheses.
 
 ## Architectural principle
 
@@ -126,10 +127,29 @@ Responsibilities:
 - apply approved identity writes through the exercise library's persistence boundary
 - preserve enough decision provenance and deferred state for later audit
 
-The review component coordinates evidence and authoritative user decisions. It
-must not infer an alias, merge identities, or choose a preferred name solely from
-a score, transformation, or AI-produced source file. Keeping two similar exercises
-separate is an explicit valid outcome, not a failed match.
+The review component coordinates evidence and authoritative user decisions.
+Automatic identity reuse is limited to deterministic normalized lookup of an
+already-confirmed name and performs no write. Fuzzy scores, abbreviations,
+transformations, modifier relationships, and AI-produced source files may surface
+evidence but cannot establish identity.
+
+For a staged observation, the implemented decisions are Link, Create, and Defer.
+Link adds the preserved observation as an `importedConfirmed` name through an
+ownership-checked transaction. Create accepts no editable name and makes the
+observation itself the sole initial preferred name, preventing semantic drift
+during review. Defer persists the unresolved observation and evidence snapshot
+without changing the exercise library. A separate audit-facing Keep Separate
+operation records that two existing exercise IDs remain distinct; it is not an
+import decision and does not merge or create identities.
+
+Resolver fixture category and human-review disposition are independent.
+`MUST_NOT_MATCH` continues to prohibit automatic identity. The review policy may
+still expose a prescription-bearing comparison, such as short- versus long-lever
+Copenhagen, as linkable with confirmation because both confirmed names remain
+selectable aliases. Fixture-established identity conflicts, such as lateral versus
+reverse lunge, are visible but non-linkable. There is no separate Exercise Family
+entity; the stable Exercise and its confirmed names are the current grouping
+envelope.
 
 The identity review is independent of the source adapter. Its first adapter stages
 a personal-library import. That adapter owns source parsing, row validation, dry-run

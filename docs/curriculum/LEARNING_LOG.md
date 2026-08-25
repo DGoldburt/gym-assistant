@@ -859,3 +859,87 @@ without granting search any identity-write authority.
 Exercise ranking as an incremental interaction, not only as isolated final queries,
 and preserve manual checks for caret behavior, shortcut ergonomics, and modal
 cancellation even when automation reports the expected focused control.
+
+### 2026-08-25 — Exercise 10 — Task A: Auditable source extraction
+
+**Skills strengthened**
+
+- `set-boundaries` — Demonstrated
+- `verify` — Demonstrated
+
+**What I did**
+
+Supervised a guarded, high-recall extraction of exercise wording from the private
+Strength Training Notes folder, then reviewed every ambiguous extraction boundary
+without deciding exercise identity.
+
+**Evidence**
+
+- Reviewed all 56 notes currently visible in the Strength Training folder; none
+  were inaccessible. The older durable count of 57 remains an explicit coverage
+  limitation rather than being silently reconciled.
+- Reviewed all 158 ambiguous rows: retained 108 as plausible exercises, excluded
+  16 non-exercises, expanded 12 incomplete boundaries, and split or trimmed 22.
+- Produced 1,891 staged observations representing 2,224 occurrences, with zero
+  unresolved extraction-review rows and all 47 requested replacement names present.
+- Preserved the original reviewed rows, source note and line evidence, decisions,
+  and pre-review source hash in a private audit; the repository remained unchanged.
+- Compared samples from four different source notes directly against Apple Notes;
+  each matched the staged source evidence. The private titles and source lines
+  remain only in the uncommitted evidence store.
+- Made no alias, canonical-name, preferred-name, stable-ID, duplicate, or merge
+  decision during extraction.
+
+**My reflection**
+
+> I kept differently worded exercises as separate source observations because extraction should preserve the evidence rather than decide identity. The app’s library-hygiene workflow should handle identity resolution—including cleaning, merging, splitting, and deleting—with the appropriate safeguards and human review. I accepted the extraction as complete enough despite the unresolved historical count of 57 versus the 56 notes currently visible, because all currently accessible notes were reviewed and sampled evidence matched the Notes source.
+
+**Next time / revisit**
+
+Keep extraction corrections limited to source boundaries and preserve every wording
+variant for the explicit identity-review workflow. Revisit the 56-versus-57 count
+if Notes exposes another item or later evidence identifies a missing source.
+
+### 2026-08-25 — Exercise 10 — Task B: Reusable identity review
+
+**Skills strengthened**
+
+- `set-boundaries` — Demonstrated
+- `verify` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Designed, challenged, implemented, and reviewed a reusable exercise-identity
+workflow that separates broad candidate evidence from authoritative human
+decisions and keeps import parsing outside the core.
+
+**Evidence**
+
+- Added durable staged observations with source references, occurrence counts,
+  stable IDs, review status, evidence snapshots, and idempotent decision handling.
+- Automatic identity reuse is limited to normalized lookup of an already-confirmed
+  name and performs no write.
+- Human review exposes conservative abbreviation, bidirectional lexical,
+  prescription-difference, and identity-conflict evidence without allowing any
+  score or transformation to create identity.
+- Link transactionally persists an `importedConfirmed` name; Create accepts no
+  editable name and uses only the preserved observation; Defer writes no exercise
+  identity and survives database reopening.
+- Keep Separate is limited to a future audit of two existing exercise IDs and
+  creates no identity. Merge remains outside Exercise 10.
+- The unchanged resolver exam passes 37/37 with zero false merges or protected
+  candidate leaks. The independent human-review report passes 6/6, distinguishing
+  linkable prescription wording from non-linkable identity conflicts.
+- Forty-three tests across eight suites pass. Candidate-diff inspection removed
+  private note titles and confirmed that no raw Task A source entered Git.
+
+**My reflection**
+
+> I learned that the resolver and candidate-evidence components can support several workflows without sharing their consequences. Autocomplete uses them only to retrieve selectable text and never establishes identity. The selected-text workflow, personal-library import, and future completed-program hygiene use them to determine when explicit human identity review is necessary. A future library audit can reuse the same evidence while adding operations between existing identities, including Merge and Keep Separate. Identity authority therefore comes from the workflow’s explicit human decision—not from fuzzy ranking, transformations, or the resolver itself.
+
+**Next time / revisit**
+
+Use the private import adapter to exercise the review boundary at full library
+scale. Revisit prescription structure or alias-menu growth only after field use
+shows that confirmed prescription-bearing names create meaningful friction.
