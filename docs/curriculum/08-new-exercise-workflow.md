@@ -27,11 +27,14 @@ If no confident match exists, present:
 - Create New Exercise
 
 If creating:
-- infer a sensible canonical name
-- preserve selected text as the first alias
-- allow a short preferred display name
+- prefill one `Name` field from the selected text
+- allow the user to confirm or edit that name, or go back
+- save only the confirmed name as the new exercise's required preferred name
 - save
 - return to Notes immediately
+
+The original selected text is not also saved when the user edits the name. A
+confirmed name is added as an alias only through the explicit Link Existing path.
 
 ## Task A — Define interaction budget
 

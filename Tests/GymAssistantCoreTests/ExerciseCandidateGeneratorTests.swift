@@ -41,4 +41,25 @@ struct ExerciseCandidateGeneratorTests {
             candidates: ["Copenhagen Plank"]
         ).map(\.preferredName) == ["Copenhagen Plank"])
     }
+
+    @Test("Identity review and autocomplete share scoring with explicit policies")
+    func sharedRankingPolicies() {
+        let identityReview = ExerciseTextCandidateRanker(policy: .identityReview())
+        let autocomplete = ExerciseTextCandidateRanker(policy: .autocomplete())
+
+        #expect(identityReview.score(query: "abcde", candidate: "abxyz") == nil)
+        #expect(autocomplete.score(query: "abcde", candidate: "abxyz") == 0.4)
+
+        #expect(identityReview.score(query: "Australian Row", candidate: "Aussie Pull-up") == 1)
+        #expect(autocomplete.score(query: "Australian Row", candidate: "Aussie Pull-up") == 1)
+
+        #expect(identityReview.score(
+            query: "Short-Lever Copenhagen Plank",
+            candidate: "Long-Lever Copenhagen Plank"
+        ) == nil)
+        #expect(autocomplete.score(
+            query: "Short-Lever Copenhagen Plank",
+            candidate: "Long-Lever Copenhagen Plank"
+        ) == nil)
+    }
 }

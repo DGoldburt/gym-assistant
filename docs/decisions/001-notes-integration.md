@@ -14,6 +14,13 @@ Retain Apple Notes as the initial writing workspace and use an AppKit macOS Serv
 
 The adapter may receive selected plain text, invoke application workflows, present a lightweight keyboard-operated chooser, return replacement or insertion text to the selected range, and restore Notes focus. Cancellation must leave the note unchanged. Exercise identity, alias knowledge, matching, persistence, blocks, programming tendencies, and future client history remain outside the adapter behind reusable application/domain boundaries.
 
+After acceptance of the selected-text interaction, the same adapter boundary may
+also be invoked with an empty Notes insertion point. In that mode it may present
+keyboard-operated search over existing confirmed exercise names and insert the
+selected exercise's preferred display name at the original cursor. Selecting a
+search result expresses intent to insert an exercise; it must not by itself create
+an alias, create an exercise, or otherwise write exercise-identity knowledge.
+
 The Exercise 02 AppKit code is disposable evidence, not the production implementation. Production work may reuse the proven Service/pasteboard interaction shape, but it must make fresh decisions about lifecycle, packaging, signing, shortcut configuration, user feedback, and integration with the resolver.
 
 Do not use the tested Automator Quick Action as the initial product mechanism.

@@ -2,10 +2,10 @@
 
 Status: the Notes adapter direction is validated by ADR 001. The initial
 exercise-identity persistence boundary, deterministic confirmed-name resolution,
-candidate generation, and explicit suggestion confirmation are implemented.
-Keyboard autocomplete, reusable exercise-identity review, personal-library import,
-search-query transformations, blocks, tendencies, and client history remain later
-slices or design hypotheses.
+candidate generation, explicit suggestion confirmation, read-only autocomplete
+search, and empty-cursor Notes autocomplete interaction are implemented. Reusable
+exercise-identity review, personal-library import, search-query transformations,
+blocks, tendencies, and client history remain later slices or design hypotheses.
 
 ## Architectural principle
 
@@ -29,7 +29,7 @@ Conceptual structure:
 
 ### Notes integration layer
 Responsibilities:
-- receive selected text
+- receive selected text or an empty-cursor invocation
 - invoke library/search workflows
 - display a lightweight chooser
 - optionally return replacement/insertion text
@@ -40,7 +40,17 @@ Must not own:
 - canonical identity rules
 - persistence rules
 
-The adapter direction is accepted in [ADR 001](decisions/001-notes-integration.md). The Exercise 02 spike validates the AppKit Service/pasteboard interaction shape but is not production code. Packaging, signing, distribution, shortcut design, and identical-text feedback remain open implementation concerns.
+The adapter direction is accepted in [ADR 001](decisions/001-notes-integration.md). The Exercise 02 spike validates the AppKit Service/pasteboard interaction shape but is not production code. The local development Service now uses Option-Command-G; packaging, durable signing, external distribution, and identical-text feedback remain open implementation concerns.
+
+The `GymAssistantNotesService` executable is wired to the real core workflow and
+Application Support SQLite library. Its `Gym Assistant: Review Selection` entry
+performs deterministic bypass, explicit identity review through a Link Existing
+action, and same-panel new-exercise creation. Its separate `Gym Assistant` entry
+supports empty-cursor autocomplete: focused query input, at most five identity-
+deduplicated results, keyboard alias expansion, exact cursor insertion, raw-query
+fallback, and cancellation without writes. The Service owns no ranking or identity
+rules. Packaging, signing, and distribution outside the local development install
+remain open concerns.
 
 ### Exercise library
 Responsibilities:
@@ -86,6 +96,24 @@ across the persisted library remains outside this slice.
 The resolver supplies identity evidence about wording that already exists. It is
 separate from autocomplete search, which retrieves an exercise for insertion and
 does not by itself create identity knowledge.
+
+### Autocomplete search
+
+The core autocomplete search reads preferred and confirmed names from the exercise
+library, ranks exact, prefix, token-prefix, lexical, and lowest-priority fuzzy text
+evidence, and returns at most one result per stable exercise identity. A result
+exposes its preferred display name and confirmed aliases so the UI can insert
+either deliberately. Search performs no library writes. Search and identity review
+use the same underlying text-candidate ranker and the same approved equivalence
+evidence; autocomplete adds a more permissive threshold because retrieval is
+reversible. Known protected modifier conflicts are excluded by both. New vocabulary
+transformations still require separate evidence and approval before becoming part
+of the shared ranker.
+
+Empty-query and unmatched-query insertion behavior belongs to the application/UI
+workflow, not this domain search component. The Notes adapter consumes this search
+through a read-only boundary; only the separate selected-text review workflow can
+persist an alias.
 
 ### Exercise identity review
 
