@@ -219,6 +219,16 @@ public final class ExerciseLibrary {
         )
     }
 
+    public func allNames() throws -> [ExerciseName] {
+        try queryNames(
+            """
+            SELECT id, exercise_id, text, normalized_text, provenance, created_at
+            FROM exercise_name
+            ORDER BY normalized_text, id
+            """
+        )
+    }
+
     private func migrate() throws {
         try transaction {
             try execute(

@@ -8,13 +8,17 @@ After this change, a coach can place an empty cursor in Apple Notes, invoke Gym 
 
 ## Plan Status
 
-Approved. Exercise 09 Task A passed with an approved interaction, ranking, and evidence contract. Implementation and real Notes verification remain.
+Complete. Exercise 09 Tasks A–C passed, including the corrected physical shortcut,
+active-caret behavior, learner-usefulness gate, incremental ranking, and cancellation.
 
 ## Progress
 
 - [x] (2026-08-24) Approved the empty-cursor interaction, alias expansion, unmatched-query insertion, read-only fuzzy ranking, and measurable acceptance budgets.
-- [ ] Implement and test persisted-library search behind an Apple Notes-independent boundary; stop at Exercise 09 Task B review.
-- [ ] Connect search to the AppKit Service, run automated and real Notes evidence, and stop at Exercise 09 Task C review.
+- [x] (2026-08-24) Implemented, tested, and passed review for persisted-library search behind an Apple Notes-independent boundary; 32 tests and the unchanged 37-case resolver exam pass.
+- [x] (2026-08-24) Connected search to the AppKit Service and completed automated
+  and real Notes evidence with zero observed integrity or identity-write failures.
+- [x] (2026-08-24) Passed the physical-shortcut and learner-usefulness review at
+  5/5 after bounded shortcut, focus, ranking-continuity, and cancellation fixes.
 
 ## Surprises & Discoveries
 
@@ -22,6 +26,40 @@ Approved. Exercise 09 Task A passed with an approved interaction, ranking, and e
   Evidence: Approved examples such as `fro`, `sl`, and `db fl` are intentionally incomplete and must never be persisted as aliases merely because a result is selected.
 - Observation: Returning unmatched query text preserves writing flow without adding a creation dialog.
   Evidence: The learner explicitly preferred raw-query insertion and recognized that later program review and identity reconciliation consequently become more important.
+- Observation: The approved short misspelling `coppen` exposed that a separate search-only fuzzy calculation would drift from identity review.
+  Evidence: An initial duplicate implementation needed its own threshold calibration. It was removed after learner review; the shared candidate ranker now supplies token-level edit evidence to both policies, with autocomplete using the more permissive `0.35` threshold while retaining the unrelated `Novel March` no-result guard.
+- Observation: Deterministic alphabetical ordering applies only after unmatched-character count.
+  Evidence: For query `press`, `Beta Press` correctly precedes `Alpha Press` because it has one fewer unmatched character; the initial test expectation contradicted the approved contract and was corrected.
+- Observation: AppKit's field editor consumes Return and navigation commands before an `NSSearchField` subclass receives `keyDown`.
+  Evidence: The first real Notes trial displayed `fro` and selected Front Squat, but synthetic Return left the panel open and inserted nothing. Routing `insertNewline:`, movement, and cancellation selectors through `NSSearchFieldDelegate` addresses the actual command boundary.
+- Observation: A Service pasteboard return can insert correctly without restoring
+  an active Notes caret.
+  Evidence: The first physical-shortcut checkpoint inserted at the requested cursor,
+  but the learner could not continue typing there. The adapter had activated Gym
+  Assistant without explicitly reactivating the invoking Notes process; direct
+  application handoff is now required and remains pending physical retest.
+- Observation: Search success alone did not make the complete workflow preferable.
+  Evidence: All five physical search cases worked, but the learner preferred the
+  workflow in only three because Control-Option-Command-G required looking down and
+  moving a hand. Option-Command-G was approved for retest without changing the 4/5
+  acceptance threshold.
+- Observation: The permissive fuzzy threshold admitted a coincidental short-token
+  similarity between `test` and a token in Tall Kneeling Bottoms-Up KB Press.
+  Evidence: The learner discovered the unrelated result during physical retesting.
+  Short single-token fuzzy input now requires a stronger score, while direct prefix,
+  containment, longer fuzzy input such as `coppen`, and close `sqat`-to-`Squat`
+  correction retain their approved behavior.
+- Observation: Testing isolated final queries missed an incremental-search
+  discontinuity: `cop` and `coppe` found Copenhagen Plank while `copp` did not.
+  Evidence: The learner tried each intermediate character after the first short-
+  query correction. Short fuzzy scoring now recognizes strong same-length prefix
+  edits, and the regression runs the complete `c` through `coppen` sequence while
+  retaining the unrelated-`test` exclusion.
+- Observation: In a long incremental-query trial, Escape cleared the search field
+  instead of canceling the panel, which then outlived the Service's 30-second timeout.
+  Evidence: The event log ended with an empty-query update and had no cancellation
+  or service-return event. The panel now intercepts Escape before `NSSearchField`,
+  and the autocomplete request timeout is two minutes to support deliberate review.
 
 ## Decision Log
 
@@ -40,16 +78,28 @@ Approved. Exercise 09 Task A passed with an approved interaction, ranking, and e
 - Decision: Observe selected-text dialog cancellation as evidence for a possible later replacement-search workflow, but do not change selected-text behavior in Exercise 09.
   Rationale: Cancellation count may reveal friction, but intent also requires surrounding behavioral or qualitative evidence.
   Date/Author: 2026-08-24 / Learner and Codex
+- Decision: Identity review and autocomplete use one candidate-ranking component with explicit consumer policies rather than separate fuzzy implementations.
+  Rationale: Anything safe to surface as an identity-review suggestion is safe to surface in read-only search, while search may use a more permissive threshold because its consequences are reversible. Autocomplete therefore uses every equivalence already accepted by identity review plus its lower threshold. Exercise 11 remains the gate for proposing new transformations such as `KB` to `kettlebell`.
+  Date/Author: 2026-08-24 / Learner
 
 ## Outcomes & Retrospective
 
-The interaction and ranking contract is approved. No implementation outcome exists yet. Task B must prove deterministic, read-only search independently of Notes before Task C changes the adapter.
+The interaction and ranking contract is approved. Task B provides a separate,
+deterministic, read-only search component with explicit match evidence, confirmed
+aliases, stable identity deduplication, protected fuzzy exclusions, and zero-write
+regression evidence. Task C connects that search to a keyboard-only AppKit Service,
+preserves the selected-text review Service, and passes the measured Notes integration
+budgets. Thirty-two tests pass across seven suites, and the unchanged
+37-case resolver exam retains zero false merges and zero protected-candidate leaks.
+Option-Command-G, active-caret restoration, and a 5/5 learner preference passed the
+final checkpoint. Field-discovered `test`, `copp`, and Escape failures are retained
+as regression evidence rather than hidden by the original automated results.
 
 ## Context and Orientation
 
 `Sources/GymAssistantCore/ExerciseLibrary.swift` owns stable exercise identities, one preferred name per exercise, and confirmed aliases in SQLite. `Sources/GymAssistantCore/ExerciseNameWorkflow.swift` coordinates the selected-text link/create workflow and must remain separate from autocomplete. `Sources/GymAssistantCore/ExerciseCandidateGenerator.swift` contains existing lexical candidate mechanics designed for identity review; autocomplete may reuse compatible low-level scoring behavior but must expose a separate search contract with no writes. `Sources/GymAssistantNotesService/main.swift` is the AppKit Service adapter currently requiring selected text. `app/notes-service/` builds the locally installed Service bundle.
 
-A preferred name is the default coach-facing name owned by an exercise. A confirmed alias is another user-approved name owned by the same stable exercise identity. Fuzzy similarity is approximate text evidence; it may order search results but cannot create identity knowledge. A vocabulary transformation is an explicit relationship such as `KB` meaning `kettlebell`; transformations are not part of this plan.
+A preferred name is the default coach-facing name owned by an exercise. A confirmed alias is another user-approved name owned by the same stable exercise identity. Fuzzy similarity is approximate text evidence; it may order search results but cannot create identity knowledge. The shared ranker's already-approved identity-review equivalences are available to autocomplete. New vocabulary transformations, including `KB` meaning `kettlebell`, are not part of this plan.
 
 ## Plan of Work
 
@@ -90,3 +140,13 @@ Task B evidence belongs in tests and a concise search report if terminal output 
 Add explicit Swift domain types for autocomplete query results and match evidence in `GymAssistantCore`; do not return dictionaries or UI types. Add read-only library access for preferred names and confirmed aliases if the current API is insufficient. Keep AppKit, pasteboard handling, focus, and key events in `GymAssistantNotesService`. SQLite remains the only persistence dependency, and no new external package is required.
 
 Revision note (2026-08-24): Created after Exercise 09 Task A approval to preserve the complete interaction, ranking, safety, and evidence contract across Tasks B and C.
+
+Revision note (2026-08-24): Updated after Task B implementation and verification.
+The first regression run calibrated the approved `coppen` fuzzy case and corrected
+a test that contradicted the accepted unmatched-character tie-breaker. A later
+self-review separated matched-alias tie-breaking from preferred-display ordering.
+
+Revision note (2026-08-24): Revised after learner review to make autocomplete
+evidence a strict superset of identity-review evidence. Both policies now enable
+all currently approved equivalences; autocomplete additionally uses a lower fuzzy
+threshold. New equivalences remain evidence-gated future work.

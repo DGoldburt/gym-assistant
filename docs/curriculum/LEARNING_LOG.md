@@ -772,3 +772,90 @@ knowledge.
 Implement the approved search behind an Apple Notes-independent boundary and prove
 its ranking, duplicate suppression, alias visibility, determinism, and zero-write
 behavior before changing the Notes adapter.
+
+### 2026-08-24 — Exercise 09 — Task B: Existing-name search
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Implemented and reviewed a read-only autocomplete search that shares candidate
+ranking with identity review while preserving different workflow consequences.
+
+**Evidence**
+
+- Added one shared text-candidate ranker for lexical overlap, token and phrase edit
+  similarity, approved equivalences, and protected-modifier conflicts.
+- Identity review and autocomplete both use every currently approved equivalence;
+  autocomplete additionally accepts a lower fuzzy threshold because retrieval is
+  reversible.
+- Direct policy tests prove Australian Row and Aussie Pull-up receive the same
+  approved equivalence in both workflows, a `0.40` fuzzy case appears only in
+  autocomplete, and protected Short-Lever/Long-Lever conflicts appear in neither.
+- Search ranks exact, whole-name prefix, ordered token-prefix, lexical, and fuzzy
+  evidence; returns each stable exercise identity once; and exposes its preferred
+  name and confirmed aliases for deliberate insertion.
+- A before/after persistence snapshot proves alias, fuzzy, unmatched, and empty
+  searches leave every stored exercise name unchanged.
+- Thirty-two tests pass across seven suites. The unchanged 37-case resolver exam
+  retains zero false merges and zero protected-candidate leaks.
+- The AppKit Notes adapter remained unchanged during Task B.
+
+**My reflection**
+
+> I learned that search and identity review can share the same candidate-ranking component without sharing the same consequences. Autocomplete can surface every suggestion available to identity review and use a more permissive fuzzy threshold because choosing a result only inserts text. Only identity review can persist an alias or otherwise change durable exercise identity; autocomplete remains read-only.
+
+**Next time / revisit**
+
+Connect the approved read-only search to the empty-cursor Notes workflow and verify
+the complete keyboard interaction in the real host application.
+
+### 2026-08-24 — Exercise 09 — Task C: Real Notes autocomplete loop
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Implemented and field-tested the complete empty-cursor autocomplete interaction in
+Apple Notes, then used surprising manual results to tighten the implementation
+without granting search any identity-write authority.
+
+**Evidence**
+
+- Added a separate empty-cursor `Gym Assistant` Service while retaining the
+  selected-text identity-review Service.
+- Verified focused query entry, at most five identity-deduplicated results,
+  preferred-name and confirmed-alias insertion, raw-query fallback, exact cursor
+  integrity, cancellation, and zero exercise-library writes.
+- Five matched queries reduced typed characters by approximately 63–73 percent.
+  The complete workflow preference improved from 3/5 to 5/5 after replacing the
+  awkward Control-Option-Command-G shortcut with Option-Command-G.
+- Twenty warm invocations and five cold launches passed the approved latency gates;
+  repeated automated cancellations left Notes unchanged.
+- Physical testing exposed a missing active caret despite a passing focus proxy.
+  Explicitly reactivating the invoking Notes application fixed it, and immediate
+  continued typing then passed.
+- Field exploration found that unrelated `test` surfaced an exercise, that the
+  intermediate typo `copp` disappeared between working prefixes, and that Escape
+  could clear the search field without closing an expired modal request. These
+  became regression evidence for stronger short-token fuzzy matching, continuous
+  prefix-typo behavior, direct Escape interception, and a longer interaction window.
+- Thirty-three package tests and all 37 resolver fixtures pass with zero false
+  merges or protected-candidate leaks. The retained screenshot contains only the
+  Gym Assistant panel and no Notes sidebar or private content.
+
+**My reflection**
+
+> I verified that all five autocomplete cases worked and that the corrected workflow returned the caret to the end of the inserted text. Manual testing mattered because automated focus and performance evidence did not reveal that I initially could not continue typing where I expected. The autocomplete interaction is useful, but Control–Option–Command–G requires me to move my hand and look down, so shortcut ergonomics remain usability debt to revisit.
+
+**Next time / revisit**
+
+Exercise ranking as an incremental interaction, not only as isolated final queries,
+and preserve manual checks for caret behavior, shortcut ergonomics, and modal
+cancellation even when automation reports the expected focused control.

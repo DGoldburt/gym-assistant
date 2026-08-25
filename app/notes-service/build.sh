@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "$0")/../.." && pwd)"
-build_root="/private/tmp/gym-assistant-exercise-08"
+build_root="/private/tmp/gym-assistant-exercise-09"
 app_dir="$build_root/Gym Assistant.app"
 contents_dir="$app_dir/Contents"
 macos_dir="$contents_dir/MacOS"
