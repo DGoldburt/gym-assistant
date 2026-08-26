@@ -2,7 +2,7 @@
 
 Current exercise: 10
 Current task: Task C — Import the personal library and test the useful product slice
-Current task state: not started
+Current task state: in-progress
 Task completion condition: pass Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate`
 Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–B
 Remaining tasks: Exercise 10 — Task C
@@ -25,6 +25,12 @@ Relevant skills: verify, set-boundaries, record-decisions
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
+
+## Planned product-extension exercises
+
+- [ ] 15 — Reusable completed-program observation extractor; begin only when
+  explicitly selected after Exercise 10 has preserved the private Task A/Task C
+  feedback packet. This planned extension does not advance current tutorial state.
 
 ## Current notes
 
@@ -116,7 +122,10 @@ Relevant skills: verify, set-boundaries, record-decisions
 
 ## Next action
 
-Begin Exercise 10 Task C by building the narrow private-source import adapter,
-validating and previewing every reviewed decision before a transactional batch,
-then proving idempotent rerun behavior and testing the imported personal library
-through the existing Notes autocomplete workflow.
+Continue Exercise 10 Task C by adapting the private-source work to ingest the
+complete source and occurrence provenance into a resumable non-blocking queue.
+Add a keyboard-operable Review Library entry to the existing Gym Assistant
+autocomplete panel, review and preview a useful subset, prove independent ingestion
+and decision idempotency, then test the closed loop from review to improved Notes
+autocomplete without Terminal. Preserve the private Task A/Task C feedback packet
+for planned Exercise 15 without implementing the completed-program extractor now.

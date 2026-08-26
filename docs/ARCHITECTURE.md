@@ -8,6 +8,11 @@ identity review core are implemented. Personal-library import, search-query
 transformations, blocks, tendencies, and client history remain later slices or
 design hypotheses.
 
+Observation ingestion is separated from identity review by
+[ADR 002](decisions/002-non-blocking-observation-ingestion.md). The complete source
+may be stored with provenance while identity decisions remain incremental,
+dismissible, and resumable.
+
 ## Architectural principle
 
 Apple Notes is an input/workspace adapter. It must not contain the core business logic.
@@ -16,12 +21,15 @@ Conceptual structure:
 
     Apple Notes --> AppKit macOS Service adapter --> Exercise Search --> Exercise Library
                        |                                  + Alias Knowledge
-                       +--> selected-text hygiene --+
-                                                   |
-    Personal-library file --> Import adapter ------+--> Exercise Identity Review
-                                                   |           |
-    Completed-program review adapter (later) ------+           +--> Resolver evidence
-    Manual library-audit adapter (later) ----------+           +--> Exercise Library writes
+                       +--> selected-text hygiene -----------------------+
+                                                                         |
+    Personal-library source ------+                                      |
+    Completed program(s) later ---+--> Observation Ingestion/Store ------+--> Exercise Identity Review
+                                  |                                              |
+                                  +--> Exercise-observation extractor (later)    +--> Resolver evidence
+                                                                                 +--> Exercise Library writes
+
+    Manual library-audit adapter (later) --> Exercise Identity Review of existing IDs
 
     Saved Blocks / Programming Tendencies / Client History (later)
         reference stable Exercise Library identities
@@ -152,15 +160,53 @@ entity; the stable Exercise and its confirmed names are the current grouping
 envelope.
 
 The identity review is independent of the source adapter. Its first adapter stages
-a personal-library import. That adapter owns source parsing, row validation, dry-run
-preview, transactional and idempotent batch behavior, and import reporting. It must
-not own candidate semantics or identity rules.
+a personal-library source. Import and completed-program adapters supply durable
+observations to the same non-blocking queue and preserve their own ingestion record,
+occurrence evidence, and provenance. Pending or deferred observations do not enter
+autocomplete and do not block program writing. The reviewer may dismiss and resume
+the queue; each explicit identity decision is independently transactional and
+idempotent.
 
-Later completed-program hygiene and manual library-audit adapters may supply their
-own occurrence context while reusing the same candidate evidence and decision
-boundary. Merging two exercise IDs that already own aliases or have downstream
-references is a separate future operation; it is not equivalent to linking a
-staged observed name before import.
+Exercise 10 exposes this queue through a separate Gym Assistant review window. The
+existing autocomplete panel contains a visible, keyboard-operable Review Library
+action, so the learner can enter review without Terminal or another global
+shortcut. Opening review releases the Notes Service request; the review window can
+then stay open independently. Closing it preserves queue position and returns focus
+to Notes. Administrative ingestion, backup, dry-run, and diagnostics remain in the
+local command-line runner.
+
+The personal-library adapter owns CSV parsing, row validation, source fingerprinting,
+and import reporting. It must not own candidate semantics or identity rules. A later
+completed-program adapter may use a reusable observation extractor before staging;
+that extractor identifies exercise-like wording in mixed program text, preserves
+verbatim evidence and location, and makes no alias or exercise-identity decision.
+
+Manual library-audit adapters may reuse candidate evidence while presenting two
+existing exercise IDs and audit-specific Merge or Keep Separate operations. Merging
+IDs that already own aliases or downstream references remains a separate future
+operation; it is not equivalent to linking a staged observed name.
+
+### Observation ingestion and provenance
+
+Observation ingestion and identity resolution are separate lifecycles. A source
+may be ingested transactionally even while some or all observations remain pending.
+Later Link or Create decisions atomically update one observation and the exercise
+library; Defer records an intentional postponement without creating identity.
+
+One observation can occur in more than one note, import, or completed program, so
+provenance must not be flattened into a single adapter/reference string. The minimal
+durable relationship is an ingestion record, a staged observation, and one or more
+occurrence/evidence records that connect the observation to source locations and
+counts. This provenance belongs to the observation workflow, not as additional
+required fields on `Exercise` or `ExerciseName`.
+
+Extraction and identity review have different ground truth. Extraction asks whether
+and where program text contains an exercise observation. Identity review asks what
+stable exercise, if any, owns that preserved wording. Task A extraction decisions
+can train and test the future extractor. Task C Link/Create/Defer outcomes can reveal
+useful error clusters, but they must not be relabeled automatically as extraction
+truth; especially, Defer may indicate identity uncertainty, unsuitable wording, or
+an extraction-boundary problem and requires reason review.
 
 ### Blocks
 Responsibilities:
