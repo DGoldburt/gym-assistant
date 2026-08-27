@@ -102,7 +102,7 @@ Then inspect the complete redirection package:
 - the corresponding boundary description in `docs/ARCHITECTURE.md`
 - Exercise 09's keyboard autocomplete scope
 - Exercise 10's reusable identity-review and personal-library import scope
-- Exercise 11's field-evidence-gated reuse of search-query transformations
+- Exercise 11's field-feedback loop and gated resolver improvements
 
 The review must distinguish three things: selecting an existing exercise for
 insertion, confirming that user-entered wording is an alias, and creating a new

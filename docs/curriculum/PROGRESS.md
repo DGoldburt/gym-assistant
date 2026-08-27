@@ -19,11 +19,17 @@ Relevant skills: orient, frame-work, set-boundaries
 - [ ] 06 — Deterministic normalization and alias lookup
 - [ ] 07 — Fuzzy candidate generation and human confirmation
 - [ ] 08 — Frictionless new-exercise workflow
-- [ ] 09 — Exercise blocks and insertion
-- [ ] 10 — Programming-history tendencies
-- [ ] 11 — Verification harness and agentic manual testing
-- [ ] 12 — Independent review and worktrees
-- [ ] 13 — Future client-history architecture (design only)
+- [ ] 09 — Keyboard autocomplete from an empty Notes cursor
+- [ ] 10 — Exercise identity review and personal-library import
+- [ ] 11 — Field feedback loops and resolver improvement
+- [ ] 12 — Verification harness and agentic manual testing
+- [ ] 13 — Independent review and worktrees
+- [ ] 14 — Future client-history architecture (design only)
+
+## Planned product-extension exercises
+
+- [ ] 15 — Reusable completed-program observation extractor; begin only when
+  explicitly selected after Exercise 10 has preserved an extractor-feedback packet.
 
 ## Current notes
 
