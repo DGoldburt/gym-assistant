@@ -8,7 +8,7 @@ After this work, Gym Assistant will have ingested the learner's complete reviewe
 
 ## Plan Status
 
-In progress.
+Complete.
 
 ## Progress
 
@@ -16,11 +16,13 @@ In progress.
 - [x] (2026-08-25) Confirmed the live Application Support library exists and currently contains 4 exercises and 5 names; no write was performed.
 - [x] (2026-08-25) Learner approved the initial Task C plan and the explicit deferred-observation lifecycle.
 - [x] (2026-08-26) Learner revised the architecture so complete observation ingestion is non-blocking and identity review is incremental, resumable, and dismissible.
-- [ ] Implement and test the private-source adapter, consolidation, validation, durable ingestion, occurrence provenance, review queue, decision preview, and reporting.
-- [ ] Ingest the complete source into a scratch copy, generate the resumable review interface, and obtain explicit approval for a useful reviewed subset before touching the live database.
-- [ ] Back up the live database, ingest the source and apply the approved subset, verify counts and provenance, and prove idempotent ingestion and decision reruns plus controlled rollback.
-- [ ] Install the verified build if needed and complete the real Notes autocomplete usefulness gate.
-- [ ] Present and obtain approval at the Task C STOP / REVIEW checkpoint.
+- [x] (2026-08-26) Shared the ranked-candidate chooser presentation between autocomplete and observation review while keeping insertion and identity decisions in their separate workflow controllers.
+- [x] (2026-08-26) Added and ran the private extractor-feedback exporter: all 158 Task A decisions mapped with zero gaps to the 1,210-observation/2,224-occurrence Task C corpus, and all 9 current skips are directly indexed with retained candidate evidence.
+- [x] (2026-08-26) Implemented and tested the private-source adapter, consolidation, validation, durable ingestion, occurrence provenance, review queue, decision preview, and reporting.
+- [x] (2026-08-26) Ingested the complete source through scratch validation and a transactional live write after backup and reconciliation.
+- [x] (2026-08-26) Proved idempotent ingestion and review decisions, controlled rollback, durable provenance, and resumable pending and skipped observations.
+- [x] (2026-08-26) Installed the verified build and exercised review-to-autocomplete behavior from Notes without Terminal.
+- [x] (2026-08-27) Learner approved the Task C checkpoint and chose to continue into a bounded field-feedback exercise rather than repair every new finding immediately.
 
 ## Surprises & Discoveries
 
@@ -28,6 +30,28 @@ In progress.
   Evidence: `wc -l` reports 2,312 while the approved Task A audit reports 1,891 records. The adapter must parse RFC 4180-style quoted fields rather than split on newline.
 - Observation: The live product database contains only four exercise identities and five names.
   Evidence: read-only SQLite counts returned `exercises|4` and `names|5` before Task C.
+- Observation: Separate AppKit candidate tables drifted in alias disclosure, evidence display, selection behavior, and keyboard ownership even though both workflows consumed the same resolver.
+  Evidence: live testing found review omitted the winning alias and autocomplete/review assigned conflicting meanings to Left and Right Arrow.
+- Observation: As an accessory Service app, Gym Assistant disappears from Command-Tab when the user consults another app while a chooser is open.
+  Evidence: live testing could leave both autocomplete and review open but provided no standard application-switcher route back to them.
+- Observation: A synchronous Notes Service request prevents independent note-bound autocomplete windows.
+  Evidence: switching to another note produced no insertion, a second invocation queued until the first assistant closed, and the queued assistant then appeared. Multiple assistants require an asynchronous insertion-context mechanism rather than additional windows around the existing Service call.
+- Observation: Command-Tab can recover Gym Assistant, but macOS otherwise leaves the most recently viewed application behind its window rather than the invoking Notes context.
+  Evidence: live testing returned from a browser to Gym Assistant with the browser still visible behind it, even though the original Notes insertion target remained safe.
+- Observation: Notes rejects ordinary programmatic activation while its synchronous Service request is still open.
+  Evidence: the workspace delivered both Notes and Gym Assistant activation events, but `NSRunningApplication.activate` returned false for Notes and neither an immediate nor delayed AppKit reorder placed Notes behind Gym Assistant.
+- Observation: Leaving autocomplete open beyond the Service deadline produces a misleading unresponsive-Service error even though search remains fast.
+  Evidence: event traces show otherwise responsive modal sessions lasting approximately 132 and 192 seconds against the declared 120-second autocomplete Service timeout.
+- Observation: A timer scheduled only in the default run-loop mode does not enforce a deadline while the autocomplete panel is running AppKit's modal loop, especially after focus changes.
+  Evidence: the first 105-second watchdog failed its manual field test. The revised timer is explicitly registered in both common and modal-panel run-loop modes.
+- Observation: The approved feedback packet existed in the plan but not in the runner while Task C review was already accumulating decisions.
+  Evidence: the live database retained the necessary outcomes and provenance, and the private Task A audit and initial candidate snapshot remained available, but no command joined them. The completed exporter now maps all 158 audit decisions with zero unmapped rows and indexes all 9 current skips.
+- Observation: Visible non-linkable conflict evidence depends on recognizing protected vocabulary before ordinary lexical scoring.
+  Evidence: the policy recognizes `deadlift` and `RDL` as hinge wording but not `DL`; field use therefore allowed a `DL` observation to surface squat candidates without the expected conflict treatment.
+- Observation: Candidate ordering lacks a total comparison across evidence types.
+  Evidence: transformation candidates carry categorical evidence without a numeric score, and mixed transformation/lexical comparisons may fall back to name ordering. Field use showed an exact `DB` to `Dumbbell` transformation too low and a `.50` lexical row below a `.45` row.
+- Observation: Cross-application focus recovery is frequent enough to be product friction, but repairing each finding inside Task C would prevent a stable field-test batch.
+  Evidence: the learner accepted the functional checkpoint while explicitly reporting repeated tab-away annoyance and chose to capture and batch further findings in Exercise 11.
 
 ## Decision Log
 
@@ -55,11 +79,42 @@ In progress.
 - Decision: Keep administrative ingestion in the command-line runner, but make routine observation review reachable from the existing keyboard-accessible Gym Assistant autocomplete panel through a visible Review Library action and local keyboard equivalent.
   Rationale: A command-line-only queue can verify mechanics but cannot test whether the product becomes better through routine library improvement. Reusing the existing Gym Assistant shortcut avoids another global shortcut. Review opens in a separate window so the Notes Service request can return; closing and reopening preserves progress. A full dashboard, menu-bar item, merge workflow, reminders, sorting system, and shortcut-settings UI remain outside Task C.
   Date/Author: 2026-08-26 / Learner and Codex.
+- Decision: Share the ranked-candidate chooser view, alias expansion, and selection behavior, but retain separate autocomplete and review workflow controllers.
+  Rationale: Both workflows present one identity-deduplicated row per exercise and score every durable name, while only autocomplete inserts text and only review can persist Link/Create/Skip. The shared collapsed row now displays the winning durable name; expansion shows the exercise's other names without displaying every non-winning score. Left and Right Arrow belong to name disclosure, while review uses Command-Z for one-step Back and Command-S for Skip.
+  Date/Author: 2026-08-26 / Learner and Codex.
+- Decision: Keep autocomplete fully read-only and do not expose the internal preferred/default-name designation.
+  Rationale: Once the collapsed row became the query's highest-scoring durable name, neither a default-alias marker nor Command-Return mutation improved the primary insertion workflow. Every visible name is a simple insertion choice. The database retains its preferred-name constraint as a stable fallback and orphan-prevention invariant; changing it is deferred to a future library-maintenance workflow if field evidence demonstrates a need.
+  Date/Author: 2026-08-26 / Learner and Codex, superseding the Make Preferred & Insert experiment.
+- Decision: Keep Gym Assistant as an accessory application rather than temporarily promoting it into the Dock and Command-Tab switcher.
+  Rationale: Field testing showed that temporary regular-app activation caused a distracting Dock bounce but did not let ordinary AppKit restore blocked Notes behind an open synchronous Service panel. The rejected experiment offered no reliable recovery benefit. Cross-application recovery requires an asynchronous insertion adapter or explicit Accessibility control rather than more window ordering.
+  Date/Author: 2026-08-26 / Learner and Codex, superseding the temporary activation experiment after field evidence.
+- Decision: Do not preselect an autocomplete result.
+  Rationale: Return must preserve and insert the user's query unless the user deliberately moves into the candidate list. Down Arrow selects the top result as the first candidate-navigation action. Observation review may retain top-candidate preselection because Link remains separately explicit.
+  Date/Author: 2026-08-26 / Learner and Codex.
+- Decision: Display each exercise identity's highest-scoring durable name in its collapsed chooser row.
+  Rationale: A preferred-name parent plus a separately labeled best-matching alias made several visible rows appear to claim “Best match” and added navigation before inserting the most relevant wording. The collapsed row now inserts the winning name directly and uses a compact reason, score, and alias count. Expansion shows every other durable name without exposing the internal default, repeating a confirmed-alias label, or displaying every non-winning query score. Identity deduplication, scoring, and review linking remain unchanged.
+  Date/Author: 2026-08-26 / Learner and Codex.
+- Decision: Auto-cancel autocomplete at 105 seconds while the synchronous Service boundary remains.
+  Rationale: The declared Service timeout is 120 seconds. Returning before that deadline prevents abandoned panels from surfacing as unresponsive Services without lengthening the period during which Notes is blocked. Normal quick interactions are unaffected.
+  Date/Author: 2026-08-26 / Learner and Codex.
 
 ## Outcomes & Retrospective
 
-No Task C implementation outcome yet. The revised non-blocking ingestion plan was
-approved on 2026-08-26; implementation and checkpoint evidence remain in progress.
+Task C completed the non-blocking personal-library ingestion and review-to-search
+vertical slice. The source fingerprint and reconciled counts account for 1,891 source
+records, 1,210 consolidated observations, and 2,224 occurrences. The private feedback
+packet maps all 158 extraction decisions with zero gaps and indexes all 9 skipped
+observations. At the checkpoint the live queue contained 43 created identities, 39
+linked observations, 9 skips, and 1,119 pending observations; unresolved work remains
+valid and absent from autocomplete.
+
+The learner verified that review decisions persist, review resumes, Escape returns to
+Notes, and newly resolved identities become available to autocomplete. Fifty-eight tests,
+all 37 resolver fixtures, and all six review-policy fixtures passed with zero
+candidate-caused identity writes. Product use also exposed ranking and focus limitations.
+Rather than broadening Task C, the learner chose a fixed next exercise that automatically
+collects and evaluates signals, preserves subjective friction with low effort, improves
+one approved resolver batch, and prepares the larger focus-recovery spike.
 
 ## Context and Orientation
 
@@ -120,3 +175,19 @@ Plan revision note (2026-08-25): Marked the plan in progress after learner appro
 Plan revision note (2026-08-26): Separated complete, idempotent observation ingestion from incremental identity decisions; made pending review non-blocking and resumable; added occurrence-level provenance and a private Task A/Task C feedback packet for the future completed-program extractor exercise.
 
 Plan revision note (2026-08-26): Initially limited review invocation to a command-line-launched local artifact, then superseded that choice after the learner identified that it could not support a true product test of iterative library improvement. Administrative ingestion remains command-line driven, while routine review is now reached from the existing Gym Assistant autocomplete panel and opens in a separate resumable window.
+
+Plan revision note (2026-08-26): Extracted a shared ranked-candidate chooser after live testing exposed presentation and keyboard drift between autocomplete and observation review. Workflow-specific query, provenance, insertion, and identity-decision controls remain outside the chooser.
+
+Plan revision note (2026-08-26): A short-lived Make Preferred & Insert experiment was later removed after the chooser began displaying the query's winning durable name directly. Autocomplete is fully read-only and does not expose the internal preferred-name designation.
+
+Plan revision note (2026-08-26): Field testing rejected temporary regular-app activation: it caused a Dock bounce and did not provide a reliable path back to Notes. Gym Assistant remains an accessory app. Cross-application recovery is now an explicit asynchronous-adapter or Accessibility boundary.
+
+Plan revision note (2026-08-26): Live cross-note testing confirmed that the synchronous Service safely avoids redirecting insertion but serializes invocations. Recorded multi-window note-bound autocomplete as a separate asynchronous insertion-context spike and removed autocomplete's default candidate selection.
+
+Plan revision note (2026-08-26): Two AppKit attempts to coordinate an open chooser with Notes failed in field testing; diagnostics showed that Notes rejected activation while servicing the synchronous request, and raising the chooser on Notes activation did not restore a usable window pair. Removed both failed strategies rather than retaining unverified focus code.
+
+Plan revision note (2026-08-26): Changed collapsed chooser rows from preferred names to each identity's highest-scoring durable name; expanded alternatives no longer expose the internal default. Added a 105-second local cancellation deadline after traces tied two unresponsive-Service alerts to sessions exceeding the 120-second synchronous Service timeout.
+
+Plan revision note (2026-08-26): Closed the missing private feedback-packet requirement. The generic runner now exports an owner-readable, regenerable Task A/Task C join with reconciliation counts, observation outcomes, occurrence provenance, initial candidates, audit-row mappings, unmapped-row reporting, and a direct skipped-observation index. The first real packet mapped 158/158 Task A decisions, reconciled 1,210 observations and 2,224 occurrences, and indexed 9/9 current skips with evidence.
+
+Plan revision note (2026-08-27): Marked Task C complete after the learner passed the product checkpoint. Preserved repeated tab-away friction, unrecognized `DL` conflict vocabulary, categorical transformation evidence, and unstable mixed-evidence ordering as field signals for Exercise 11 rather than extending this plan indefinitely.

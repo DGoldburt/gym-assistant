@@ -50,8 +50,8 @@ struct ExerciseCandidateGeneratorTests {
         #expect(identityReview.score(query: "abcde", candidate: "abxyz") == nil)
         #expect(autocomplete.score(query: "abcde", candidate: "abxyz") == 0.4)
 
-        #expect(identityReview.score(query: "Australian Row", candidate: "Aussie Pull-up") == 1)
-        #expect(autocomplete.score(query: "Australian Row", candidate: "Aussie Pull-up") == 1)
+        #expect(identityReview.score(query: "Australian Row", candidate: "Aussie Pull-up") == 0.999)
+        #expect(autocomplete.score(query: "Australian Row", candidate: "Aussie Pull-up") == 0.999)
 
         #expect(identityReview.score(
             query: "Short-Lever Copenhagen Plank",
@@ -61,5 +61,26 @@ struct ExerciseCandidateGeneratorTests {
             query: "Short-Lever Copenhagen Plank",
             candidate: "Long-Lever Copenhagen Plank"
         ) == nil)
+    }
+
+    @Test("Only normalized-name lookup may reserve a perfect score")
+    func scoredCandidatesRemainBelowOne() {
+        let rankers = [
+            ExerciseTextCandidateRanker(policy: .identityReview()),
+            ExerciseTextCandidateRanker(policy: .autocomplete())
+        ]
+        let comparisons = [
+            ("Australian Row", "Aussie Pull-up"),
+            ("Paloff Press", "Pallof Press"),
+            ("Front Squat", "Front Squat")
+        ]
+
+        for ranker in rankers {
+            for (query, candidate) in comparisons {
+                if let score = ranker.score(query: query, candidate: candidate) {
+                    #expect(score < 1)
+                }
+            }
+        }
     }
 }

@@ -18,6 +18,65 @@ public struct ExerciseObservationSource: Equatable, Sendable {
     }
 }
 
+public struct ExerciseObservationOccurrence: Equatable, Sendable {
+    public let sourceReference: String
+    public let evidence: String
+    public let occurrenceCount: Int
+
+    public init(sourceReference: String, evidence: String, occurrenceCount: Int) {
+        self.sourceReference = sourceReference
+        self.evidence = evidence
+        self.occurrenceCount = occurrenceCount
+    }
+}
+
+public struct ExerciseObservationIngestion: Equatable, Sendable {
+    public let id: String
+    public let sourceKind: String
+    public let sourceReference: String
+    public let sourceFingerprint: String
+
+    public init(id: String, sourceKind: String, sourceReference: String, sourceFingerprint: String) {
+        self.id = id
+        self.sourceKind = sourceKind
+        self.sourceReference = sourceReference
+        self.sourceFingerprint = sourceFingerprint
+    }
+}
+
+public struct IngestedExerciseObservation: Equatable, Sendable {
+    public let observation: StagedExerciseObservation
+    public let occurrences: [ExerciseObservationOccurrence]
+
+    public init(
+        observation: StagedExerciseObservation,
+        occurrences: [ExerciseObservationOccurrence]
+    ) {
+        self.observation = observation
+        self.occurrences = occurrences
+    }
+}
+
+public struct ExerciseObservationIngestionReport: Equatable, Sendable {
+    public let alreadyIngested: Bool
+    public let observationCount: Int
+    public let occurrenceCount: Int
+}
+
+public struct ExerciseReviewQueueItem: Equatable, Sendable {
+    public let observation: StagedExerciseObservation
+    public let status: ExerciseObservationReviewStatus
+    public let occurrences: [ExerciseObservationOccurrence]
+}
+
+public struct ExerciseObservationFeedbackRecord: Equatable, Sendable {
+    public let observation: StagedExerciseObservation
+    public let status: ExerciseObservationReviewStatus
+    public let resolvedExerciseID: ExerciseID?
+    public let evidenceSnapshot: String
+    public let occurrences: [ExerciseObservationOccurrence]
+}
+
 public struct StagedExerciseObservation: Equatable, Sendable {
     public let id: ExerciseObservationID
     public let observedName: String
@@ -47,8 +106,58 @@ public enum ExerciseReviewEvidence: Equatable, Sendable {
 public struct ExerciseReviewCandidate: Equatable, Sendable {
     public let exerciseID: ExerciseID
     public let preferredName: String
+    public let aliases: [String]
+    public let matchedName: String
     public let evidence: [ExerciseReviewEvidence]
     public let linkAllowed: Bool
+}
+
+public struct ExerciseReviewTextRelation: Equatable, Sendable {
+    public let evidence: ExerciseReviewEvidence
+    public let linkAllowed: Bool
+}
+
+public struct ExerciseReviewCandidateEvaluator: Sendable {
+    private let generator: ExerciseCandidateGenerator
+
+    public init(candidateGenerator: ExerciseCandidateGenerator = .init()) {
+        generator = candidateGenerator
+    }
+
+    public func evaluate(observation: String, candidate: String) -> ExerciseReviewTextRelation? {
+        if let relation = explicitRelationship(observation: observation, candidate: candidate) {
+            return relation
+        }
+        if let transformation = ReviewRelationshipPolicy.transformation(
+            observation: observation,
+            candidate: candidate
+        ) {
+            return .init(
+                evidence: .conservativeTransformation(transformation),
+                linkAllowed: true
+            )
+        }
+        let forward = generator.rank(query: observation, candidates: [candidate]).first?.score
+        let reverse = generator.rank(query: candidate, candidates: [observation]).first?.score
+        guard let score = [forward, reverse].compactMap({ $0 }).max() else { return nil }
+        return .init(evidence: .lexicalSimilarity(score: score), linkAllowed: true)
+    }
+
+    public func explicitRelationship(
+        observation: String,
+        candidate: String
+    ) -> ExerciseReviewTextRelation? {
+        guard let relation = ReviewRelationshipPolicy.relation(
+            observation: observation,
+            candidate: candidate
+        ) else { return nil }
+        switch relation {
+        case .prescription(let reason):
+            return .init(evidence: .prescriptionDifference(reason), linkAllowed: true)
+        case .identityConflict(let reason):
+            return .init(evidence: .identityConflict(reason), linkAllowed: false)
+        }
+    }
 }
 
 public enum ExerciseObservationReviewStatus: String, Equatable, Sendable {
@@ -70,6 +179,14 @@ public enum ExerciseIdentityReviewResult: Equatable, Sendable {
     case keptSeparate
 }
 
+public struct ExerciseIdentityReviewUndoReceipt: Equatable, Sendable {
+    public let observationID: ExerciseObservationID
+    public let decision: ExerciseObservationReviewStatus
+    public let previousStatus: ExerciseObservationReviewStatus
+    public let resolvedExerciseID: ExerciseID?
+    let previousEvidenceSnapshot: String
+}
+
 public enum ExerciseIdentityReviewError: Error, Equatable {
     case invalidOccurrenceCount
     case observationNotFound(ExerciseObservationID)
@@ -77,6 +194,8 @@ public enum ExerciseIdentityReviewError: Error, Equatable {
     case observationIDConflict(ExerciseObservationID)
     case incompatibleRepeatedDecision
     case sameExerciseCannotRemainSeparate
+    case invalidIngestion
+    case ingestionConflict(String)
 }
 
 public final class ExerciseIdentityReviewService {
@@ -100,6 +219,37 @@ public final class ExerciseIdentityReviewService {
         try library.stageReviewObservation(observation)
     }
 
+    public func ingest(
+        _ ingestion: ExerciseObservationIngestion,
+        observations: [IngestedExerciseObservation]
+    ) throws -> ExerciseObservationIngestionReport {
+        guard !ingestion.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !ingestion.sourceKind.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !ingestion.sourceReference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !ingestion.sourceFingerprint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !observations.isEmpty,
+              observations.allSatisfy({ item in
+                  item.observation.occurrenceCount > 0 &&
+                      !item.occurrences.isEmpty &&
+                      item.occurrences.allSatisfy { $0.occurrenceCount > 0 } &&
+                      Set(item.occurrences.map { "\($0.sourceReference)\u{0}\($0.evidence)" }).count
+                        == item.occurrences.count
+              }) else {
+            throw ExerciseIdentityReviewError.invalidIngestion
+        }
+        return try library.ingestReviewObservations(ingestion, observations: observations)
+    }
+
+    public func feedbackRecords() throws -> [ExerciseObservationFeedbackRecord] {
+        try library.reviewObservationFeedbackRecords()
+    }
+
+    public func reviewQueue() throws -> [ExerciseReviewQueueItem] {
+        try library.reviewQueueItems().filter { item in
+            try library.exactName(for: item.observation.observedName) == nil
+        }
+    }
+
     public func prepare(observationID: ExerciseObservationID) throws -> ExerciseReviewPreparation {
         guard let stored = try library.storedReviewObservation(observationID) else {
             throw ExerciseIdentityReviewError.observationNotFound(observationID)
@@ -113,6 +263,7 @@ public final class ExerciseIdentityReviewService {
         let preferredNames = try library.allPreferredNames()
         let allNames = try library.allNames()
         let preferredByExercise = Dictionary(uniqueKeysWithValues: preferredNames.map { ($0.exerciseID, $0) })
+        let namesByExercise = Dictionary(grouping: allNames, by: \ExerciseName.exerciseID)
         let forwardRanked = candidateGenerator.rank(
             query: stored.observedName,
             candidates: allNames.map(\.text)
@@ -124,7 +275,11 @@ public final class ExerciseIdentityReviewService {
                 candidates: [stored.observedName]
             ).first?.score
             if let reverseScore {
-                rankedByName[name.text] = max(rankedByName[name.text] ?? 0, reverseScore)
+                if let forwardScore = rankedByName[name.text] {
+                    rankedByName[name.text] = min(forwardScore, reverseScore)
+                } else {
+                    rankedByName[name.text] = reverseScore
+                }
             }
         }
 
@@ -141,6 +296,8 @@ public final class ExerciseIdentityReviewService {
                     candidate = .init(
                         exerciseID: name.exerciseID,
                         preferredName: preferred.text,
+                        aliases: aliases(for: name.exerciseID, preferred: preferred, namesByExercise: namesByExercise),
+                        matchedName: name.text,
                         evidence: [.prescriptionDifference(reason)],
                         linkAllowed: true
                     )
@@ -148,6 +305,8 @@ public final class ExerciseIdentityReviewService {
                     candidate = .init(
                         exerciseID: name.exerciseID,
                         preferredName: preferred.text,
+                        aliases: aliases(for: name.exerciseID, preferred: preferred, namesByExercise: namesByExercise),
+                        matchedName: name.text,
                         evidence: [.identityConflict(reason)],
                         linkAllowed: false
                     )
@@ -159,6 +318,8 @@ public final class ExerciseIdentityReviewService {
                 candidate = .init(
                     exerciseID: name.exerciseID,
                     preferredName: preferred.text,
+                    aliases: aliases(for: name.exerciseID, preferred: preferred, namesByExercise: namesByExercise),
+                    matchedName: name.text,
                     evidence: [.conservativeTransformation(transformation)],
                     linkAllowed: true
                 )
@@ -166,6 +327,8 @@ public final class ExerciseIdentityReviewService {
                 candidate = .init(
                     exerciseID: name.exerciseID,
                     preferredName: preferred.text,
+                    aliases: aliases(for: name.exerciseID, preferred: preferred, namesByExercise: namesByExercise),
+                    matchedName: name.text,
                     evidence: [.lexicalSimilarity(score: score)],
                     linkAllowed: true
                 )
@@ -174,15 +337,22 @@ public final class ExerciseIdentityReviewService {
             }
 
             guard let candidate else { continue }
-            if let existing = bestByExercise[name.exerciseID],
-               evidencePriority(existing) >= evidencePriority(candidate) {
-                continue
+            if let existing = bestByExercise[name.exerciseID] {
+                let existingPriority = evidencePriority(existing)
+                let candidatePriority = evidencePriority(candidate)
+                if existingPriority > candidatePriority ||
+                    (existingPriority == candidatePriority &&
+                     !lexicalEvidenceRanksBefore(candidate, existing)) {
+                    continue
+                }
             }
             bestByExercise[name.exerciseID] = candidate
         }
 
         let candidates = bestByExercise.values.sorted { lhs, rhs in
             if lhs.linkAllowed != rhs.linkAllowed { return lhs.linkAllowed }
+            if lexicalEvidenceRanksBefore(lhs, rhs) { return true }
+            if lexicalEvidenceRanksBefore(rhs, lhs) { return false }
             return lhs.preferredName.localizedCaseInsensitiveCompare(rhs.preferredName) == .orderedAscending
         }
 
@@ -266,6 +436,71 @@ public final class ExerciseIdentityReviewService {
         return .deferred
     }
 
+    public func linkWithUndoReceipt(
+        observationID: ExerciseObservationID,
+        to exerciseID: ExerciseID
+    ) throws -> (ExerciseIdentityReviewResult, ExerciseIdentityReviewUndoReceipt) {
+        guard let stored = try library.storedReviewObservation(observationID) else {
+            throw ExerciseIdentityReviewError.observationNotFound(observationID)
+        }
+        let result = try link(observationID: observationID, to: exerciseID)
+        return (result, .init(
+            observationID: observationID,
+            decision: .linked,
+            previousStatus: stored.status,
+            resolvedExerciseID: exerciseID,
+            previousEvidenceSnapshot: stored.evidenceSnapshot
+        ))
+    }
+
+    public func createWithUndoReceipt(
+        observationID: ExerciseObservationID
+    ) throws -> (ExerciseIdentityReviewResult, ExerciseIdentityReviewUndoReceipt) {
+        guard let stored = try library.storedReviewObservation(observationID) else {
+            throw ExerciseIdentityReviewError.observationNotFound(observationID)
+        }
+        let result = try create(observationID: observationID)
+        let decision: ExerciseObservationReviewStatus
+        let exerciseID: ExerciseID
+        switch result {
+        case .created(let match):
+            decision = .created
+            exerciseID = match.exerciseID
+        case .linked(let match):
+            decision = .linked
+            exerciseID = match.exerciseID
+        default:
+            throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+        }
+        return (result, .init(
+            observationID: observationID,
+            decision: decision,
+            previousStatus: stored.status,
+            resolvedExerciseID: exerciseID,
+            previousEvidenceSnapshot: stored.evidenceSnapshot
+        ))
+    }
+
+    public func skipWithUndoReceipt(
+        observationID: ExerciseObservationID
+    ) throws -> (ExerciseIdentityReviewResult, ExerciseIdentityReviewUndoReceipt) {
+        guard let stored = try library.storedReviewObservation(observationID) else {
+            throw ExerciseIdentityReviewError.observationNotFound(observationID)
+        }
+        let result = try deferDecision(observationID: observationID)
+        return (result, .init(
+            observationID: observationID,
+            decision: .deferred,
+            previousStatus: stored.status,
+            resolvedExerciseID: nil,
+            previousEvidenceSnapshot: stored.evidenceSnapshot
+        ))
+    }
+
+    public func undo(_ receipt: ExerciseIdentityReviewUndoReceipt) throws {
+        try library.undoReviewDecisionAtomically(receipt)
+    }
+
     public func keepSeparate(
         firstExerciseID: ExerciseID,
         secondExerciseID: ExerciseID
@@ -292,6 +527,26 @@ public final class ExerciseIdentityReviewService {
         case .conservativeTransformation: return 2
         case .lexicalSimilarity: return 1
         }
+    }
+
+    private func aliases(
+        for exerciseID: ExerciseID,
+        preferred: ExerciseName,
+        namesByExercise: [ExerciseID: [ExerciseName]]
+    ) -> [String] {
+        namesByExercise[exerciseID, default: []]
+            .filter { $0.id != preferred.id }
+            .map(\.text)
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    private func lexicalEvidenceRanksBefore(
+        _ lhs: ExerciseReviewCandidate,
+        _ rhs: ExerciseReviewCandidate
+    ) -> Bool {
+        guard case .lexicalSimilarity(let lhsScore) = lhs.evidence.first,
+              case .lexicalSimilarity(let rhsScore) = rhs.evidence.first else { return false }
+        return lhsScore > rhsScore
     }
 }
 

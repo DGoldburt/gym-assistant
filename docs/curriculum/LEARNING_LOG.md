@@ -943,3 +943,57 @@ decisions and keeps import parsing outside the core.
 Use the private import adapter to exercise the review boundary at full library
 scale. Revisit prescription structure or alias-menu growth only after field use
 shows that confirmed prescription-bearing names create meaningful friction.
+
+### 2026-08-27 — Exercise 10 — Task C: Personal-library product loop
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Imported the complete reviewed source into a durable non-blocking observation queue,
+used the in-product identity-review workflow to improve the live exercise library, and
+tested the resulting identities through autocomplete in Apple Notes.
+
+**Evidence**
+
+- Reconciled 1,891 source records into 1,210 consolidated observations and 2,224
+  occurrence records under the approved source fingerprint.
+- Preserved every occurrence's private provenance while keeping source wording, note
+  titles, source lines, the live database, backups, and review artifacts out of Git.
+- The private extractor-feedback packet maps all 158 Task A decisions with zero gaps and
+  directly indexes all 9 skipped observations with their candidate evidence.
+- At checkpoint time, review had created 43 exercise identities, linked 39 observations,
+  skipped 9, and retained 1,119 pending observations. Pending and skipped observations
+  remain outside autocomplete and do not invalidate complete ingestion.
+- Verified transactional rollback, idempotent ingestion and decision reruns, independent
+  decisions, resumable review, one-step Back, Skip accounting, and durable aliases.
+- From Notes, verified that Review Library is reachable without Terminal, decisions
+  persist immediately, Escape returns focus, and a newly resolved name is available for
+  autocomplete insertion.
+- Fifty-eight tests, all 37 resolver fixtures, and all six identity-review fixtures pass
+  with zero candidate-caused identity writes.
+- Field use retained known product signals rather than hiding them: repeated tab-away
+  friction, missing `DL` protected-conflict recognition, exact abbreviation evidence
+  appearing too low, and inconsistent mixed-evidence ordering.
+
+**My reflection**
+
+> I learned that the pending count demonstrates a resumable review workload, not ingestion completeness. Ingestion completeness is supported by the source fingerprint and reconciled observation and occurrence totals. The reviewed subset's usefulness can only be established through product use; unresolved identities may remain without invalidating ingestion. Review outcomes, evidence, and provenance are being retained, but the planned extractor-feedback packet still needs to be generated. Skipped observations will require later qualitative review because skipping alone does not identify whether the uncertainty came from identity, wording, context, or extraction.
+
+**Correction after the approved reflection**
+
+The extractor-feedback packet was generated before Task C closed. It reconciles all 158
+Task A decisions and indexes all 9 current skips. The reflection's broader lesson remains
+accurate: the packet preserves evidence but does not itself explain why an observation
+was skipped.
+
+**Next time / revisit**
+
+Use Exercise 11 to collect resolver and focus signals during ordinary use, evaluate
+mechanical anomalies automatically, retain subjective flags with one action, and improve
+only a fixed approved batch. Keep the larger asynchronous Notes focus change in its own
+spike plan.

@@ -79,4 +79,9 @@ public final class ExerciseNameWorkflow {
         }
         return .init(exerciseID: exerciseID, preferredName: preferredName.text)
     }
+
+    public func makePreferred(name: String, for exerciseID: ExerciseID) throws -> ExerciseWorkflowMatch {
+        let preferred = try library.setPreferredName(name, for: exerciseID)
+        return .init(exerciseID: exerciseID, preferredName: preferred.text)
+    }
 }

@@ -34,7 +34,10 @@ Selected-text and post-program interactions remain useful secondary workflows.
 They can resolve wording already present in a note, link a confirmed alias, create
 a genuinely new exercise, or review unmatched exercise text after a program has
 been written. Choosing an autocomplete result for insertion does not by itself
-confirm an alias or create an exercise-identity relationship.
+confirm an alias or create an exercise-identity relationship. Autocomplete has one
+narrow explicit mutation: when the selected wording is already a confirmed alias
+owned by that exercise, Make Preferred & Insert may change which owned name is the
+default while inserting it. This does not create, delete, link, or merge identity.
 
 ## Exercise identity
 

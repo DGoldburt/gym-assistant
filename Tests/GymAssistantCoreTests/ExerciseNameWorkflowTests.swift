@@ -64,6 +64,20 @@ struct ExerciseNameWorkflowTests {
         #expect(try fixture.library.exactName(for: "Kickstand RDL")?.exerciseID == existing.exercise.id)
         #expect(try fixture.library.allPreferredNames().count == 1)
     }
+
+    @Test("Explicit preference change preserves identity and every confirmed name")
+    func makeAliasPreferred() throws {
+        let fixture = try WorkflowFixture()
+        let rdl = try fixture.library.createExercise(preferredName: "Romanian Deadlift")
+        _ = try fixture.library.addName("RDL", to: rdl.exercise.id)
+
+        #expect(try fixture.workflow.makePreferred(name: "RDL", for: rdl.exercise.id) == .init(
+            exerciseID: rdl.exercise.id,
+            preferredName: "RDL"
+        ))
+        #expect(try fixture.library.exactName(for: "Romanian Deadlift")?.exerciseID == rdl.exercise.id)
+        #expect(try fixture.library.exactName(for: "RDL")?.exerciseID == rdl.exercise.id)
+    }
 }
 
 private final class WorkflowFixture {

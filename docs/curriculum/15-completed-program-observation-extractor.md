@@ -18,7 +18,7 @@ semantically separate.
 - Exercise 10 has ingested the personal source with occurrence provenance.
 - The private Task A extraction audit remains available by source fingerprint.
 - The private Task C feedback packet connects stable observation IDs to review
-  status, candidate snapshots, and explicit outcomes.
+  status, candidate snapshots, and explicit outcomes. Re-run the packet exporter to make sure it covers all review decisions that have accumulated in the database since the last packet was generated.
 - The observation store and identity-review service remain independent of Notes.
 
 If any private prerequisite is unavailable, stop and reconstruct only the smallest

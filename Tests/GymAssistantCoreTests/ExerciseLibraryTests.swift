@@ -41,6 +41,28 @@ struct ExerciseLibraryTests {
         #expect(existing.id == created.preferredName.id)
     }
 
+    @Test("Only an owned confirmed alias can become preferred")
+    func changePreferredName() throws {
+        let fixture = try Fixture()
+        let rdl = try fixture.library.createExercise(preferredName: "Romanian Deadlift")
+        let alias = try fixture.library.addName("RDL", to: rdl.exercise.id)
+        let squat = try fixture.library.createExercise(preferredName: "Front Squat")
+
+        let changed = try fixture.library.setPreferredName(" rdl ", for: rdl.exercise.id)
+        #expect(changed.id == alias.id)
+        #expect(changed.exerciseID == rdl.exercise.id)
+        #expect(try fixture.library.preferredName(for: rdl.exercise.id)?.id == alias.id)
+        #expect(try fixture.library.preferredName(for: rdl.exercise.id)?.text == "RDL")
+        #expect(throws: ExerciseLibraryError.nameNotOwnedByExercise(
+            proposedText: "Front Squat",
+            exerciseID: rdl.exercise.id
+        )) {
+            try fixture.library.setPreferredName("Front Squat", for: rdl.exercise.id)
+        }
+        #expect(try fixture.library.preferredName(for: squat.exercise.id)?.text == "Front Squat")
+        #expect(try fixture.library.allNames().count == 3)
+    }
+
     @Test("A normalized name cannot be owned by two exercises")
     func conflictingOwnershipFails() throws {
         let fixture = try Fixture()

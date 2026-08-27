@@ -4,6 +4,25 @@ import Testing
 
 @Suite("Exercise autocomplete search")
 struct ExerciseAutocompleteSearchTests {
+    @Test("Reserves 1.000 for normalized-name lookup")
+    func reservedNormalizedNameScore() throws {
+        let fixture = try SearchFixture()
+        _ = try fixture.add("Front Squat")
+        _ = try fixture.add("Aussie Pull-up")
+
+        let normalized = try #require(fixture.search.search(" FRONT   SQUAT! ").first)
+        #expect(normalized.matchKind == .normalizedName)
+        #expect(normalized.score == 1)
+
+        let prefix = try #require(fixture.search.search("front").first)
+        #expect(prefix.matchKind == .namePrefix)
+        #expect(prefix.score < 1)
+
+        let equivalence = try #require(fixture.search.search("Australian Row").first)
+        #expect(equivalence.matchKind == .fuzzy)
+        #expect(equivalence.score < 1)
+    }
+
     @Test("Ranks exact, whole-name prefix, and ordered token-prefix evidence")
     func transparentRanking() throws {
         let fixture = try SearchFixture()
@@ -53,7 +72,9 @@ struct ExerciseAutocompleteSearchTests {
         let results = try fixture.search.search("coppen")
         #expect(results.map(\.preferredName).prefix(2) == ["Coppen Press", "Copenhagen Plank"])
         #expect(results.first?.matchKind == .namePrefix)
+        #expect((results.first?.score ?? 1) < 1)
         #expect(results.dropFirst().first?.matchKind == .fuzzy)
+        #expect((results.dropFirst().first?.score ?? 1) < 1)
     }
 
     @Test("Protected modifier conflicts are excluded from fuzzy results")

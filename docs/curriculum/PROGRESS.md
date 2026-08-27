@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 10
-Current task: Task C — Import the personal library and test the useful product slice
-Current task state: in-progress
-Task completion condition: pass Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–B
-Remaining tasks: Exercise 10 — Task C
-Most recent checkpoint: Exercise 10 Task B `STOP / REVIEW — Identity-review evidence` (passed)
-Relevant skills: verify, set-boundaries, record-decisions
+Current exercise: 11
+Current task: Task A — Define the field-signal contract
+Current task state: not started
+Task completion condition: pass Exercise 11 Task A `STOP / REVIEW — Feedback-loop contract`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C
+Remaining tasks: Exercise 11 — Tasks A–D
+Most recent checkpoint: Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate` (passed)
+Relevant skills: frame-work, verify, set-boundaries, record-decisions
 
 ## Completed
 
@@ -20,7 +20,7 @@ Relevant skills: verify, set-boundaries, record-decisions
 - [x] 07 — Fuzzy candidate generation and human confirmation
 - [x] 08 — Frictionless new-exercise workflow
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
-- [ ] 10 — Exercise identity review and personal-library import
+- [x] 10 — Exercise identity review and personal-library import
 - [ ] 11 — Field feedback loops and resolver improvement
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
@@ -108,6 +108,13 @@ Relevant skills: verify, set-boundaries, record-decisions
   observation-text-only Create, and durable Defer; audit-only Keep Separate applies
   to two existing IDs. Forty-three tests, all 37 resolver fixtures, and all six
   review-policy fixtures pass with zero candidate-caused identity writes.
+- Exercise 10 Task C ingested 1,891 source records as 1,210 durable observations
+  and 2,224 occurrence records. The private feedback packet maps 158/158 extraction
+  decisions with zero gaps and indexes all 9 skips. Review-to-autocomplete passed
+  in Notes; 58 tests, 37 resolver fixtures, and 6 review-policy fixtures pass.
+- Field use retained repeated tab-away friction, missing `DL` protected-conflict
+  recognition, and mixed-evidence ordering problems as Exercise 11 signals rather
+  than expanding Task C indefinitely.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -122,10 +129,8 @@ Relevant skills: verify, set-boundaries, record-decisions
 
 ## Next action
 
-Continue Exercise 10 Task C by adapting the private-source work to ingest the
-complete source and occurrence provenance into a resumable non-blocking queue.
-Add a keyboard-operable Review Library entry to the existing Gym Assistant
-autocomplete panel, review and preview a useful subset, prove independent ingestion
-and decision idempotency, then test the closed loop from review to improved Notes
-autocomplete without Terminal. Preserve the private Task A/Task C feedback packet
-for planned Exercise 15 without implementing the completed-program extractor now.
+Begin Exercise 11 Task A by defining the private field-event schema, one-action
+subjective flag, deterministic anomaly checks, baseline metrics, disposition ledger,
+and fixed first resolver batch. Keep collection and evaluation unattended-capable,
+but retain prioritization, identity changes, and product-scope decisions as foreground
+gates.

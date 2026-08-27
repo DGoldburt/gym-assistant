@@ -23,6 +23,8 @@ struct ExerciseTextCandidatePolicy: Sendable {
 }
 
 struct ExerciseTextCandidateRanker: Sendable {
+    static let maximumScoredCandidateScore = 0.999
+
     let policy: ExerciseTextCandidatePolicy
 
     func score(query: String, candidate: String) -> Double? {
@@ -61,7 +63,9 @@ struct ExerciseTextCandidateRanker: Sendable {
             shortPrefixSimilarity
         )
         let effectiveMinimum = isShortSingleToken ? max(policy.minimumScore, 0.7) : policy.minimumScore
-        return score >= effectiveMinimum ? score : nil
+        return score >= effectiveMinimum
+            ? min(score, Self.maximumScoredCandidateScore)
+            : nil
     }
 
     private func rankingTokens(_ text: String) -> [String] {

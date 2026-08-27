@@ -63,6 +63,37 @@ struct ExerciseIdentityReviewTests {
         #expect(score >= 0.45)
     }
 
+    @Test("A close full-name match outranks a shorter contained name")
+    func fullNameClosenessOutranksShortContainment() throws {
+        let fixture = try ReviewFixture()
+        _ = try fixture.library.createExercise(preferredName: "Air squat")
+        _ = try fixture.library.createExercise(preferredName: "Air squat jump")
+        try fixture.stage("Air squat jumps", id: "air-squat-jumps")
+
+        let candidates = try fixture.candidates("air-squat-jumps")
+        #expect(candidates.prefix(2).map(\.preferredName) == ["Air squat jump", "Air squat"])
+        guard case .lexicalSimilarity(let closerScore) = candidates.first?.evidence.first,
+              case .lexicalSimilarity(let shorterScore) = candidates.dropFirst().first?.evidence.first else {
+            Issue.record("Expected lexical evidence for both candidates")
+            return
+        }
+        #expect(closerScore > shorterScore)
+        #expect(shorterScore < 0.999)
+    }
+
+    @Test("Review keeps the winning alias while presenting one exercise identity")
+    func reviewCandidatePreservesWinningAlias() throws {
+        let fixture = try ReviewFixture()
+        let rdl = try fixture.library.createExercise(preferredName: "Romanian Deadlift")
+        _ = try fixture.library.addName("RDL", to: rdl.exercise.id)
+        try fixture.stage("RDLs", id: "alias-winner")
+
+        let candidate = try #require(fixture.candidates("alias-winner").first)
+        #expect(candidate.preferredName == "Romanian Deadlift")
+        #expect(candidate.matchedName == "RDL")
+        #expect(candidate.aliases == ["RDL"])
+    }
+
     @Test("Link requires reviewable evidence and persists imported alias once")
     func linkIsExplicitAndIdempotent() throws {
         let fixture = try ReviewFixture()
@@ -143,6 +174,51 @@ struct ExerciseIdentityReviewTests {
         #expect(try reopened.allNames().isEmpty)
     }
 
+    @Test("Back atomically restores prior status and removes only the decision's identity write")
+    func undoLastReviewDecision() throws {
+        let createFixture = try ReviewFixture()
+        try createFixture.stage("New Contralateral RDL", id: "create-undo")
+        let (_, createReceipt) = try createFixture.service.createWithUndoReceipt(
+            observationID: .init(rawValue: "create-undo")
+        )
+        #expect(try createFixture.library.allNames().count == 1)
+        try createFixture.service.undo(createReceipt)
+        #expect(try createFixture.library.allNames().isEmpty)
+        guard case .review(let createStatus, _) = try createFixture.service.prepare(
+            observationID: .init(rawValue: "create-undo")
+        ) else {
+            Issue.record("Expected the created observation to return to review")
+            return
+        }
+        #expect(createStatus == .pending)
+
+        let linkFixture = try ReviewFixture()
+        let floorPress = try linkFixture.library.createExercise(preferredName: "Dumbbell Floor Press")
+        try linkFixture.stage("DB Floor Press", id: "link-undo")
+        let (_, linkReceipt) = try linkFixture.service.linkWithUndoReceipt(
+            observationID: .init(rawValue: "link-undo"),
+            to: floorPress.exercise.id
+        )
+        #expect(try linkFixture.library.allNames().count == 2)
+        try linkFixture.service.undo(linkReceipt)
+        #expect(try linkFixture.library.allNames().count == 1)
+        #expect(try linkFixture.library.exactName(for: "DB Floor Press") == nil)
+
+        let skipFixture = try ReviewFixture()
+        try skipFixture.stage("Unclear exercise", id: "skip-undo")
+        let (_, skipReceipt) = try skipFixture.service.skipWithUndoReceipt(
+            observationID: .init(rawValue: "skip-undo")
+        )
+        try skipFixture.service.undo(skipReceipt)
+        guard case .review(let skipStatus, _) = try skipFixture.service.prepare(
+            observationID: .init(rawValue: "skip-undo")
+        ) else {
+            Issue.record("Expected the skipped observation to return to review")
+            return
+        }
+        #expect(skipStatus == .pending)
+    }
+
     @Test("Keep Separate applies only to two existing identities and is idempotent")
     func keepSeparateExistingIdentities() throws {
         let fixture = try ReviewFixture()
@@ -188,6 +264,24 @@ struct ExerciseIdentityReviewTests {
         #expect(throws: ExerciseIdentityReviewError.observationIDConflict(.init(rawValue: "stable"))) {
             try fixture.stage("Reverse Lunge", id: "stable")
         }
+    }
+
+    @Test("Review queue is resumable and resolved identities leave it")
+    func reviewQueueLifecycle() throws {
+        let fixture = try ReviewFixture()
+        try fixture.stage("First New Exercise", id: "first")
+        try fixture.stage("Second New Exercise", id: "second")
+        try fixture.stage("Third New Exercise", id: "third")
+
+        #expect(try fixture.service.reviewQueue().map(\.observation.id.rawValue) == ["first", "second", "third"])
+        _ = try fixture.service.deferDecision(observationID: .init(rawValue: "first"))
+        #expect(try fixture.service.reviewQueue().map(\.observation.id.rawValue) == ["second", "third", "first"])
+
+        _ = try fixture.service.create(observationID: .init(rawValue: "second"))
+        let remaining = try fixture.service.reviewQueue()
+        #expect(remaining.count == 2)
+        #expect(remaining.map(\.observation.id.rawValue) == ["third", "first"])
+        #expect(remaining.last?.status == .deferred)
     }
 }
 
