@@ -21,7 +21,7 @@ Relevant skills: verify, set-boundaries, record-decisions
 - [x] 08 — Frictionless new-exercise workflow
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
 - [ ] 10 — Exercise identity review and personal-library import
-- [ ] 11 — Reuse conservative transformations in autocomplete (only if field use justifies continuing)
+- [ ] 11 — Field feedback loops and resolver improvement
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
