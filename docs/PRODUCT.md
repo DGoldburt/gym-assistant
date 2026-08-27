@@ -34,7 +34,10 @@ Selected-text and post-program interactions remain useful secondary workflows.
 They can resolve wording already present in a note, link a confirmed alias, create
 a genuinely new exercise, or review unmatched exercise text after a program has
 been written. Choosing an autocomplete result for insertion does not by itself
-confirm an alias or create an exercise-identity relationship.
+confirm an alias or create an exercise-identity relationship. Autocomplete has one
+narrow explicit mutation: when the selected wording is already a confirmed alias
+owned by that exercise, Make Preferred & Insert may change which owned name is the
+default while inserting it. This does not create, delete, link, or merge identity.
 
 ## Exercise identity
 
@@ -76,23 +79,44 @@ near-duplicate search results. Later, the same mistake can fragment blocks,
 exercise attributes, programming frequency, recent exposure, client history, and
 load history across identities that should have been one.
 
-The product therefore needs a reusable exercise-identity review workflow. Given
-observed exercise wording and its source evidence, the workflow may let the user:
+The product therefore needs a reusable exercise-observation and identity-review
+workflow. Personal-library imports and completed-program reviews both contribute
+durable observations with source evidence to the same resumable review queue.
+Ingestion does not block program writing or require every identity question to be
+answered: the user may open, dismiss, and later resume review while pending and
+deferred observations remain outside autocomplete identity.
+
+Routine library improvement must not require Terminal. The keyboard-accessible
+Gym Assistant UI provides a visible Review Library action that opens the resumable
+queue. Administrative source ingestion, backups, and diagnostics may remain local
+command-line operations.
+
+Given staged exercise wording and its source evidence, the workflow may let the
+user:
 
 - link the wording to an existing exercise as a confirmed name;
-- create a genuinely new exercise and choose its preferred display name;
-- affirm that similar exercises should remain separate;
+- create a genuinely new exercise using the preserved observation as its initial
+  preferred name;
 - defer an uncertain decision without losing the observation.
 
-Candidate scores, deterministic transformations, and AI-extracted source material
-may help surface possibilities, but none may establish identity without user
-confirmation. AI preparation of source data should preserve observed wording and
-provenance rather than produce a supposedly cleaned canonical library.
+A manual library audit may additionally affirm that two already-existing exercise
+identities should remain separate. That is not an import or completed-program
+observation decision.
 
-The personal-library import is the first use of this review workflow. Later
-adapters may send it unmatched wording from a completed-program review or possible
-duplicates from a manual library audit. Those adapters should reuse the identity
-review rather than implement separate alias-decision systems.
+Deterministic transformations, candidate match scores (using fuzzy matching), and
+AI-extracted source material may help surface possibilities, but none may establish
+identity without user confirmation. AI preparation of source data should preserve
+observed wording and provenance rather than produce a supposedly cleaned canonical
+library.
+
+The personal-library import is the first observation source for this review
+workflow. It is behaviorally equivalent to reviewing observations from one or
+many completed programs, although the import and completed-program adapters retain
+their own source records and provenance. A reusable exercise-observation extractor
+should later identify plausible exercise wording inside mixed completed-program
+text while preserving verbatim evidence and making no identity decision. Manual
+library audits may send possible duplicates to the same identity-evidence boundary
+while retaining their separate Merge and Keep Separate operations.
 
 ## Non-goals for initial MVP
 
@@ -106,10 +130,11 @@ review rather than implement separate alias-decision systems.
 ## Product horizons
 
 The current and next slices should establish low-friction library maintenance,
-keyboard-first retrieval of known exercises, and a trustworthy personal-library
-import through the reusable identity-review workflow. Later slices may help the
-user search by programming intent, select complementary exercises, insert reusable
-blocks, and review a completed program for unmatched exercise wording.
+keyboard-first retrieval of known exercises, and trustworthy non-blocking
+observation ingestion from the personal library through the reusable identity-
+review workflow. Later slices may add reusable completed-program observation
+extraction, help the user search by programming intent, select complementary
+exercises, and insert reusable blocks.
 
 These horizons preserve the larger product direction without adding their scope
 to the active slice. The evidence, opportunities, candidate solutions, and current

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum ExerciseSearchMatchKind: Int, Comparable, Sendable {
-    case exact = 0
+    case normalizedName = 0
     case namePrefix = 1
     case orderedTokenPrefix = 2
     case lexicalContainment = 3
@@ -19,6 +19,7 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
     public let matchedName: String
     public let matchedNameIsPreferred: Bool
     public let matchKind: ExerciseSearchMatchKind
+    public let score: Double
 
     public init(
         exerciseID: ExerciseID,
@@ -26,7 +27,8 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
         aliases: [String],
         matchedName: String,
         matchedNameIsPreferred: Bool,
-        matchKind: ExerciseSearchMatchKind
+        matchKind: ExerciseSearchMatchKind,
+        score: Double
     ) {
         self.exerciseID = exerciseID
         self.preferredName = preferredName
@@ -34,6 +36,7 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
         self.matchedName = matchedName
         self.matchedNameIsPreferred = matchedNameIsPreferred
         self.matchKind = matchKind
+        self.score = score
     }
 }
 
@@ -94,7 +97,8 @@ public final class ExerciseAutocompleteSearch {
                 aliases: aliases,
                 matchedName: ranked.name.text,
                 matchedNameIsPreferred: ranked.isPreferred,
-                matchKind: ranked.kind
+                matchKind: ranked.kind,
+                score: ranked.score
             )
         }
         .sorted { lhs, rhs in
@@ -115,7 +119,7 @@ public final class ExerciseAutocompleteSearch {
         let isPreferred: Bool
         let kind: ExerciseSearchMatchKind
         let unmatchedCharacters: Int
-        let fuzzyScore: Double
+        let score: Double
     }
 
     private func rank(query: String, name: ExerciseName, isPreferred: Bool) -> RankedName? {
@@ -123,27 +127,27 @@ public final class ExerciseAutocompleteSearch {
         let queryTokens = tokens(query)
         let candidateTokens = tokens(candidate)
         let kind: ExerciseSearchMatchKind
-        let fuzzyScore: Double
+        let score: Double
 
         if candidate == query {
-            kind = .exact
-            fuzzyScore = 1
+            kind = .normalizedName
+            score = 1
         } else if candidate.hasPrefix(query) {
             kind = .namePrefix
-            fuzzyScore = 1
+            score = ExerciseTextCandidateRanker.maximumScoredCandidateScore
         } else if orderedTokenPrefixes(queryTokens, in: candidateTokens) {
             kind = .orderedTokenPrefix
-            fuzzyScore = 1
+            score = ExerciseTextCandidateRanker.maximumScoredCandidateScore
         } else if candidate.contains(query) || queryTokens.allSatisfy({ queryToken in
             candidateTokens.contains(where: { $0.contains(queryToken) })
         }) {
             kind = .lexicalContainment
-            fuzzyScore = 1
+            score = ExerciseTextCandidateRanker.maximumScoredCandidateScore
         } else {
             guard let sharedScore = fuzzyRanker.score(query: query, candidate: candidate) else {
                 return nil
             }
-            fuzzyScore = sharedScore
+            score = sharedScore
             kind = .fuzzy
         }
 
@@ -152,14 +156,14 @@ public final class ExerciseAutocompleteSearch {
             isPreferred: isPreferred,
             kind: kind,
             unmatchedCharacters: max(0, candidate.count - query.count),
-            fuzzyScore: fuzzyScore
+            score: score
         )
     }
 
     private func coreRanksBefore(_ lhs: RankedName, _ rhs: RankedName) -> Bool {
         if lhs.kind != rhs.kind { return lhs.kind < rhs.kind }
-        if lhs.kind == .fuzzy, lhs.fuzzyScore != rhs.fuzzyScore {
-            return lhs.fuzzyScore > rhs.fuzzyScore
+        if lhs.kind == .fuzzy, lhs.score != rhs.score {
+            return lhs.score > rhs.score
         }
         if lhs.unmatchedCharacters != rhs.unmatchedCharacters {
             return lhs.unmatchedCharacters < rhs.unmatchedCharacters

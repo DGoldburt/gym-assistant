@@ -1,5 +1,6 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "maximumScoredCandidateScoreExclusive": 1.0,
   "normalizationAssumptions": [
     "Case differences do not establish distinct exercise identity.",
     "Leading, trailing, and repeated whitespace do not establish distinct exercise identity.",

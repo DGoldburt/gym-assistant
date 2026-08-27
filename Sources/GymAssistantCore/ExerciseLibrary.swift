@@ -47,8 +47,18 @@ public struct CreatedExercise: Equatable, Sendable {
 public enum ExerciseLibraryError: Error, Equatable {
     case emptyName
     case exerciseNotFound(ExerciseID)
+    case nameNotOwnedByExercise(proposedText: String, exerciseID: ExerciseID)
     case nameOwnershipConflict(proposedText: String, existingOwnerID: ExerciseID)
     case database(message: String)
+}
+
+struct StoredReviewObservation: Equatable, Sendable {
+    let observation: StagedExerciseObservation
+    let status: ExerciseObservationReviewStatus
+    let resolvedExerciseID: ExerciseID?
+    let evidenceSnapshot: String
+
+    var observedName: String { observation.observedName }
 }
 
 public struct BasicExerciseNameNormalizer: Sendable {
@@ -208,6 +218,33 @@ public final class ExerciseLibrary {
         )
     }
 
+    public func setPreferredName(
+        _ text: String,
+        for exerciseID: ExerciseID,
+        now: Date = Date()
+    ) throws -> ExerciseName {
+        guard try exerciseExists(exerciseID) else {
+            throw ExerciseLibraryError.exerciseNotFound(exerciseID)
+        }
+        let normalizedText = try normalizer.normalize(text)
+        guard let name = try name(forNormalizedText: normalizedText),
+              name.exerciseID == exerciseID else {
+            throw ExerciseLibraryError.nameNotOwnedByExercise(
+                proposedText: text,
+                exerciseID: exerciseID
+            )
+        }
+        try run(
+            "UPDATE exercise SET preferred_name_id = ?, updated_at = ? WHERE id = ?",
+            bindings: [
+                .text(name.id.rawValue.uuidString),
+                .double(now.timeIntervalSince1970),
+                .text(exerciseID.rawValue.uuidString),
+            ]
+        )
+        return name
+    }
+
     public func allPreferredNames() throws -> [ExerciseName] {
         try queryNames(
             """
@@ -227,6 +264,518 @@ public final class ExerciseLibrary {
             ORDER BY normalized_text, id
             """
         )
+    }
+
+    func ingestReviewObservations(
+        _ ingestion: ExerciseObservationIngestion,
+        observations: [IngestedExerciseObservation]
+    ) throws -> ExerciseObservationIngestionReport {
+        let alreadyIngested = try scalarInt(
+            "SELECT COUNT(*) FROM exercise_observation_ingestion WHERE id = ?",
+            bindings: [.text(ingestion.id)]
+        ) == 1
+
+        if alreadyIngested {
+            let matching = try scalarInt(
+                """
+                SELECT COUNT(*) FROM exercise_observation_ingestion
+                WHERE id = ? AND source_kind = ? AND source_reference = ? AND source_fingerprint = ?
+                """,
+                bindings: [
+                    .text(ingestion.id),
+                    .text(ingestion.sourceKind),
+                    .text(ingestion.sourceReference),
+                    .text(ingestion.sourceFingerprint),
+                ]
+            ) == 1
+            guard matching else {
+                throw ExerciseIdentityReviewError.ingestionConflict(ingestion.id)
+            }
+        }
+
+        for item in observations {
+            guard item.observation.source.adapter == ingestion.sourceKind,
+                  item.observation.source.reference == ingestion.id,
+                  item.occurrences.reduce(0, { $0 + $1.occurrenceCount }) == item.observation.occurrenceCount else {
+                throw ExerciseIdentityReviewError.invalidIngestion
+            }
+            if let existing = try storedReviewObservation(item.observation.id),
+               existing.observation.observedName != item.observation.observedName.trimmingCharacters(in: .whitespacesAndNewlines)
+                || existing.observation.source != item.observation.source {
+                throw ExerciseIdentityReviewError.observationIDConflict(item.observation.id)
+            }
+        }
+
+        try transaction {
+            try run(
+                """
+                INSERT OR IGNORE INTO exercise_observation_ingestion (
+                    id, source_kind, source_reference, source_fingerprint, created_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                bindings: [
+                    .text(ingestion.id),
+                    .text(ingestion.sourceKind),
+                    .text(ingestion.sourceReference),
+                    .text(ingestion.sourceFingerprint),
+                    .double(Date().timeIntervalSince1970),
+                ]
+            )
+            for item in observations {
+                try stageReviewObservation(item.observation)
+                for occurrence in item.occurrences {
+                    try run(
+                        """
+                        INSERT OR IGNORE INTO exercise_observation_occurrence (
+                            observation_id, ingestion_id, source_reference, evidence_text,
+                            occurrence_count, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        """,
+                        bindings: [
+                            .text(item.observation.id.rawValue),
+                            .text(ingestion.id),
+                            .text(occurrence.sourceReference),
+                            .text(occurrence.evidence),
+                            .double(Double(occurrence.occurrenceCount)),
+                            .double(Date().timeIntervalSince1970),
+                        ]
+                    )
+                }
+            }
+        }
+
+        return .init(
+            alreadyIngested: alreadyIngested,
+            observationCount: observations.count,
+            occurrenceCount: observations.reduce(0) { $0 + $1.observation.occurrenceCount }
+        )
+    }
+
+    func reviewQueueItems() throws -> [ExerciseReviewQueueItem] {
+        let statement = try prepare(
+            """
+            SELECT id, observed_name, source_adapter, source_reference, occurrence_count, status
+            FROM exercise_review_observation
+            WHERE status IN ('pending', 'deferred')
+            ORDER BY CASE status WHEN 'deferred' THEN 1 ELSE 0 END, updated_at, id
+            """,
+            bindings: []
+        )
+        defer { sqlite3_finalize(statement) }
+
+        var items: [ExerciseReviewQueueItem] = []
+        while true {
+            switch sqlite3_step(statement) {
+            case SQLITE_ROW:
+                guard let id = columnText(statement, 0),
+                      let observedName = columnText(statement, 1),
+                      let adapter = columnText(statement, 2),
+                      let reference = columnText(statement, 3),
+                      let statusText = columnText(statement, 5),
+                      let status = ExerciseObservationReviewStatus(rawValue: statusText) else {
+                    throw databaseError()
+                }
+                let observationID = ExerciseObservationID(rawValue: id)
+                let observation = StagedExerciseObservation(
+                    id: observationID,
+                    observedName: observedName,
+                    source: .init(adapter: adapter, reference: reference),
+                    occurrenceCount: Int(sqlite3_column_int64(statement, 4))
+                )
+                let occurrences = try observationOccurrences(observationID)
+                items.append(.init(
+                    observation: observation,
+                    status: status,
+                    occurrences: occurrences.isEmpty
+                        ? [.init(sourceReference: reference, evidence: "", occurrenceCount: observation.occurrenceCount)]
+                        : occurrences
+                ))
+            case SQLITE_DONE:
+                return items
+            default:
+                throw databaseError()
+            }
+        }
+    }
+
+    func reviewObservationFeedbackRecords() throws -> [ExerciseObservationFeedbackRecord] {
+        let statement = try prepare(
+            """
+            SELECT id, observed_name, source_adapter, source_reference, occurrence_count,
+                   status, resolved_exercise_id, evidence_snapshot
+            FROM exercise_review_observation
+            ORDER BY id
+            """,
+            bindings: []
+        )
+        defer { sqlite3_finalize(statement) }
+
+        var records: [ExerciseObservationFeedbackRecord] = []
+        while true {
+            switch sqlite3_step(statement) {
+            case SQLITE_ROW:
+                guard let id = columnText(statement, 0),
+                      let observedName = columnText(statement, 1),
+                      let adapter = columnText(statement, 2),
+                      let reference = columnText(statement, 3),
+                      let statusText = columnText(statement, 5),
+                      let status = ExerciseObservationReviewStatus(rawValue: statusText),
+                      let resolvedIDText = columnText(statement, 6),
+                      let evidenceSnapshot = columnText(statement, 7) else {
+                    throw databaseError()
+                }
+                let observationID = ExerciseObservationID(rawValue: id)
+                let resolvedExerciseID = resolvedIDText.isEmpty
+                    ? nil
+                    : UUID(uuidString: resolvedIDText).map(ExerciseID.init(rawValue:))
+                records.append(.init(
+                    observation: .init(
+                        id: observationID,
+                        observedName: observedName,
+                        source: .init(adapter: adapter, reference: reference),
+                        occurrenceCount: Int(sqlite3_column_int64(statement, 4))
+                    ),
+                    status: status,
+                    resolvedExerciseID: resolvedExerciseID,
+                    evidenceSnapshot: evidenceSnapshot,
+                    occurrences: try observationOccurrences(observationID)
+                ))
+            case SQLITE_DONE:
+                return records
+            default:
+                throw databaseError()
+            }
+        }
+    }
+
+    private func observationOccurrences(
+        _ observationID: ExerciseObservationID
+    ) throws -> [ExerciseObservationOccurrence] {
+        let statement = try prepare(
+            """
+            SELECT source_reference, evidence_text, occurrence_count
+            FROM exercise_observation_occurrence
+            WHERE observation_id = ?
+            ORDER BY ingestion_id, source_reference, evidence_text
+            """,
+            bindings: [.text(observationID.rawValue)]
+        )
+        defer { sqlite3_finalize(statement) }
+        var occurrences: [ExerciseObservationOccurrence] = []
+        while true {
+            switch sqlite3_step(statement) {
+            case SQLITE_ROW:
+                guard let reference = columnText(statement, 0),
+                      let evidence = columnText(statement, 1) else { throw databaseError() }
+                occurrences.append(.init(
+                    sourceReference: reference,
+                    evidence: evidence,
+                    occurrenceCount: Int(sqlite3_column_int64(statement, 2))
+                ))
+            case SQLITE_DONE:
+                return occurrences
+            default:
+                throw databaseError()
+            }
+        }
+    }
+
+    func stageReviewObservation(_ observation: StagedExerciseObservation) throws {
+        let trimmed = observation.observedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = try normalizer.normalize(trimmed)
+        try run(
+            """
+            INSERT INTO exercise_review_observation (
+                id, observed_name, source_adapter, source_reference, occurrence_count,
+                status, resolved_exercise_id, evidence_snapshot, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'pending', '', '', ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                occurrence_count = excluded.occurrence_count,
+                updated_at = excluded.updated_at
+            WHERE exercise_review_observation.observed_name = excluded.observed_name
+              AND exercise_review_observation.source_adapter = excluded.source_adapter
+              AND exercise_review_observation.source_reference = excluded.source_reference
+            """,
+            bindings: [
+                .text(observation.id.rawValue),
+                .text(trimmed),
+                .text(observation.source.adapter),
+                .text(observation.source.reference),
+                .double(Double(observation.occurrenceCount)),
+                .double(Date().timeIntervalSince1970),
+                .double(Date().timeIntervalSince1970),
+            ]
+        )
+    }
+
+    func storedReviewObservation(_ id: ExerciseObservationID) throws -> StoredReviewObservation? {
+        let statement = try prepare(
+            """
+            SELECT observed_name, source_adapter, source_reference, occurrence_count,
+                   status, resolved_exercise_id, evidence_snapshot
+            FROM exercise_review_observation WHERE id = ?
+            """,
+            bindings: [.text(id.rawValue)]
+        )
+        defer { sqlite3_finalize(statement) }
+        let result = sqlite3_step(statement)
+        if result == SQLITE_DONE { return nil }
+        guard result == SQLITE_ROW,
+              let observedName = columnText(statement, 0),
+              let sourceAdapter = columnText(statement, 1),
+              let sourceReference = columnText(statement, 2),
+              let statusText = columnText(statement, 4),
+              let status = ExerciseObservationReviewStatus(rawValue: statusText),
+              let resolvedText = columnText(statement, 5),
+              let snapshot = columnText(statement, 6) else {
+            throw databaseError()
+        }
+        let resolvedID = UUID(uuidString: resolvedText).map { ExerciseID(rawValue: $0) }
+        return .init(
+            observation: .init(
+                id: id,
+                observedName: observedName,
+                source: .init(adapter: sourceAdapter, reference: sourceReference),
+                occurrenceCount: Int(sqlite3_column_int64(statement, 3))
+            ),
+            status: status,
+            resolvedExerciseID: resolvedID,
+            evidenceSnapshot: snapshot
+        )
+    }
+
+    func resolveReviewObservation(
+        _ id: ExerciseObservationID,
+        status: ExerciseObservationReviewStatus,
+        exerciseID: ExerciseID
+    ) throws {
+        try run(
+            """
+            UPDATE exercise_review_observation
+            SET status = ?, resolved_exercise_id = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            bindings: [
+                .text(status.rawValue),
+                .text(exerciseID.rawValue.uuidString),
+                .double(Date().timeIntervalSince1970),
+                .text(id.rawValue),
+            ]
+        )
+    }
+
+    func linkReviewObservationAtomically(
+        _ id: ExerciseObservationID,
+        observedName: String,
+        to exerciseID: ExerciseID,
+        now: Date = Date()
+    ) throws -> ExerciseName {
+        guard try exerciseExists(exerciseID) else {
+            throw ExerciseLibraryError.exerciseNotFound(exerciseID)
+        }
+        let normalizedText = try normalizer.normalize(observedName)
+        if let existing = try name(forNormalizedText: normalizedText),
+           existing.exerciseID != exerciseID {
+            throw ExerciseLibraryError.nameOwnershipConflict(
+                proposedText: observedName,
+                existingOwnerID: existing.exerciseID
+            )
+        }
+
+        try transaction {
+            if try name(forNormalizedText: normalizedText) == nil {
+                try run(
+                    """
+                    INSERT INTO exercise_name (
+                        id, exercise_id, text, normalized_text, provenance, created_at
+                    ) VALUES (?, ?, ?, ?, 'importedConfirmed', ?)
+                    """,
+                    bindings: [
+                        .text(UUID().uuidString),
+                        .text(exerciseID.rawValue.uuidString),
+                        .text(observedName.trimmingCharacters(in: .whitespacesAndNewlines)),
+                        .text(normalizedText),
+                        .double(now.timeIntervalSince1970),
+                    ]
+                )
+            }
+            try run(
+                """
+                UPDATE exercise_review_observation
+                SET status = 'linked', resolved_exercise_id = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                bindings: [
+                    .text(exerciseID.rawValue.uuidString),
+                    .double(now.timeIntervalSince1970),
+                    .text(id.rawValue),
+                ]
+            )
+        }
+        guard let name = try name(forNormalizedText: normalizedText) else {
+            throw databaseError()
+        }
+        return name
+    }
+
+    func createReviewObservationAtomically(
+        _ id: ExerciseObservationID,
+        observedName: String,
+        now: Date = Date()
+    ) throws -> CreatedExercise {
+        let trimmed = observedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedText = try normalizer.normalize(trimmed)
+        if let existing = try name(forNormalizedText: normalizedText) {
+            throw ExerciseLibraryError.nameOwnershipConflict(
+                proposedText: observedName,
+                existingOwnerID: existing.exerciseID
+            )
+        }
+
+        let exerciseID = ExerciseID(rawValue: UUID())
+        let nameID = ExerciseNameID(rawValue: UUID())
+        let timestamp = now.timeIntervalSince1970
+        try transaction {
+            try run(
+                "INSERT INTO exercise (id, preferred_name_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
+                bindings: [
+                    .text(exerciseID.rawValue.uuidString),
+                    .text(nameID.rawValue.uuidString),
+                    .double(timestamp),
+                    .double(timestamp),
+                ]
+            )
+            try run(
+                """
+                INSERT INTO exercise_name (
+                    id, exercise_id, text, normalized_text, provenance, created_at
+                ) VALUES (?, ?, ?, ?, 'importedConfirmed', ?)
+                """,
+                bindings: [
+                    .text(nameID.rawValue.uuidString),
+                    .text(exerciseID.rawValue.uuidString),
+                    .text(trimmed),
+                    .text(normalizedText),
+                    .double(timestamp),
+                ]
+            )
+            try run(
+                """
+                UPDATE exercise_review_observation
+                SET status = 'created', resolved_exercise_id = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                bindings: [
+                    .text(exerciseID.rawValue.uuidString),
+                    .double(timestamp),
+                    .text(id.rawValue),
+                ]
+            )
+        }
+        return .init(
+            exercise: .init(id: exerciseID, preferredNameID: nameID, createdAt: now, updatedAt: now),
+            preferredName: .init(
+                id: nameID,
+                exerciseID: exerciseID,
+                text: trimmed,
+                normalizedText: normalizedText,
+                provenance: .importedConfirmed,
+                createdAt: now
+            )
+        )
+    }
+
+    func deferReviewObservation(_ id: ExerciseObservationID, evidenceSnapshot: String) throws {
+        try run(
+            """
+            UPDATE exercise_review_observation
+            SET status = 'deferred', evidence_snapshot = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            bindings: [
+                .text(evidenceSnapshot),
+                .double(Date().timeIntervalSince1970),
+                .text(id.rawValue),
+            ]
+        )
+    }
+
+    func undoReviewDecisionAtomically(_ receipt: ExerciseIdentityReviewUndoReceipt) throws {
+        guard let stored = try storedReviewObservation(receipt.observationID),
+              stored.status == receipt.decision,
+              stored.resolvedExerciseID == receipt.resolvedExerciseID else {
+            throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+        }
+
+        try transaction {
+            if receipt.decision == .created {
+                guard let exerciseID = receipt.resolvedExerciseID,
+                      try scalarInt(
+                        "SELECT COUNT(*) FROM exercise_name WHERE exercise_id = ?",
+                        bindings: [.text(exerciseID.rawValue.uuidString)]
+                      ) == 1,
+                      try scalarInt(
+                        "SELECT COUNT(*) FROM exercise_review_observation WHERE resolved_exercise_id = ? AND id <> ?",
+                        bindings: [.text(exerciseID.rawValue.uuidString), .text(receipt.observationID.rawValue)]
+                      ) == 0 else {
+                    throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+                }
+                try run(
+                    "DELETE FROM exercise_name WHERE exercise_id = ?",
+                    bindings: [.text(exerciseID.rawValue.uuidString)]
+                )
+                try run(
+                    "DELETE FROM exercise WHERE id = ?",
+                    bindings: [.text(exerciseID.rawValue.uuidString)]
+                )
+            } else if receipt.decision == .linked {
+                guard let exerciseID = receipt.resolvedExerciseID else {
+                    throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+                }
+                let normalized = try normalizer.normalize(stored.observedName)
+                guard let linkedName = try name(forNormalizedText: normalized),
+                      linkedName.exerciseID == exerciseID,
+                      try preferredName(for: exerciseID)?.id != linkedName.id else {
+                    throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+                }
+                try run(
+                    "DELETE FROM exercise_name WHERE id = ?",
+                    bindings: [.text(linkedName.id.rawValue.uuidString)]
+                )
+            }
+
+            try run(
+                """
+                UPDATE exercise_review_observation
+                SET status = ?, resolved_exercise_id = '', evidence_snapshot = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                bindings: [
+                    .text(receipt.previousStatus.rawValue),
+                    .text(receipt.previousEvidenceSnapshot),
+                    .double(Date().timeIntervalSince1970),
+                    .text(receipt.observationID.rawValue),
+                ]
+            )
+        }
+    }
+
+    func recordSeparateExercises(_ lhs: ExerciseID, _ rhs: ExerciseID) throws {
+        guard try exerciseExists(lhs) else { throw ExerciseLibraryError.exerciseNotFound(lhs) }
+        guard try exerciseExists(rhs) else { throw ExerciseLibraryError.exerciseNotFound(rhs) }
+        let ordered = [lhs.rawValue.uuidString, rhs.rawValue.uuidString].sorted()
+        try run(
+            """
+            INSERT OR IGNORE INTO separate_exercise_decision (
+                first_exercise_id, second_exercise_id, created_at
+            ) VALUES (?, ?, ?)
+            """,
+            bindings: [.text(ordered[0]), .text(ordered[1]), .double(Date().timeIntervalSince1970)]
+        )
+    }
+
+    func separateExerciseDecisionCount() throws -> Int {
+        try scalarInt("SELECT COUNT(*) FROM separate_exercise_decision")
     }
 
     private func migrate() throws {
@@ -261,7 +810,57 @@ public final class ExerciseLibrary {
                 CREATE INDEX IF NOT EXISTS exercise_name_exercise_id
                     ON exercise_name(exercise_id);
 
+                CREATE TABLE IF NOT EXISTS exercise_review_observation (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    observed_name TEXT NOT NULL CHECK (length(trim(observed_name)) > 0),
+                    source_adapter TEXT NOT NULL CHECK (length(trim(source_adapter)) > 0),
+                    source_reference TEXT NOT NULL CHECK (length(trim(source_reference)) > 0),
+                    occurrence_count INTEGER NOT NULL CHECK (occurrence_count > 0),
+                    status TEXT NOT NULL CHECK (status IN ('pending', 'deferred', 'linked', 'created')),
+                    resolved_exercise_id TEXT NOT NULL DEFAULT '',
+                    evidence_snapshot TEXT NOT NULL DEFAULT '',
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL CHECK (updated_at >= created_at)
+                );
+
+                CREATE TABLE IF NOT EXISTS separate_exercise_decision (
+                    first_exercise_id TEXT NOT NULL,
+                    second_exercise_id TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    PRIMARY KEY (first_exercise_id, second_exercise_id),
+                    CHECK (first_exercise_id < second_exercise_id),
+                    FOREIGN KEY (first_exercise_id) REFERENCES exercise(id),
+                    FOREIGN KEY (second_exercise_id) REFERENCES exercise(id)
+                );
+
+                CREATE TABLE IF NOT EXISTS exercise_observation_ingestion (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    source_kind TEXT NOT NULL CHECK (length(trim(source_kind)) > 0),
+                    source_reference TEXT NOT NULL CHECK (length(trim(source_reference)) > 0),
+                    source_fingerprint TEXT NOT NULL UNIQUE CHECK (length(trim(source_fingerprint)) > 0),
+                    created_at REAL NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS exercise_observation_occurrence (
+                    observation_id TEXT NOT NULL,
+                    ingestion_id TEXT NOT NULL,
+                    source_reference TEXT NOT NULL CHECK (length(trim(source_reference)) > 0),
+                    evidence_text TEXT NOT NULL,
+                    occurrence_count INTEGER NOT NULL CHECK (occurrence_count > 0),
+                    created_at REAL NOT NULL,
+                    PRIMARY KEY (
+                        observation_id, ingestion_id, source_reference, evidence_text
+                    ),
+                    FOREIGN KEY (observation_id) REFERENCES exercise_review_observation(id),
+                    FOREIGN KEY (ingestion_id) REFERENCES exercise_observation_ingestion(id)
+                );
+
+                CREATE INDEX IF NOT EXISTS exercise_observation_occurrence_observation_id
+                    ON exercise_observation_occurrence(observation_id);
+
                 INSERT OR IGNORE INTO schema_version(version) VALUES (1);
+                INSERT OR IGNORE INTO schema_version(version) VALUES (2);
+                INSERT OR IGNORE INTO schema_version(version) VALUES (3);
                 """
             )
         }

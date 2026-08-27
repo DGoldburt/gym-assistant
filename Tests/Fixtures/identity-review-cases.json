@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": "db-floor-press-abbreviation",
+      "observation": "DB Floor Press",
+      "candidate": "Dumbbell Floor Press",
+      "expectedDisposition": "linkableWithConfirmation"
+    },
+    {
+      "id": "short-versus-long-lever-copenhagen",
+      "observation": "Short-Lever Copenhagen Plank",
+      "candidate": "Long-Lever Copenhagen Plank",
+      "expectedDisposition": "linkableWithConfirmation"
+    },
+    {
+      "id": "touch-down-rnt-prescription",
+      "observation": "Touch-Down with RNT",
+      "candidate": "Touch-Down",
+      "expectedDisposition": "linkableWithConfirmation"
+    },
+    {
+      "id": "paloff-spelling-review",
+      "observation": "Paloff Press",
+      "candidate": "Pallof Press",
+      "expectedDisposition": "linkableWithConfirmation"
+    },
+    {
+      "id": "lateral-versus-reverse-lunge",
+      "observation": "Lateral Lunge",
+      "candidate": "Reverse Lunge",
+      "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "single-leg-squat-versus-rdl",
+      "observation": "Single-Leg Squat",
+      "candidate": "Single-Leg Romanian Deadlift",
+      "expectedDisposition": "identityConflict"
+    }
+  ]
+}

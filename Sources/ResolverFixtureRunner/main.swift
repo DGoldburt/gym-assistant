@@ -15,10 +15,14 @@ private struct FixtureResolver: ResolverFixtureResolving {
             return .init(automaticMatch: knownExercise.preferredName)
         }
 
-        return .init(rankedCandidates: candidateGenerator.rank(
+        let rankings = candidateGenerator.rank(
             query: input.query,
             candidates: input.candidatePreferredNames
-        ).map(\.preferredName))
+        )
+        return .init(
+            rankedCandidates: rankings.map(\.preferredName),
+            rankedCandidateScores: rankings.map(\.score)
+        )
     }
 }
 
@@ -46,6 +50,7 @@ do {
     print("missed expected matches: \(report.missedExpectedMatches)")
     print("candidate ranking failures: \(report.candidateRankingFailures)")
     print("protected candidate leaks: \(report.protectedCandidateLeaks)")
+    print("authoritative score leaks: \(report.authoritativeScoreLeaks)")
     print("automatic resolution precision: \(document.categories.mustMatch.count)/\(document.categories.mustMatch.count)")
     print("protected exclusions: \(document.categories.mustNotMatch.count - report.protectedCandidateLeaks)/\(document.categories.mustNotMatch.count)")
 

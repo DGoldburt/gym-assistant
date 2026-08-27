@@ -25,12 +25,201 @@ private enum WorkflowEventLog {
 
 private enum AutocompletePanelResult {
     case insert(String)
+    case reviewLibrary
     case cancel
 }
 
-private enum AutocompleteRow {
-    case exercise(ExerciseSearchMatch)
-    case alias(parent: ExerciseSearchMatch, name: String)
+private struct RankedCandidateItem {
+    let exerciseID: ExerciseID
+    let preferredName: String
+    let aliases: [String]
+    let matchedName: String
+    let detail: String
+    let selectable: Bool
+
+    var otherNames: [String] {
+        ([preferredName] + aliases).reduce(into: [String]()) { names, name in
+            guard name != matchedName, !names.contains(name) else { return }
+            names.append(name)
+        }
+    }
+}
+
+private enum RankedCandidateRow {
+    case exercise(RankedCandidateItem)
+    case alias(parent: RankedCandidateItem, name: String)
+}
+
+@MainActor
+private final class RankedCandidateTableView: NSTableView {
+    var onExpand: (() -> Void)?
+    var onCollapse: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 124: onExpand?()
+        case 123: onCollapse?()
+        default: super.keyDown(with: event)
+        }
+    }
+}
+
+@MainActor
+private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+    let tableView = RankedCandidateTableView()
+    let scrollView = NSScrollView()
+    var onSelectionChange: (() -> Void)?
+    private var items: [RankedCandidateItem] = []
+    private var rows: [RankedCandidateRow] = []
+    private var expandedExerciseID: ExerciseID?
+
+    override init() {
+        super.init()
+        let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("ranked-candidate"))
+        tableView.addTableColumn(column)
+        tableView.headerView = nil
+        tableView.rowHeight = 46
+        tableView.allowsEmptySelection = true
+        tableView.allowsMultipleSelection = false
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.onExpand = { [weak self] in self?.expandSelection() }
+        tableView.onCollapse = { [weak self] in self?.collapseSelection() }
+        scrollView.borderType = .bezelBorder
+        scrollView.hasVerticalScroller = true
+        scrollView.documentView = tableView
+    }
+
+    var selectedItem: RankedCandidateItem? {
+        guard rows.indices.contains(tableView.selectedRow) else { return nil }
+        switch rows[tableView.selectedRow] {
+        case .exercise(let item), .alias(let item, _): return item
+        }
+    }
+
+    var selectedName: String? {
+        guard rows.indices.contains(tableView.selectedRow) else { return nil }
+        switch rows[tableView.selectedRow] {
+        case .exercise(let item): return item.matchedName
+        case .alias(_, let name): return name
+        }
+    }
+
+    func setItems(_ items: [RankedCandidateItem], preselectTop: Bool = true) {
+        self.items = items
+        expandedExerciseID = nil
+        rebuildRows()
+        if preselectTop, !rows.isEmpty {
+            tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+            tableView.scrollRowToVisible(0)
+        }
+    }
+
+    func moveSelection(_ delta: Int) {
+        guard !rows.isEmpty else { return }
+        let current = tableView.selectedRow
+        let next: Int
+        if current < 0 {
+            next = delta >= 0 ? 0 : rows.count - 1
+        } else {
+            next = min(max(current + delta, 0), rows.count - 1)
+        }
+        tableView.selectRowIndexes(IndexSet(integer: next), byExtendingSelection: false)
+        tableView.scrollRowToVisible(next)
+    }
+
+    func expandSelection() {
+        guard rows.indices.contains(tableView.selectedRow),
+              case .exercise(let item) = rows[tableView.selectedRow],
+              !item.otherNames.isEmpty else { return }
+        expandedExerciseID = item.exerciseID
+        rebuildRows(selecting: item.exerciseID)
+    }
+
+    func collapseSelection() {
+        guard let item = selectedItem, expandedExerciseID == item.exerciseID else { return }
+        expandedExerciseID = nil
+        rebuildRows(selecting: item.exerciseID)
+    }
+
+    func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
+
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        switch rows[row] {
+        case .exercise:
+            return 46
+        case .alias:
+            return 30
+        }
+    }
+
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        let container = NSView()
+        let title: String
+        let detail: String
+        let indent: CGFloat
+        let selectable: Bool
+        switch rows[row] {
+        case .exercise(let item):
+            title = item.matchedName
+            detail = exerciseDetail(for: item)
+            indent = 0
+            selectable = item.selectable
+        case .alias(let item, let name):
+            title = name
+            detail = ""
+            indent = 22
+            selectable = item.selectable
+        }
+
+        let rowHeight = self.tableView(tableView, heightOfRow: row)
+        let titleField = NSTextField(labelWithString: title)
+        let titleY = detail.isEmpty ? (rowHeight - 20) / 2 : rowHeight - 24
+        titleField.frame = NSRect(x: 8 + indent, y: titleY, width: max(0, tableView.bounds.width - 24 - indent), height: 20)
+        titleField.font = .systemFont(ofSize: 15)
+        container.addSubview(titleField)
+
+        let detailField = NSTextField(labelWithString: detail)
+        detailField.frame = NSRect(x: 8 + indent, y: 3, width: max(0, tableView.bounds.width - 24 - indent), height: 17)
+        detailField.font = .systemFont(ofSize: 11)
+        detailField.textColor = selectable ? .secondaryLabelColor : .systemRed
+        container.addSubview(detailField)
+        return container
+    }
+
+    func tableViewSelectionDidChange(_ notification: Notification) {
+        onSelectionChange?()
+    }
+
+    private func rebuildRows(selecting exerciseID: ExerciseID? = nil) {
+        rows = items.flatMap { item -> [RankedCandidateRow] in
+            var result: [RankedCandidateRow] = [.exercise(item)]
+            if expandedExerciseID == item.exerciseID {
+                result.append(contentsOf: item.otherNames.map { .alias(parent: item, name: $0) })
+            }
+            return result
+        }
+        tableView.reloadData()
+        guard !rows.isEmpty else {
+            tableView.deselectAll(nil)
+            return
+        }
+        if let exerciseID,
+           let index = rows.firstIndex(where: {
+               if case .exercise(let item) = $0 { return item.exerciseID == exerciseID }
+               return false
+           }) {
+            tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+            tableView.scrollRowToVisible(index)
+        }
+    }
+
+    private func exerciseDetail(for item: RankedCandidateItem) -> String {
+        let otherNameSummary: String? = item.otherNames.isEmpty
+            ? nil
+            : "\(item.otherNames.count) \(item.otherNames.count == 1 ? "alias" : "aliases")"
+        return ([item.detail] + [otherNameSummary].compactMap { $0 }).joined(separator: " · ")
+    }
 }
 
 @MainActor
@@ -55,21 +244,24 @@ private final class AutocompleteSearchField: NSSearchField {
 }
 
 @MainActor
-private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate {
+private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
     private let search: ExerciseAutocompleteSearch
     private let panel: NSPanel
     private let searchField = AutocompleteSearchField()
-    private let tableView = NSTableView()
+    private let chooser = RankedCandidateChooser()
     private let statusField = NSTextField(labelWithString: "Type to search")
+    private lazy var reviewButton = NSButton(
+        title: "Review Library…  ⌘R",
+        target: self,
+        action: #selector(openLibraryReview)
+    )
     private var matches: [ExerciseSearchMatch] = []
-    private var rows: [AutocompleteRow] = []
-    private var expandedExerciseID: ExerciseID?
     private var result: AutocompletePanelResult = .cancel
 
     init(search: ExerciseAutocompleteSearch) {
         self.search = search
         panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 330),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 330),
             styleMask: [.titled],
             backing: .buffered,
             defer: false
@@ -79,14 +271,27 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
     }
 
     func runModal() -> AutocompletePanelResult {
-        let escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.keyCode == 53 else { return event }
-            self?.cancel()
-            return nil
+        let serviceDeadlineTimer = Timer(
+            timeInterval: 105,
+            target: self,
+            selector: #selector(serviceDeadlineReached),
+            userInfo: nil,
+            repeats: false
+        )
+        RunLoop.main.add(serviceDeadlineTimer, forMode: .common)
+        RunLoop.main.add(serviceDeadlineTimer, forMode: .modalPanel)
+        let shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            if event.keyCode == 53 {
+                self.cancel()
+                return nil
+            }
+            return event
         }
         defer {
-            if let escapeMonitor {
-                NSEvent.removeMonitor(escapeMonitor)
+            serviceDeadlineTimer.invalidate()
+            if let shortcutMonitor {
+                NSEvent.removeMonitor(shortcutMonitor)
             }
         }
         panel.center()
@@ -98,35 +303,9 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
         return result
     }
 
-    func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
-
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let container = NSView()
-        let title: String
-        let detail: String
-        let indent: CGFloat
-        switch rows[row] {
-        case .exercise(let match):
-            title = match.preferredName
-            detail = match.aliases.isEmpty ? "" : "\(match.aliases.count) aliases · Right Arrow to view"
-            indent = 0
-        case .alias(_, let name):
-            title = name
-            detail = "Confirmed alias"
-            indent = 22
-        }
-
-        let titleField = NSTextField(labelWithString: title)
-        titleField.frame = NSRect(x: 8 + indent, y: 20, width: 440 - indent, height: 22)
-        titleField.font = .systemFont(ofSize: 15)
-        container.addSubview(titleField)
-
-        let detailField = NSTextField(labelWithString: detail)
-        detailField.frame = NSRect(x: 8 + indent, y: 3, width: 440 - indent, height: 17)
-        detailField.font = .systemFont(ofSize: 11)
-        detailField.textColor = .secondaryLabelColor
-        container.addSubview(detailField)
-        return container
+    @objc private func serviceDeadlineReached() {
+        WorkflowEventLog.write("autocomplete_service_deadline_reached")
+        cancel()
     }
 
     func controlTextDidChange(_ notification: Notification) {
@@ -163,7 +342,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
         let content = NSView(frame: panel.contentRect(forFrameRect: panel.frame))
         panel.contentView = content
 
-        searchField.frame = NSRect(x: 24, y: 270, width: 472, height: 32)
+        searchField.frame = NSRect(x: 24, y: 270, width: 592, height: 32)
         searchField.placeholderString = "Search exercises"
         searchField.font = .systemFont(ofSize: 16)
         searchField.delegate = self
@@ -174,23 +353,18 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
         searchField.onCancel = { [weak self] in self?.cancel() }
         content.addSubview(searchField)
 
-        let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("autocomplete-result"))
-        column.width = 456
-        tableView.addTableColumn(column)
-        tableView.headerView = nil
-        tableView.rowHeight = 46
-        tableView.allowsEmptySelection = true
-        tableView.allowsMultipleSelection = false
-        tableView.dataSource = self
-        tableView.delegate = self
+        chooser.scrollView.frame = NSRect(x: 24, y: 52, width: 592, height: 202)
+        chooser.tableView.tableColumns.first?.width = 576
+        chooser.onSelectionChange = { [weak self] in self?.updateSelectionHint() }
+        content.addSubview(chooser.scrollView)
 
-        let scrollView = NSScrollView(frame: NSRect(x: 24, y: 52, width: 472, height: 202))
-        scrollView.borderType = .bezelBorder
-        scrollView.hasVerticalScroller = true
-        scrollView.documentView = tableView
-        content.addSubview(scrollView)
+        reviewButton.frame = NSRect(x: 24, y: 12, width: 166, height: 30)
+        reviewButton.keyEquivalent = "r"
+        reviewButton.keyEquivalentModifierMask = [.command]
+        reviewButton.toolTip = "Open the observation review queue (Command-R)"
+        content.addSubview(reviewButton)
 
-        statusField.frame = NSRect(x: 24, y: 18, width: 472, height: 22)
+        statusField.frame = NSRect(x: 200, y: 18, width: 416, height: 22)
         statusField.textColor = .secondaryLabelColor
         content.addSubview(statusField)
     }
@@ -199,14 +373,13 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
         let updateStartedAt = Date()
         do {
             matches = try search.search(searchField.stringValue)
-            expandedExerciseID = nil
-            rebuildRows()
+            chooser.setItems(matches.map(autocompleteCandidateItem), preselectTop: false)
             if searchField.stringValue.isEmpty {
                 statusField.stringValue = "Type to search"
             } else if matches.isEmpty {
                 statusField.stringValue = "Press Return to insert “\(searchField.stringValue)”"
             } else {
-                statusField.stringValue = "Return inserts · Right Arrow shows aliases · Escape cancels"
+                statusField.stringValue = "↩ Insert query · ↓ Select top match"
             }
             WorkflowEventLog.write("autocomplete_results", details: [
                 "query": searchField.stringValue,
@@ -215,75 +388,53 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
             ])
         } catch {
             matches = []
-            rows = []
-            tableView.reloadData()
+            chooser.setItems([])
             statusField.stringValue = "Search unavailable"
             WorkflowEventLog.write("autocomplete_error", details: ["message": String(describing: error)])
         }
     }
 
-    private func rebuildRows(selecting exerciseID: ExerciseID? = nil) {
-        rows = matches.flatMap { match -> [AutocompleteRow] in
-            var result: [AutocompleteRow] = [.exercise(match)]
-            if expandedExerciseID == match.exerciseID {
-                result.append(contentsOf: match.aliases.map { .alias(parent: match, name: $0) })
-            }
-            return result
+    private func resultDetail(for match: ExerciseSearchMatch) -> String {
+        let evidence: String
+        switch match.matchKind {
+        case .normalizedName: evidence = "Exact"
+        case .namePrefix: evidence = "Prefix"
+        case .orderedTokenPrefix: evidence = "Token"
+        case .lexicalContainment: evidence = "Contains"
+        case .fuzzy: evidence = "Fuzzy"
         }
-        tableView.reloadData()
-        guard !rows.isEmpty else {
-            tableView.deselectAll(nil)
-            return
-        }
-        let selectedIndex = exerciseID.flatMap { id in
-            rows.firstIndex { row in
-                if case .exercise(let match) = row { return match.exerciseID == id }
-                return false
-            }
-        } ?? 0
-        tableView.selectRowIndexes(IndexSet(integer: selectedIndex), byExtendingSelection: false)
-        tableView.scrollRowToVisible(selectedIndex)
+
+        return [evidence, compactScore(match.score)].joined(separator: " · ")
+    }
+
+    private func autocompleteCandidateItem(_ match: ExerciseSearchMatch) -> RankedCandidateItem {
+        .init(
+            exerciseID: match.exerciseID,
+            preferredName: match.preferredName,
+            aliases: match.aliases,
+            matchedName: match.matchedName,
+            detail: resultDetail(for: match),
+            selectable: true
+        )
     }
 
     private func moveSelection(_ delta: Int) {
-        guard !rows.isEmpty else { return }
-        let current = max(0, tableView.selectedRow)
-        let next = min(max(current + delta, 0), rows.count - 1)
-        tableView.selectRowIndexes(IndexSet(integer: next), byExtendingSelection: false)
-        tableView.scrollRowToVisible(next)
+        chooser.moveSelection(delta)
     }
 
     private func expandSelection() {
-        let row = tableView.selectedRow
-        guard rows.indices.contains(row), case .exercise(let match) = rows[row], !match.aliases.isEmpty else {
-            return
+        chooser.expandSelection()
+        if let item = chooser.selectedItem {
+            WorkflowEventLog.write("autocomplete_aliases_expanded", details: ["preferredName": item.preferredName])
         }
-        expandedExerciseID = match.exerciseID
-        rebuildRows(selecting: match.exerciseID)
-        WorkflowEventLog.write("autocomplete_aliases_expanded", details: ["preferredName": match.preferredName])
     }
 
     private func collapseSelection() {
-        let row = tableView.selectedRow
-        guard rows.indices.contains(row) else { return }
-        let parent: ExerciseSearchMatch
-        switch rows[row] {
-        case .exercise(let match): parent = match
-        case .alias(let match, _): parent = match
-        }
-        guard expandedExerciseID == parent.exerciseID else { return }
-        expandedExerciseID = nil
-        rebuildRows(selecting: parent.exerciseID)
+        chooser.collapseSelection()
     }
 
     private func chooseSelection() {
-        let row = tableView.selectedRow
-        if rows.indices.contains(row) {
-            let insertion: String
-            switch rows[row] {
-            case .exercise(let match): insertion = match.preferredName
-            case .alias(_, let name): insertion = name
-            }
+        if let insertion = chooser.selectedName {
             result = .insert(insertion)
             WorkflowEventLog.write("autocomplete_chosen", details: ["insertion": insertion])
             NSApp.stopModal()
@@ -296,9 +447,20 @@ private final class ExerciseAutocompletePanel: NSObject, NSTableViewDataSource, 
         NSApp.stopModal()
     }
 
+    private func updateSelectionHint() {
+        guard chooser.selectedName != nil, !matches.isEmpty else { return }
+        statusField.stringValue = "Return inserts selected name"
+    }
+
     private func cancel() {
         result = .cancel
         WorkflowEventLog.write("autocomplete_cancelled")
+        NSApp.stopModal()
+    }
+
+    @objc private func openLibraryReview() {
+        result = .reviewLibrary
+        WorkflowEventLog.write("library_review_selected")
         NSApp.stopModal()
     }
 }
@@ -493,9 +655,336 @@ private final class ExerciseWorkflowPanel: NSObject, NSTableViewDataSource, NSTa
 }
 
 @MainActor
+private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
+    private let service: ExerciseIdentityReviewService
+    private let window: NSWindow
+    private let observationField = NSTextField(wrappingLabelWithString: "")
+    private let metaField = NSTextField(labelWithString: "")
+    private let sourceField = NSTextField(wrappingLabelWithString: "")
+    private let statusField = NSTextField(labelWithString: "")
+    private let chooser = RankedCandidateChooser()
+    private lazy var linkButton = NSButton(
+        title: "Link Selected",
+        target: self,
+        action: #selector(linkSelected)
+    )
+    private lazy var backButton = NSButton(
+        title: "← Back",
+        target: self,
+        action: #selector(undoLastDecision)
+    )
+    private var queue: [ExerciseReviewQueueItem] = []
+    private var current: ExerciseReviewQueueItem?
+    private var candidates: [ExerciseReviewCandidate] = []
+    private var skippedThisSession: Set<ExerciseObservationID> = []
+    private var returnFocusTo: NSRunningApplication?
+    private var shortcutMonitor: Any?
+    private var pendingCount = 0
+    private var skippedCount = 0
+    private var lastUndoReceipt: ExerciseIdentityReviewUndoReceipt?
+    private var feedbackMessage = ""
+
+    init(service: ExerciseIdentityReviewService) {
+        self.service = service
+        window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 500),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        super.init()
+        chooser.onSelectionChange = { [weak self] in self?.updateLinkAvailability() }
+        configureWindow()
+    }
+
+    func show(returnFocusTo application: NSRunningApplication?) {
+        returnFocusTo = application
+        skippedThisSession.removeAll()
+        lastUndoReceipt = nil
+        feedbackMessage = ""
+        reloadQueue()
+        window.center()
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(chooser.tableView)
+        installShortcutMonitor()
+        WorkflowEventLog.write("library_review_ready", details: ["queueCount": queue.count])
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if let shortcutMonitor {
+            NSEvent.removeMonitor(shortcutMonitor)
+            self.shortcutMonitor = nil
+        }
+        WorkflowEventLog.write("library_review_closed")
+        restoreFocus()
+    }
+
+    private func configureWindow() {
+        window.title = "Gym Assistant — Review Library"
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        let content = NSView(frame: window.contentRect(forFrameRect: window.frame))
+        window.contentView = content
+
+        observationField.frame = NSRect(x: 24, y: 432, width: 592, height: 42)
+        observationField.font = .systemFont(ofSize: 22, weight: .semibold)
+        content.addSubview(observationField)
+
+        metaField.frame = NSRect(x: 24, y: 405, width: 592, height: 20)
+        metaField.textColor = .secondaryLabelColor
+        content.addSubview(metaField)
+
+        sourceField.frame = NSRect(x: 24, y: 332, width: 592, height: 62)
+        sourceField.font = .systemFont(ofSize: 12)
+        sourceField.textColor = .secondaryLabelColor
+        content.addSubview(sourceField)
+
+        chooser.scrollView.frame = NSRect(x: 24, y: 112, width: 592, height: 208)
+        chooser.tableView.tableColumns.first?.width = 576
+        content.addSubview(chooser.scrollView)
+
+        backButton.title = "← Back  ⌘Z"
+        backButton.frame = NSRect(x: 24, y: 54, width: 120, height: 32)
+        backButton.isEnabled = false
+        content.addSubview(backButton)
+
+        let deferButton = NSButton(title: "Skip & Next  ⌘S", target: self, action: #selector(skipCurrent))
+        deferButton.frame = NSRect(x: 494, y: 54, width: 122, height: 32)
+        content.addSubview(deferButton)
+
+        let createButton = NSButton(title: "Create Exact  ⌘C", target: self, action: #selector(createCurrent))
+        createButton.frame = NSRect(x: 240, y: 54, width: 154, height: 32)
+        createButton.keyEquivalent = "c"
+        createButton.keyEquivalentModifierMask = [.command]
+        content.addSubview(createButton)
+
+        linkButton.title = "Link  ⌘L"
+        linkButton.frame = NSRect(x: 400, y: 54, width: 88, height: 32)
+        linkButton.keyEquivalent = "l"
+        linkButton.keyEquivalentModifierMask = [.command]
+        linkButton.isEnabled = false
+        content.addSubview(linkButton)
+
+        statusField.frame = NSRect(x: 24, y: 18, width: 592, height: 22)
+        statusField.textColor = .secondaryLabelColor
+        content.addSubview(statusField)
+    }
+
+    private func reloadQueue(
+        preferredObservationID: ExerciseObservationID? = nil,
+        feedback: String = ""
+    ) {
+        do {
+            let fullQueue = try service.reviewQueue()
+            pendingCount = fullQueue.filter { $0.status == .pending }.count
+            skippedCount = fullQueue.filter { $0.status == .deferred }.count
+            queue = fullQueue.filter { !skippedThisSession.contains($0.observation.id) }
+            if let preferredObservationID,
+               let index = queue.firstIndex(where: { $0.observation.id == preferredObservationID }) {
+                queue.insert(queue.remove(at: index), at: 0)
+            }
+            feedbackMessage = feedback
+            current = queue.first
+            candidates = []
+            if let current {
+                if case .review(_, let preparedCandidates) = try service.prepare(
+                    observationID: current.observation.id
+                ) {
+                    candidates = preparedCandidates
+                }
+            }
+            render()
+        } catch {
+            current = nil
+            candidates = []
+            render(error: error)
+        }
+    }
+
+    private func render(error: Error? = nil) {
+        if let error {
+            window.title = "Gym Assistant — Review Library"
+            observationField.stringValue = "Review unavailable"
+            metaField.stringValue = ""
+            sourceField.stringValue = ""
+            statusField.stringValue = String(describing: error)
+        } else if let current {
+            window.title = "Gym Assistant — Review Library · \(pendingCount) to review · \(skippedCount) skipped"
+            observationField.stringValue = current.observation.observedName
+            let occurrenceSummary = current.observation.occurrenceCount == 1
+                ? "Observed once"
+                : "Observed \(current.observation.occurrenceCount) times"
+            metaField.stringValue = occurrenceSummary
+            sourceField.stringValue = current.occurrences.prefix(2).map { occurrence in
+                let evidence = occurrence.evidence.isEmpty ? "" : "\n\(String(occurrence.evidence.prefix(220)))"
+                return "Observed in: \(occurrence.sourceReference)\(evidence)"
+            }.joined(separator: "\n")
+            statusField.stringValue = feedbackMessage
+        } else {
+            window.title = "Gym Assistant — Review Library · 0 to review · \(skippedCount) skipped"
+            observationField.stringValue = "Nothing needs review"
+            metaField.stringValue = ""
+            sourceField.stringValue = ""
+            statusField.stringValue = ""
+        }
+        chooser.setItems(candidates.map(reviewCandidateItem), preselectTop: true)
+        updateLinkAvailability()
+        backButton.isEnabled = lastUndoReceipt != nil
+    }
+
+    @objc private func linkSelected() {
+        guard let current, let selected = chooser.selectedItem,
+              let candidate = candidates.first(where: { $0.exerciseID == selected.exerciseID }) else { return }
+        guard candidate.linkAllowed else { return }
+        applyDecision("Link") {
+            try service.linkWithUndoReceipt(
+                observationID: current.observation.id,
+                to: candidate.exerciseID
+            )
+        }
+    }
+
+    @objc private func createCurrent() {
+        guard let current else { return }
+        applyDecision("Create") {
+            try service.createWithUndoReceipt(observationID: current.observation.id)
+        }
+    }
+
+    @objc private func skipCurrent() {
+        guard let current else { return }
+        applyDecision("Skip") {
+            try service.skipWithUndoReceipt(observationID: current.observation.id)
+        }
+    }
+
+    private func applyDecision(
+        _ decision: String,
+        operation: () throws -> (ExerciseIdentityReviewResult, ExerciseIdentityReviewUndoReceipt)
+    ) {
+        do {
+            let observationID = current?.observation.id.rawValue ?? "unknown"
+            let (_, receipt) = try operation()
+            lastUndoReceipt = receipt
+            if receipt.decision == .deferred {
+                skippedThisSession.insert(receipt.observationID)
+            }
+            WorkflowEventLog.write("library_review_decision", details: [
+                "decision": decision,
+                "observationID": observationID,
+            ])
+            reloadQueue()
+        } catch {
+            NSSound.beep()
+            statusField.stringValue = "Could not save: \(error)"
+            WorkflowEventLog.write("library_review_error", details: ["message": String(describing: error)])
+        }
+    }
+
+    @objc private func closeReview() {
+        window.performClose(nil)
+    }
+
+    @objc private func undoLastDecision() {
+        guard let receipt = lastUndoReceipt else { return }
+        do {
+            try service.undo(receipt)
+            skippedThisSession.remove(receipt.observationID)
+            lastUndoReceipt = nil
+            let restored = receipt.previousStatus == .deferred ? "Skipped" : "Ready for review"
+            reloadQueue(
+                preferredObservationID: receipt.observationID,
+                feedback: "Undid \(reviewDecisionLabel(receipt.decision)) · restored previous status: \(restored)"
+            )
+        } catch {
+            NSSound.beep()
+            statusField.stringValue = "Could not undo safely: \(error)"
+        }
+    }
+
+    private func installShortcutMonitor() {
+        guard shortcutMonitor == nil else { return }
+        shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.window.isKeyWindow else { return event }
+            if event.keyCode == 53 {
+                self.closeReview()
+                return nil
+            }
+            guard
+                  event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.command],
+                  let key = event.charactersIgnoringModifiers?.lowercased() else { return event }
+            switch key {
+            case "c": self.createCurrent()
+            case "l": self.linkSelected()
+            case "s": self.skipCurrent()
+            case "z":
+                guard self.backButton.isEnabled else { return event }
+                self.undoLastDecision()
+            default: return event
+            }
+            return nil
+        }
+    }
+
+    private func reviewCandidateItem(_ candidate: ExerciseReviewCandidate) -> RankedCandidateItem {
+        return .init(
+            exerciseID: candidate.exerciseID,
+            preferredName: candidate.preferredName,
+            aliases: candidate.aliases,
+            matchedName: candidate.matchedName,
+            detail: candidate.evidence.map(reviewEvidenceText).joined(separator: " · "),
+            selectable: candidate.linkAllowed
+        )
+    }
+
+    private func updateLinkAvailability() {
+        linkButton.isEnabled = chooser.selectedItem?.selectable == true
+    }
+
+    private func restoreFocus() {
+        guard let application = returnFocusTo,
+              application.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+        application.activate(options: [.activateIgnoringOtherApps])
+        returnFocusTo = nil
+        WorkflowEventLog.write("invoking_application_reactivated", details: [
+            "bundleIdentifier": application.bundleIdentifier ?? "unknown",
+        ])
+    }
+}
+
+private func reviewDecisionLabel(_ status: ExerciseObservationReviewStatus) -> String {
+    switch status {
+    case .created: return "Create"
+    case .linked: return "Link"
+    case .deferred: return "Skip"
+    case .pending: return "review"
+    }
+}
+
+private func reviewEvidenceText(_ evidence: ExerciseReviewEvidence) -> String {
+    switch evidence {
+    case .conservativeTransformation(let detail): return "Transform · \(detail)"
+    case .lexicalSimilarity(let score): return "Lexical · \(compactScore(score))"
+    case .prescriptionDifference(let detail): return "Prescription · \(detail)"
+    case .identityConflict(let detail): return "Cannot link · \(detail)"
+    }
+}
+
+private func compactScore(_ score: Double) -> String {
+    if score == 1 { return "1.00" }
+    let formatted = score >= 0.995
+        ? String(format: "%.3f", score)
+        : String(format: "%.2f", score)
+    return formatted.hasPrefix("0") ? String(formatted.dropFirst()) : formatted
+}
+
+@MainActor
 private final class ExerciseServiceProvider: NSObject {
     private let workflow: ExerciseNameWorkflow
     private let autocompleteSearch: ExerciseAutocompleteSearch
+    private let identityReview: ExerciseIdentityReviewService
+    private var libraryReviewWindow: LibraryReviewWindowController?
 
     override init() {
         do {
@@ -509,6 +998,7 @@ private final class ExerciseServiceProvider: NSObject {
             let library = try ExerciseLibrary(databaseURL: baseURL.appendingPathComponent("exercise-library.sqlite"))
             workflow = ExerciseNameWorkflow(library: library)
             autocompleteSearch = ExerciseAutocompleteSearch(library: library)
+            identityReview = ExerciseIdentityReviewService(library: library)
         } catch {
             fatalError("Unable to initialize the exercise library: \(error)")
         }
@@ -529,10 +1019,14 @@ private final class ExerciseServiceProvider: NSObject {
         case .insert(let text):
             pasteboard.clearContents()
             pasteboard.setString(text, forType: .string)
+            restoreFocus(to: invokingApplication)
+        case .reviewLibrary:
+            DispatchQueue.main.async { [weak self] in
+                self?.showLibraryReview(returnFocusTo: invokingApplication)
+            }
         case .cancel:
-            break
+            restoreFocus(to: invokingApplication)
         }
-        restoreFocus(to: invokingApplication)
         WorkflowEventLog.write("autocomplete_service_returning")
     }
 
@@ -581,6 +1075,17 @@ private final class ExerciseServiceProvider: NSObject {
         WorkflowEventLog.write("invoking_application_reactivated", details: [
             "bundleIdentifier": application.bundleIdentifier ?? "unknown",
         ])
+    }
+
+    private func showLibraryReview(returnFocusTo application: NSRunningApplication?) {
+        let controller: LibraryReviewWindowController
+        if let libraryReviewWindow {
+            controller = libraryReviewWindow
+        } else {
+            controller = LibraryReviewWindowController(service: identityReview)
+            libraryReviewWindow = controller
+        }
+        controller.show(returnFocusTo: application)
     }
 
     private func handlePanel(

@@ -36,15 +36,18 @@ unmatched wording accumulates without a quick review path.
 
 - **Now:** finish and manually verify the selected-text workflow for linking an
   existing exercise or creating a genuinely new one without leaving Notes.
-- **Next after baseline autocomplete:** use a reusable exercise-identity review
-  workflow to stage and import the personal exercise library. The import adapter
-  must share candidate evidence, explicit link/create/separate/defer decisions,
-  and provenance with later hygiene workflows rather than implement a disposable
-  batch deduplicator.
-- **Later:** after a program is complete, reuse the identity-review workflow to
-  review unmatched exercise wording and
-  quickly mark each item as a confirmed alias, a new exercise, or intentionally
-  unresolved.
+- **Next after baseline autocomplete:** ingest the personal exercise source into a
+  durable, resumable observation queue. Review enough observations to establish a
+  useful autocomplete library without requiring the complete queue to be resolved.
+  The import adapter must share candidate evidence, explicit link/create/defer
+  decisions, and provenance with later hygiene workflows rather than implement a
+  disposable batch deduplicator.
+- **Later:** after a program is complete, run a reusable exercise-observation
+  extractor over mixed program text, preserve source evidence, and send plausible
+  observations to the same non-blocking identity-review queue.
+- **Later:** evaluate extractor quality against Task A boundary decisions and review
+  Task C outcome clusters—especially deferred observations—without treating an
+  identity disposition as automatic extraction ground truth.
 - **Later:** provide a dedicated duplicate-review or merge workflow. Similarity
   alone must not establish identity.
 
@@ -117,11 +120,12 @@ product scope until explicitly approved.
 
 **Now** completes the already-started new-exercise workflow and records the product
 redirection. **Next** proves keyboard autocomplete from an empty Notes cursor, then
-builds the reusable identity-review workflow, imports the personal library, and
-reaches an explicit useful-product pause gate. Conservative transformations extend
-autocomplete only if field use justifies continuing. **Later** contains
-completed-program hygiene, intent-based retrieval, blocks, programming tendencies,
-contextual pairing, and progression relationships. **Future** contains
+builds the reusable identity-review workflow, ingests the personal source into a
+non-blocking queue, reviews a useful subset, and reaches an explicit useful-product
+pause gate. Conservative transformations extend autocomplete only if field use
+justifies continuing. **Later** contains reusable completed-program observation
+extraction, library hygiene, intent-based retrieval, blocks, programming
+tendencies, contextual pairing, and progression relationships. **Future** contains
 client-specific history and load-aware assistance.
 
 Ideas may be added to this tree without changing active success criteria. Each idea

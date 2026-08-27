@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 10
-Current task: Task A — Prepare auditable source evidence from Strength Training Notes
+Current exercise: 11
+Current task: Task A — Define the field-signal contract
 Current task state: not started
-Task completion condition: pass Exercise 10 Task A `STOP / REVIEW — Source-evidence boundary`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C
-Remaining tasks: Exercise 10 — Tasks A–C
-Most recent checkpoint: Exercise 09 Task C `STOP / REVIEW — Autocomplete evidence` (passed)
-Relevant skills: verify, set-boundaries
+Task completion condition: pass Exercise 11 Task A `STOP / REVIEW — Feedback-loop contract`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C
+Remaining tasks: Exercise 11 — Tasks A–D
+Most recent checkpoint: Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate` (passed)
+Relevant skills: frame-work, verify, set-boundaries, record-decisions
 
 ## Completed
 
@@ -20,7 +20,7 @@ Relevant skills: verify, set-boundaries
 - [x] 07 — Fuzzy candidate generation and human confirmation
 - [x] 08 — Frictionless new-exercise workflow
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
-- [ ] 10 — Exercise identity review and personal-library import
+- [x] 10 — Exercise identity review and personal-library import
 - [ ] 11 — Field feedback loops and resolver improvement
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
@@ -29,7 +29,8 @@ Relevant skills: verify, set-boundaries
 ## Planned product-extension exercises
 
 - [ ] 15 — Reusable completed-program observation extractor; begin only when
-  explicitly selected after Exercise 10 has preserved an extractor-feedback packet.
+  explicitly selected after Exercise 10 has preserved the private Task A/Task C
+  feedback packet. This planned extension does not advance current tutorial state.
 
 ## Current notes
 
@@ -93,6 +94,27 @@ Relevant skills: verify, set-boundaries
   result, an incremental `copp` ranking discontinuity, and Escape behavior that
   could leave a modal panel open past the Service timeout. Thirty-three tests and
   all 37 resolver fixtures pass; search remains read-only with zero identity writes.
+- Exercise 10 Task A reviewed all 56 currently visible Strength Training notes and
+  staged 1,891 private source observations representing 2,224 occurrences. All 158
+  ambiguous extraction rows received explicit boundary decisions; the original
+  wording, source evidence, and audit remain private and uncommitted. Four
+  cross-note samples matched Notes directly. The older durable count of 57 notes
+  remains a recorded coverage limitation, but the current source was accepted as
+  complete enough to proceed without making exercise-identity decisions.
+- Exercise 10 Task B implemented a source-adapter-independent identity-review core.
+  Exact confirmed names reuse identity without writes; transformations,
+  bidirectional lexical similarity, prescription differences, and identity
+  conflicts provide human-review evidence only. Staged observations support Link,
+  observation-text-only Create, and durable Defer; audit-only Keep Separate applies
+  to two existing IDs. Forty-three tests, all 37 resolver fixtures, and all six
+  review-policy fixtures pass with zero candidate-caused identity writes.
+- Exercise 10 Task C ingested 1,891 source records as 1,210 durable observations
+  and 2,224 occurrence records. The private feedback packet maps 158/158 extraction
+  decisions with zero gaps and indexes all 9 skips. Review-to-autocomplete passed
+  in Notes; 58 tests, 37 resolver fixtures, and 6 review-policy fixtures pass.
+- Field use retained repeated tab-away friction, missing `DL` protected-conflict
+  recognition, and mixed-evidence ordering problems as Exercise 11 signals rather
+  than expanding Task C indefinitely.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -107,6 +129,8 @@ Relevant skills: verify, set-boundaries
 
 ## Next action
 
-Begin Exercise 10 Task A by reviewing the guarded source-extraction prompt and
-preparing auditable, privacy-aware exercise wording evidence from Strength Training
-Notes without asking ChatGPT to decide exercise identity.
+Begin Exercise 11 Task A by defining the private field-event schema, one-action
+subjective flag, deterministic anomaly checks, baseline metrics, disposition ledger,
+and fixed first resolver batch. Keep collection and evaluation unattended-capable,
+but retain prioritization, identity changes, and product-scope decisions as foreground
+gates.

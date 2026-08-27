@@ -3,6 +3,7 @@ import Foundation
 public struct ResolverFixtureDocument: Decodable, Sendable {
     public let schemaVersion: Int
     public let normalizationAssumptions: [String]
+    public let maximumScoredCandidateScoreExclusive: Double
     public let categories: ResolverFixtureCategories
 }
 
@@ -55,10 +56,16 @@ public struct ResolverFixtureInput: Sendable {
 public struct ResolverFixtureObservation: Equatable, Sendable {
     public let automaticMatch: String?
     public let rankedCandidates: [String]
+    public let rankedCandidateScores: [Double]
 
-    public init(automaticMatch: String? = nil, rankedCandidates: [String] = []) {
+    public init(
+        automaticMatch: String? = nil,
+        rankedCandidates: [String] = [],
+        rankedCandidateScores: [Double] = []
+    ) {
         self.automaticMatch = automaticMatch
         self.rankedCandidates = rankedCandidates
+        self.rankedCandidateScores = rankedCandidateScores
     }
 }
 
@@ -71,6 +78,7 @@ public enum ResolverFixtureFailureKind: String, Sendable {
     case missedExpectedMatch = "MISSED_EXPECTED_MATCH"
     case candidateRankingFailure = "CANDIDATE_RANKING_FAILURE"
     case protectedCandidateLeak = "PROTECTED_CANDIDATE_LEAK"
+    case authoritativeScoreLeak = "AUTHORITATIVE_SCORE_LEAK"
 }
 
 public struct ResolverFixtureFailure: Equatable, Sendable {
@@ -88,6 +96,7 @@ public struct ResolverFixtureReport: Sendable {
     public var missedExpectedMatches: Int { count(.missedExpectedMatch) }
     public var candidateRankingFailures: Int { count(.candidateRankingFailure) }
     public var protectedCandidateLeaks: Int { count(.protectedCandidateLeak) }
+    public var authoritativeScoreLeaks: Int { count(.authoritativeScoreLeak) }
     public var succeeded: Bool { failures.isEmpty }
 
     private func count(_ kind: ResolverFixtureFailureKind) -> Int {
@@ -163,6 +172,14 @@ public struct ResolverFixtureHarness: Sendable {
                     fixtureID: fixture.id,
                     kind: .falseMerge,
                     detail: "Review was required; automatically matched \(automaticMatch.debugDescription)."
+                ))
+            } else if observation.rankedCandidateScores.contains(where: {
+                $0 >= document.maximumScoredCandidateScoreExclusive
+            }) {
+                failures.append(.init(
+                    fixtureID: fixture.id,
+                    kind: .authoritativeScoreLeak,
+                    detail: "A review-only candidate scored at least \(document.maximumScoredCandidateScoreExclusive); that score is reserved for normalized-name lookup."
                 ))
             } else if observation.rankedCandidates.first == fixture.candidatePreferredNames.first {
                 passes += 1
