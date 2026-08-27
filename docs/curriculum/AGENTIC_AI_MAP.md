@@ -65,6 +65,29 @@ If this procedure proves useful, `AGENTS.md` should contain only a short trigger
 3. Have the author disposition every blocking finding, revise once, and run one targeted re-review only when a blocker changed. Stop at the risk-tier budget; do not wait for unanimity.
 4. Record time spent, useful findings, duplicated noise, unresolved human judgments, and whether the decision improved. Repeat on two or three decisions before deciding whether a durable `docs/DECISIONS_REVIEW.md` procedure is justified.
 
+### Field feedback as an operating loop
+
+A field-feedback loop has five distinct parts: collect evidence during real use,
+evaluate objective conditions, preserve subjective friction cheaply, prioritize a
+bounded batch, and compare the same signals after an intervention. Automation can run
+collection and deterministic evaluation without attention. It should not silently make
+value judgments, change success criteria, or expand the active batch.
+
+The durable queue is what permits moving on. Each signal needs a stable identifier,
+occurrence history, disposition, and link to any regression fixture. A periodic report
+should emphasize new or materially changed findings rather than repeatedly announcing
+unchanged state. This makes the loop resumable without turning product work into a stream
+of interruptions.
+
+The maturity sequence is manual run, deterministic evaluator, several observed
+unattended runs, and only then a reusable skill or more autonomous scheduled task. A
+scheduled task is transport for a proven procedure, not the procedure itself. Any
+unattended code or data mutation requires a separate authority and safety decision.
+
+**Project connection:** Exercise 11 uses resolver ordering and Notes focus friction to
+build a private local signal store, replayable cases, a read-only scheduled evaluator,
+and a foreground batch gate.
+
 ## 2. Context and task framing
 
 An agent needs the right amount of durable context in the right place: product truth, agent rules, architecture decisions, plans, and current task instructions serve different jobs. A well-framed task names outcome, context, constraints, verification, and stopping conditions.
