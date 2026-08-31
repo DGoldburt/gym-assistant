@@ -29,6 +29,7 @@ It should run the relevant project checks such as:
 - lint
 - typecheck/static analysis
 - build
+- documentation structure and internal links
 
 Use the tooling appropriate to the actual project stack.
 
@@ -82,3 +83,9 @@ Inspect the self-review findings, the final diff, and the rerun verification evi
 Teach back: How does self-review complement automated checks and manual artifacts rather than replace them?
 
 After the user approves the reflection and checkpoint, append learning evidence, update justified skill confidence and progress, and advance to Exercise 13.
+
+## Optional extension
+
+After this exercise, Optional Lab 05 can extend the harness from code checks into
+documentation invariants and a reviewable code-versus-doc drift scan. The lab does not
+advance tutorial progress.

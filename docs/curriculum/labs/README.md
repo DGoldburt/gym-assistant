@@ -1,6 +1,6 @@
 # Optional Agentic-AI Labs
 
-These labs extend the agentic-development curriculum without blocking or advancing the 13-exercise product course.
+These labs extend the agentic-development curriculum without blocking or advancing the 14-exercise product course.
 
 Rules:
 
@@ -17,3 +17,4 @@ Available labs:
 - `02-skill-from-repeated-workflow.md`
 - `03-cloud-delegation.md`
 - `04-stable-before-scheduled.md`
+- `05-documentation-gardening.md`
