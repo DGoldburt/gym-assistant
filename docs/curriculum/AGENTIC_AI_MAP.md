@@ -88,6 +88,34 @@ unattended code or data mutation requires a separate authority and safety decisi
 build a private local signal store, replayable cases, a read-only scheduled evaluator,
 and a foreground batch gate.
 
+### Knowledge-base integrity and doc gardening
+
+OpenAI's [*Harness engineering*](https://openai.com/index/harness-engineering/)
+describes two complementary controls for repository knowledge. Deterministic checks
+can enforce mechanical invariants such as valid links, required structure, generated
+indexes, and declared source-of-truth relationships. A doc-gardening agent can then
+compare documentation with code, tests, configuration, and observed behavior to find
+semantic drift that a linter cannot prove mechanically.
+
+The distinction matters: a passing link checker does not establish that a document is
+true, while an agent's plausible drift finding is not authoritative enough to rewrite
+shared knowledge unattended. The useful operating loop is deterministic checks in the
+ordinary verification or CI path, followed by a bounded agent scan that cites evidence
+and opens a reviewable fix-up pull request. Humans still decide whether the proposed
+documentation reflects intended behavior and whether it should merge.
+
+Recurring gardening should follow the same maturity sequence as other automation:
+prove the scan manually, constrain its sources and write scope, observe false positives,
+make unchanged runs quiet, and schedule it only when repeated runs are predictable.
+The scheduled agent may prepare a branch and pull request; it must not silently change
+product truth, architecture decisions, learner records, or success criteria.
+
+**Project connections:** Exercise 12 can add documentation invariants to the
+one-command harness; Exercise 13 supplies independent diff and pull-request review;
+Optional Lab 05 combines those pieces in one documentation-gardening trial. Exercise
+11 and Optional Lab 04 provide the maturity model for recurrence, not an instruction
+to schedule the first prompt immediately.
+
 ## 2. Context and task framing
 
 An agent needs the right amount of durable context in the right place: product truth, agent rules, architecture decisions, plans, and current task instructions serve different jobs. A well-framed task names outcome, context, constraints, verification, and stopping conditions.

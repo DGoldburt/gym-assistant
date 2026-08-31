@@ -32,6 +32,7 @@ Then start a separate review task with instructions such as:
 - missing tests
 - unnecessary complexity
 - architecture violations
+- stale or contradictory documentation
 - security/privacy concerns
 - UX regressions
 
@@ -81,3 +82,8 @@ After the user approves the reflection and checkpoint, append learning evidence,
 ## Optional map check-in
 
 After this exercise is recorded, offer a brief, non-blocking map check-in: Which review perspective found something the implementing context would likely have missed, and when would parallel work add value rather than coordination cost? Preserve a summary in `LEARNING_LOG.md` only if the user asks or approves.
+
+Optional Lab 05 can use the same independent-review and pull-request discipline for a
+doc-gardening agent. Keep its scan separate from feature implementation so the learner
+can judge whether each proposed documentation correction is supported by code, tests,
+configuration, or runtime evidence.
