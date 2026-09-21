@@ -18,3 +18,4 @@ Available labs:
 - `03-cloud-delegation.md`
 - `04-stable-before-scheduled.md`
 - `05-documentation-gardening.md`
+- `06-codex-cli-and-notes-ui.md`

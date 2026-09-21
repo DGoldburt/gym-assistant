@@ -18,14 +18,18 @@ The next agentic skill is delegation and review rather than direct implementatio
 - `collaborate` — Work through reviewable Git collaboration
 - `verify` — Build an evidence-producing delivery loop
 - `review` — Challenge work from more than one perspective
+- `operate-cli-agents` — Direct coding agents through terminal workflows
 
 ## Task A — Independent review
 
 Choose one recently completed feature.
 
-Have one Codex task implement or improve it.
+Have one Codex task implement or improve it. Record whether the implementer runs in the
+desktop app, an in-session subagent, or a separate CLI session; these are different
+context and isolation boundaries.
 
-Then start a separate review task with instructions such as:
+Then start a fresh, separate Codex CLI review session from the repository or a dedicated
+review worktree with instructions such as:
 
 - inspect the diff as an independent reviewer
 - look for incorrect behavior
@@ -37,12 +41,17 @@ Then start a separate review task with instructions such as:
 - UX regressions
 
 Do not tell the reviewer what the first agent was worried about.
+Give it the acceptance criteria, complete diff, repository instructions, and relevant
+verification evidence, but not the implementer's rationale, self-review conclusions, or
+proposed defense. Record the review session's working directory, Git state, permissions,
+model, and any material context it inherited despite the intended separation.
 
 ### STOP / REVIEW
 
 Inspect both review reports against the same diff and test evidence. Compare:
 - implementer's self-review
 - independent review
+- the context and filesystem boundaries each reviewer actually received
 
 Which findings were unique?
 
@@ -57,13 +66,20 @@ Pick 2-3 independent small enhancements, for example:
 - favorites
 - autocomplete ranking edge cases
 
-Run them in separate worktrees.
+Run them in separate worktrees and separate CLI sessions. Start with one machine; adding
+terminal multiplexers, session dashboards, remote hosts, or extra machines requires
+observed coordination or resource friction rather than an assumption that more
+infrastructure is inherently better.
 
 Your job is to:
 - keep scopes independent
+- give each session an explicit branch, working directory, allowed files, verification
+  contract, and stopping condition
 - inspect each diff
 - decide what to merge
 - resolve conflicts only if necessary
+- record how many concurrent workstreams remained useful before supervision, duplicated
+  work, or context switching became the bottleneck
 
 ## Reflection
 
@@ -73,7 +89,13 @@ Explain the difference between:
 
 ### STOP / REVIEW — Parallel work and merge judgment
 
-Inspect each worktree's scope, branch, diff, verification output, overlap, and review result. Decide independently which changes should merge and confirm that no task relied on another worktree's uncommitted state.
+Inspect each worktree's scope, branch, diff, verification output, overlap, and review
+result. Decide independently which changes should merge and confirm that no task relied
+on another worktree's uncommitted state.
+
+Also compare this setup with a single desktop task and an in-session subagent: identify
+what independence came from a fresh CLI conversation, a separate process, a separate
+worktree, or a different model, and do not attribute all differences to one mechanism.
 
 Teach back: What makes two tasks safe to run in parallel, and what responsibilities remain with the human supervisor?
 
