@@ -15,6 +15,7 @@ A coding agent becomes more reliable when the environment can objectively tell i
 
 - `verify` — Build an evidence-producing delivery loop
 - `review` — Challenge work from more than one perspective
+- `operate-cli-agents` — Direct coding agents through terminal workflows
 
 ## Goal
 
@@ -31,7 +32,10 @@ It should run the relevant project checks such as:
 - build
 - documentation structure and internal links
 
-Use the tooling appropriate to the actual project stack.
+Use the tooling appropriate to the actual project stack. The command must work from an
+ordinary terminal and provide enough structured evidence for both an interactive Codex
+CLI session and a stable non-interactive `codex exec` task. Do not require hidden chat
+context or undocumented machine setup.
 
 ## Task A — Audit the current harness
 
@@ -39,6 +43,10 @@ Ask Codex:
 - what can be verified automatically?
 - what still requires manual testing?
 - what common failure could currently slip through?
+- which checks can run in an ordinary shell, which require macOS UI or accessibility
+  control, and which still require human judgment?
+- what environment, permission, and private-data assumptions a fresh CLI session would
+  need to reproduce each check?
 
 ### STOP / REVIEW
 
@@ -52,6 +60,11 @@ Teach back: What makes a verification check actionable rather than ceremonial?
 
 Make failures easy for Codex and humans to interpret.
 
+Run the finished command directly in the terminal, from an interactive Codex CLI
+session, and through one bounded non-interactive invocation. These runs should exercise
+the same harness rather than maintain three divergent procedures. If a mode cannot run
+a check, report that boundary explicitly instead of silently skipping it.
+
 ### STOP / REVIEW — One-command verification
 
 Inspect the command, its output, and at least one intentionally observed failure. Decide whether the failure identifies the check that failed and gives a useful route to investigation rather than a vague success/failure claim.
@@ -64,7 +77,10 @@ Give Codex a bounded workflow such as:
 
 > Exercise the Notes lookup flow using a defined set of cases. Capture logs/screenshots or other artifacts where available. Report each step and result.
 
-The goal is evidence, not "looks good."
+The goal is evidence, not "looks good." Separate deterministic shell checks, structured
+UI automation, visual inspection, and human usability judgment. A successful build or
+command invocation must not be reported as proof that Notes displayed the right content,
+kept the intended range, or restored a usable caret.
 
 ### STOP / REVIEW — Manual-test evidence
 
@@ -89,3 +105,8 @@ After the user approves the reflection and checkpoint, append learning evidence,
 After this exercise, Optional Lab 05 can extend the harness from code checks into
 documentation invariants and a reviewable code-versus-doc drift scan. The lab does not
 advance tutorial progress.
+
+Optional Lab 06 can be completed before or during this exercise to compare interactive
+Codex CLI, `codex exec`, and the shell-to-Notes UI boundary. Its evidence may inform the
+harness, but the lab does not advance tutorial progress and Exercise 12 must remain
+completable without it.

@@ -49,6 +49,14 @@ Record consequential decisions, evidence, tradeoffs, and revisit triggers outsid
 **Confidence:** Not yet used
 Use self-review, independent review, and worktree or parallel-agent judgment without multiplying work unnecessarily.
 
+## operate-cli-agents — Direct coding agents through terminal workflows
+
+**Confidence:** Not yet used
+Start, inspect, steer, and safely automate coding-agent sessions from the terminal.
+Choose appropriately between interactive and non-interactive execution; understand
+working directory, repository context, permissions, sandboxing, context boundaries,
+verification output, and the limits of shell-driven access to graphical applications.
+
 ## scale-capabilities — Apply advanced capabilities deliberately
 
 **Confidence:** Not yet used  
