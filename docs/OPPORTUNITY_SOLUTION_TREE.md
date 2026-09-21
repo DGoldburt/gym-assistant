@@ -45,8 +45,22 @@ unmatched wording accumulates without a quick review path.
   review unmatched exercise wording and
   quickly mark each item as a confirmed alias, a new exercise, or intentionally
   unresolved.
-- **Later:** provide a dedicated duplicate-review or merge workflow. Similarity
-  alone must not establish identity.
+- **Later, unsequenced:** evolve the Exercise Library into a small library-maintenance
+  workspace. It may continue directly into **To review**, but must clearly name that
+  mode, show **Skipped** as the only other additions view, and expose source import
+  and existing-exercise management without implying multiple end-user queues.
+  Existing-exercise management should support deliberate duplicate merges and
+  separating an incorrectly linked alias into its own exercise with an audit trail.
+  The autocomplete chooser may provide a keyboard action that opens management for
+  the selected stable exercise identity rather than searching by display text.
+- **Later, unsequenced:** let the user submit additional exercise sources—initially
+  pasted text or a URL, and eventually a photographed notebook page—through source
+  adapters that preserve provenance and feed extracted observations into the same
+  **To review** additions flow. Image transcription and correction remain a later
+  experiment within this solution, not a requirement of the first import path.
+
+Similarity may propose a duplicate or an incorrectly linked alias, but must not
+merge or separate exercise identities without an explicit reviewed action.
 
 ## Opportunity: retrieve a known exercise with minimal input
 
