@@ -9,11 +9,15 @@ macos_dir="$contents_dir/MacOS"
 
 cd "$repo_dir"
 swift build --product GymAssistantNotesService
+swift build --product FieldFeedbackReport
+swift build --product SetFieldFeedbackDisposition
 bin_dir="$(swift build --product GymAssistantNotesService --show-bin-path)"
 
 mkdir -p "$macos_dir"
 cp "$repo_dir/app/notes-service/Info.plist" "$contents_dir/Info.plist"
 cp "$bin_dir/GymAssistantNotesService" "$macos_dir/GymAssistantNotesService"
+cp "$bin_dir/FieldFeedbackReport" "$macos_dir/FieldFeedbackReport"
+cp "$bin_dir/SetFieldFeedbackDisposition" "$macos_dir/SetFieldFeedbackDisposition"
 
 xattr -cr "$app_dir"
 codesign --force --sign - "$app_dir"

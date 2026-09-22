@@ -23,6 +23,28 @@ private enum WorkflowEventLog {
     }
 }
 
+private enum FieldFeedbackRecorder {
+    static func append(_ interaction: FeedbackInteraction, panelScreenshot: Data? = nil) {
+        do {
+            let store = try FeedbackFileStore.applicationSupport()
+            try store.append(interaction)
+            if let panelScreenshot {
+                try store.savePanelScreenshot(panelScreenshot, eventID: interaction.eventID)
+            }
+        }
+        catch { WorkflowEventLog.write("field_feedback_write_failed", details: ["message": String(describing: error)]) }
+    }
+}
+
+@MainActor
+private func panelScreenshotPNG(_ window: NSWindow) -> Data? {
+    guard let view = window.contentView?.superview ?? window.contentView else { return nil }
+    let bounds = view.bounds
+    guard !bounds.isEmpty, let bitmap = view.bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
+    view.cacheDisplay(in: bounds, to: bitmap)
+    return bitmap.representation(using: .png, properties: [:])
+}
+
 private enum AutocompletePanelResult {
     case insert(String)
     case reviewLibrary
@@ -103,6 +125,11 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
         case .exercise(let item): return item.matchedName
         case .alias(_, let name): return name
         }
+    }
+
+    var selectedExerciseRank: Int? {
+        guard let selectedItem, let index = items.firstIndex(where: { $0.exerciseID == selectedItem.exerciseID }) else { return nil }
+        return index + 1
     }
 
     func setItems(_ items: [RankedCandidateItem], preselectTop: Bool = true) {
@@ -244,7 +271,7 @@ private final class AutocompleteSearchField: NSSearchField {
 }
 
 @MainActor
-private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
+private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, NSWindowDelegate {
     private let search: ExerciseAutocompleteSearch
     private let panel: NSPanel
     private let searchField = AutocompleteSearchField()
@@ -257,6 +284,19 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
     )
     private var matches: [ExerciseSearchMatch] = []
     private var result: AutocompletePanelResult = .cancel
+    private let sessionID = UUID()
+    private let startedAt = Date()
+    private var aliasesExpanded = false
+    private var deactivationCount = 0
+    private var returnedAfterDeactivation = false
+    private var lastReturnAt: Date?
+    private lazy var reportButton: NSButton = {
+        let button = NSButton(image: NSImage(systemSymbolName: "exclamationmark.bubble", accessibilityDescription: "Report Issue")!, target: self, action: #selector(reportIssue))
+        button.bezelStyle = .inline
+        button.isBordered = false
+        button.toolTip = "Report a surprising result (Shift-Command-R)"
+        return button
+    }()
 
     init(search: ExerciseAutocompleteSearch) {
         self.search = search
@@ -267,6 +307,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
             defer: false
         )
         super.init()
+        panel.delegate = self
         configurePanel()
     }
 
@@ -282,6 +323,11 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
         RunLoop.main.add(serviceDeadlineTimer, forMode: .modalPanel)
         let shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if modifiers == [.command, .shift], event.charactersIgnoringModifiers?.lowercased() == "r" {
+                self.reportIssue()
+                return nil
+            }
             if event.keyCode == 53 {
                 self.cancel()
                 return nil
@@ -367,6 +413,9 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
         statusField.frame = NSRect(x: 200, y: 18, width: 416, height: 22)
         statusField.textColor = .secondaryLabelColor
         content.addSubview(statusField)
+
+        reportButton.frame = NSRect(x: 588, y: 270, width: 28, height: 28)
+        content.addSubview(reportButton)
     }
 
     private func updateResults() {
@@ -424,6 +473,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
 
     private func expandSelection() {
         chooser.expandSelection()
+        aliasesExpanded = true
         if let item = chooser.selectedItem {
             WorkflowEventLog.write("autocomplete_aliases_expanded", details: ["preferredName": item.preferredName])
         }
@@ -435,6 +485,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
 
     private func chooseSelection() {
         if let insertion = chooser.selectedName {
+            record(.init(kind: .insertedCandidate, selectedRank: chooser.selectedExerciseRank, selectedName: insertion))
             result = .insert(insertion)
             WorkflowEventLog.write("autocomplete_chosen", details: ["insertion": insertion])
             NSApp.stopModal()
@@ -442,6 +493,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
         }
 
         guard !searchField.stringValue.isEmpty else { return }
+        record(.init(kind: .insertedQuery, selectedName: searchField.stringValue))
         result = .insert(searchField.stringValue)
         WorkflowEventLog.write("autocomplete_query_inserted", details: ["insertion": searchField.stringValue])
         NSApp.stopModal()
@@ -453,15 +505,69 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate {
     }
 
     private func cancel() {
+        record(.init(kind: .cancelled))
         result = .cancel
         WorkflowEventLog.write("autocomplete_cancelled")
         NSApp.stopModal()
     }
 
     @objc private func openLibraryReview() {
+        record(.init(kind: .opened))
         result = .reviewLibrary
         WorkflowEventLog.write("library_review_selected")
         NSApp.stopModal()
+    }
+
+    @objc private func reportIssue() {
+        record(
+            .init(kind: .opened, selectedRank: chooser.selectedExerciseRank, selectedName: chooser.selectedName),
+            flagged: true
+        )
+        statusField.stringValue = "Issue captured — you can keep working"
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        guard panel.isVisible else { return }
+        deactivationCount += 1
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if deactivationCount > 0 {
+            returnedAfterDeactivation = true
+            lastReturnAt = Date()
+        }
+    }
+
+    private func record(_ outcome: FeedbackOutcome, flagged: Bool = false) {
+        let snapshots = matches.enumerated().map { index, match in
+            FeedbackCandidateSnapshot(
+                rank: index + 1,
+                exerciseID: match.exerciseID.rawValue.uuidString,
+                preferredName: match.preferredName,
+                matchedName: match.matchedName,
+                aliases: match.aliases,
+                evidence: [resultDetail(for: match)],
+                score: match.score,
+                linkAllowed: true
+            )
+        }
+        let interaction = FeedbackInteraction(
+            sessionID: sessionID,
+            workflow: .autocomplete,
+            queryOrObservation: searchField.stringValue,
+            candidates: snapshots,
+            outcome: outcome,
+            durationMilliseconds: Int(Date().timeIntervalSince(startedAt) * 1_000),
+            aliasesExpanded: aliasesExpanded,
+            deactivationCount: deactivationCount,
+            returnedAfterDeactivation: returnedAfterDeactivation,
+            lastReturnToOutcomeMilliseconds: lastReturnAt.map { Int(Date().timeIntervalSince($0) * 1_000) },
+            userFlagged: flagged
+        )
+        FieldFeedbackRecorder.append(
+            interaction,
+            panelScreenshot: flagged ? panelScreenshotPNG(panel) : nil
+        )
     }
 }
 
@@ -683,6 +789,19 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     private var skippedCount = 0
     private var lastUndoReceipt: ExerciseIdentityReviewUndoReceipt?
     private var feedbackMessage = ""
+    private var sessionID = UUID()
+    private var interactionStartedAt = Date()
+    private var aliasesExpanded = false
+    private var deactivationCount = 0
+    private var returnedAfterDeactivation = false
+    private var lastReturnAt: Date?
+    private lazy var reportButton: NSButton = {
+        let button = NSButton(image: NSImage(systemSymbolName: "exclamationmark.bubble", accessibilityDescription: "Report Issue")!, target: self, action: #selector(reportIssue))
+        button.bezelStyle = .inline
+        button.isBordered = false
+        button.toolTip = "Report a surprising result (Shift-Command-R)"
+        return button
+    }()
 
     init(service: ExerciseIdentityReviewService) {
         self.service = service
@@ -702,6 +821,12 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         skippedThisSession.removeAll()
         lastUndoReceipt = nil
         feedbackMessage = ""
+        sessionID = UUID()
+        interactionStartedAt = Date()
+        aliasesExpanded = false
+        deactivationCount = 0
+        returnedAfterDeactivation = false
+        lastReturnAt = nil
         reloadQueue()
         window.center()
         NSApp.activate(ignoringOtherApps: true)
@@ -712,12 +837,25 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        record(.init(kind: .cancelled))
         if let shortcutMonitor {
             NSEvent.removeMonitor(shortcutMonitor)
             self.shortcutMonitor = nil
         }
         WorkflowEventLog.write("library_review_closed")
         restoreFocus()
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        guard window.isVisible else { return }
+        deactivationCount += 1
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if deactivationCount > 0 {
+            returnedAfterDeactivation = true
+            lastReturnAt = Date()
+        }
     }
 
     private func configureWindow() {
@@ -769,6 +907,9 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         statusField.frame = NSRect(x: 24, y: 18, width: 592, height: 22)
         statusField.textColor = .secondaryLabelColor
         content.addSubview(statusField)
+
+        reportButton.frame = NSRect(x: 588, y: 442, width: 28, height: 28)
+        content.addSubview(reportButton)
     }
 
     private func reloadQueue(
@@ -865,6 +1006,8 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     ) {
         do {
             let observationID = current?.observation.id.rawValue ?? "unknown"
+            let outcomeKind: FeedbackOutcomeKind = decision == "Link" ? .linked : decision == "Create" ? .created : .skipped
+            record(.init(kind: outcomeKind, selectedRank: chooser.selectedExerciseRank, selectedName: chooser.selectedName))
             let (_, receipt) = try operation()
             lastUndoReceipt = receipt
             if receipt.decision == .deferred {
@@ -875,6 +1018,11 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
                 "observationID": observationID,
             ])
             reloadQueue()
+            interactionStartedAt = Date()
+            aliasesExpanded = false
+            deactivationCount = 0
+            returnedAfterDeactivation = false
+            lastReturnAt = nil
         } catch {
             NSSound.beep()
             statusField.stringValue = "Could not save: \(error)"
@@ -889,6 +1037,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     @objc private func undoLastDecision() {
         guard let receipt = lastUndoReceipt else { return }
         do {
+            record(.init(kind: .backed))
             try service.undo(receipt)
             skippedThisSession.remove(receipt.observationID)
             lastUndoReceipt = nil
@@ -911,8 +1060,8 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
                 self.closeReview()
                 return nil
             }
-            guard
-                  event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.command],
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard modifiers == [.command] || modifiers == [.command, .shift],
                   let key = event.charactersIgnoringModifiers?.lowercased() else { return event }
             switch key {
             case "c": self.createCurrent()
@@ -921,6 +1070,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             case "z":
                 guard self.backButton.isEnabled else { return event }
                 self.undoLastDecision()
+            case "r" where modifiers == [.command, .shift]: self.reportIssue()
             default: return event
             }
             return nil
@@ -940,6 +1090,52 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
 
     private func updateLinkAvailability() {
         linkButton.isEnabled = chooser.selectedItem?.selectable == true
+    }
+
+    @objc private func reportIssue() {
+        record(
+            .init(kind: .opened, selectedRank: chooser.selectedExerciseRank, selectedName: chooser.selectedName),
+            flagged: true
+        )
+        feedbackMessage = "Issue captured — you can keep reviewing"
+        statusField.stringValue = feedbackMessage
+    }
+
+    private func record(_ outcome: FeedbackOutcome, flagged: Bool = false) {
+        guard let current else { return }
+        let snapshots = candidates.enumerated().map { index, candidate in
+            FeedbackCandidateSnapshot(
+                rank: index + 1,
+                exerciseID: candidate.exerciseID.rawValue.uuidString,
+                preferredName: candidate.preferredName,
+                matchedName: candidate.matchedName,
+                aliases: candidate.aliases,
+                evidence: candidate.evidence.map(reviewEvidenceText),
+                score: candidate.evidence.compactMap { evidence in
+                    if case .lexicalSimilarity(let score) = evidence { return score }
+                    return nil
+                }.first,
+                linkAllowed: candidate.linkAllowed
+            )
+        }
+        let interaction = FeedbackInteraction(
+            sessionID: sessionID,
+            workflow: .identityReview,
+            queryOrObservation: current.observation.observedName,
+            observationID: current.observation.id.rawValue,
+            candidates: snapshots,
+            outcome: outcome,
+            durationMilliseconds: Int(Date().timeIntervalSince(interactionStartedAt) * 1_000),
+            aliasesExpanded: aliasesExpanded,
+            deactivationCount: deactivationCount,
+            returnedAfterDeactivation: returnedAfterDeactivation,
+            lastReturnToOutcomeMilliseconds: lastReturnAt.map { Int(Date().timeIntervalSince($0) * 1_000) },
+            userFlagged: flagged
+        )
+        FieldFeedbackRecorder.append(
+            interaction,
+            panelScreenshot: flagged ? panelScreenshotPNG(window) : nil
+        )
     }
 
     private func restoreFocus() {

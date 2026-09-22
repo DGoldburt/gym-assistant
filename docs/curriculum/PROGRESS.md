@@ -1,13 +1,13 @@
 # Tutorial Progress
 
 Current exercise: 11
-Current task: Task A — Define the field-signal contract
-Current task state: not started
-Task completion condition: pass Exercise 11 Task A `STOP / REVIEW — Feedback-loop contract`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C
-Remaining tasks: Exercise 11 — Tasks A–D
-Most recent checkpoint: Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate` (passed)
-Relevant skills: frame-work, verify, set-boundaries, record-decisions
+Current task: Task C — Improve one bounded resolver batch
+Current task state: in-progress
+Task completion condition: pass Exercise 11 Task C `STOP / REVIEW — Measured resolver improvement`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–B
+Remaining tasks: Exercise 11 — Tasks C–D
+Most recent checkpoint: Exercise 11 Task B `STOP / REVIEW — Running feedback loop` (passed)
+Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 
 ## Completed
 
@@ -129,8 +129,8 @@ Relevant skills: frame-work, verify, set-boundaries, record-decisions
 
 ## Next action
 
-Begin Exercise 11 Task A by defining the private field-event schema, one-action
-subjective flag, deterministic anomaly checks, baseline metrics, disposition ledger,
-and fixed first resolver batch. Keep collection and evaluation unattended-capable,
-but retain prioritization, identity changes, and product-scope decisions as foreground
-gates.
+Begin Task C with a short field-use intake window. Continue reviewing signals and allow
+additional resolver cases to enter `acceptedForBatch`; keep focus-recovery cases routed
+to Task D. At the learner's explicit freeze instruction, snapshot the accepted resolver
+case IDs as the fixed Task C intervention batch. Signals accepted after that freeze
+belong to a later batch and cannot expand the active implementation.

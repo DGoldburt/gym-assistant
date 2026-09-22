@@ -11,6 +11,8 @@ let package = Package(
         .executable(name: "IdentityReviewFixtureRunner", targets: ["IdentityReviewFixtureRunner"]),
         .executable(name: "PersonalLibraryImport", targets: ["PersonalLibraryImport"]),
         .executable(name: "GymAssistantNotesService", targets: ["GymAssistantNotesService"]),
+        .executable(name: "FieldFeedbackReport", targets: ["FieldFeedbackReport"]),
+        .executable(name: "SetFieldFeedbackDisposition", targets: ["SetFieldFeedbackDisposition"]),
     ],
     targets: [
         .target(name: "GymAssistantCore", linkerSettings: [.linkedLibrary("sqlite3")]),
@@ -22,6 +24,8 @@ let package = Package(
             dependencies: ["GymAssistantCore"],
             linkerSettings: [.linkedFramework("AppKit")]
         ),
+        .executableTarget(name: "FieldFeedbackReport", dependencies: ["GymAssistantCore"]),
+        .executableTarget(name: "SetFieldFeedbackDisposition", dependencies: ["GymAssistantCore"]),
         .testTarget(name: "GymAssistantCoreTests", dependencies: ["GymAssistantCore"]),
     ]
 )
