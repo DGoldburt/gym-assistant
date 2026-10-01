@@ -337,23 +337,15 @@ public final class ExerciseIdentityReviewService {
             }
 
             guard let candidate else { continue }
-            if let existing = bestByExercise[name.exerciseID] {
-                let existingPriority = evidencePriority(existing)
-                let candidatePriority = evidencePriority(candidate)
-                if existingPriority > candidatePriority ||
-                    (existingPriority == candidatePriority &&
-                     !lexicalEvidenceRanksBefore(candidate, existing)) {
-                    continue
-                }
+            if let existing = bestByExercise[name.exerciseID],
+               !candidateRanksBefore(candidate, existing) {
+                continue
             }
             bestByExercise[name.exerciseID] = candidate
         }
 
         let candidates = bestByExercise.values.sorted { lhs, rhs in
-            if lhs.linkAllowed != rhs.linkAllowed { return lhs.linkAllowed }
-            if lexicalEvidenceRanksBefore(lhs, rhs) { return true }
-            if lexicalEvidenceRanksBefore(rhs, lhs) { return false }
-            return lhs.preferredName.localizedCaseInsensitiveCompare(rhs.preferredName) == .orderedAscending
+            candidateRanksBefore(lhs, rhs)
         }
 
         return .review(status: stored.status, candidates: candidates)
@@ -522,11 +514,28 @@ public final class ExerciseIdentityReviewService {
     private func evidencePriority(_ candidate: ExerciseReviewCandidate) -> Int {
         guard let evidence = candidate.evidence.first else { return 0 }
         switch evidence {
-        case .identityConflict: return 4
-        case .prescriptionDifference: return 3
-        case .conservativeTransformation: return 2
-        case .lexicalSimilarity: return 1
+        case .conservativeTransformation: return 0
+        case .prescriptionDifference: return 1
+        case .lexicalSimilarity: return 2
+        case .identityConflict: return 3
         }
+    }
+
+    private func candidateRanksBefore(
+        _ lhs: ExerciseReviewCandidate,
+        _ rhs: ExerciseReviewCandidate
+    ) -> Bool {
+        if lhs.linkAllowed != rhs.linkAllowed { return lhs.linkAllowed }
+        let lhsPriority = evidencePriority(lhs)
+        let rhsPriority = evidencePriority(rhs)
+        if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+        if lexicalEvidenceRanksBefore(lhs, rhs) { return true }
+        if lexicalEvidenceRanksBefore(rhs, lhs) { return false }
+        let preferredOrder = lhs.preferredName.localizedCaseInsensitiveCompare(rhs.preferredName)
+        if preferredOrder != .orderedSame { return preferredOrder == .orderedAscending }
+        let matchedOrder = lhs.matchedName.localizedCaseInsensitiveCompare(rhs.matchedName)
+        if matchedOrder != .orderedSame { return matchedOrder == .orderedAscending }
+        return lhs.exerciseID.rawValue.uuidString < rhs.exerciseID.rawValue.uuidString
     }
 
     private func aliases(
@@ -561,10 +570,6 @@ enum ReviewRelationshipPolicy {
         if pair == Set(["lateral lunge", "reverse lunge"]) {
             return .identityConflict("plane of motion changes the exercise identity")
         }
-        if pair == Set(["single leg squat", "single leg romanian deadlift"]) {
-            return .identityConflict("squat and hinge are different movement identities")
-        }
-
         let combined = pair.joined(separator: " ")
         if combined.contains("copenhagen plank") &&
             (combined.contains("short lever") || combined.contains("long lever")) {
@@ -573,6 +578,12 @@ enum ReviewRelationshipPolicy {
         if combined.contains("touch down") &&
             (combined.contains("rnt") || combined.contains("sec negative")) {
             return .prescription("RNT or eccentric duration is preserved in the confirmed name")
+        }
+        if let reason = ProtectedModifierPolicy.conflictReason(
+            query: observation,
+            candidate: candidate
+        ) {
+            return .identityConflict(reason)
         }
         return nil
     }

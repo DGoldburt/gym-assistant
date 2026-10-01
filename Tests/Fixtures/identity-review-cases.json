@@ -35,6 +35,18 @@
       "observation": "Single-Leg Squat",
       "candidate": "Single-Leg Romanian Deadlift",
       "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "dl-versus-squat",
+      "observation": "Single Leg DL",
+      "candidate": "Single Leg Squat",
+      "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "seated-row-versus-push-up",
+      "observation": "Seated Cable Row",
+      "candidate": "Push up",
+      "expectedDisposition": "identityConflict"
     }
   ]
 }

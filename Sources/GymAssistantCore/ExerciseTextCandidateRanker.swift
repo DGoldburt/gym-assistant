@@ -76,12 +76,17 @@ struct ExerciseTextCandidateRanker: Sendable {
 
         guard policy.usesReviewEquivalences else { return rawTokens }
 
+        // This is a phrase equivalence, not a general synonym for `row`. Expanding every
+        // occurrence of `row` to `pull up` made unrelated row observations rank push-up
+        // and pull-up names surprisingly highly.
+        if rawTokens == ["australian", "row"] || rawTokens == ["aussie", "pull", "up"] {
+            return ["aussie", "pull", "up"]
+        }
+
         var tokens: [String] = []
         for token in rawTokens {
             switch token {
             case "1", "single": tokens.append("one")
-            case "australian": tokens.append("aussie")
-            case "row": tokens.append(contentsOf: ["pull", "up"])
             case "kickstand": tokens.append(contentsOf: ["b", "stance"])
             case "bulgarian": tokens.append(contentsOf: ["rear", "foot", "elevated"])
             case "rainbow": tokens.append("rotation")
@@ -137,13 +142,17 @@ enum ProtectedModifierPolicy {
     ]
 
     static func conflicts(query: String, candidate: String) -> Bool {
+        conflictReason(query: query, candidate: candidate) != nil
+    }
+
+    static func conflictReason(query: String, candidate: String) -> String? {
         let query = comparable(query)
         let candidate = comparable(candidate)
 
-        if movementPattern(query) != nil,
-           movementPattern(candidate) != nil,
-           movementPattern(query) != movementPattern(candidate) {
-            return true
+        if let queryPattern = movementPattern(query),
+           let candidatePattern = movementPattern(candidate),
+           queryPattern != candidatePattern {
+            return "\(queryPattern) and \(candidatePattern) are different movement identities"
         }
 
         if opposingDimensions.contains(where: {
@@ -151,20 +160,20 @@ enum ProtectedModifierPolicy {
             let candidateValues = $0.filter(candidate.contains)
             return !queryValues.isEmpty && !candidateValues.isEmpty && queryValues != candidateValues
         }) {
-            return true
+            return "opposing protected modifiers change the exercise identity"
         }
 
         if queryModifiersThatCannotDisappear.contains(where: {
             query.contains($0) && !candidate.contains($0)
         }) {
-            return true
+            return "a protected modifier cannot disappear during identity resolution"
         }
 
         if candidate.contains("single leg") && !query.contains("single leg") {
-            return true
+            return "single-leg and bilateral exercises are different movement identities"
         }
 
-        return false
+        return nil
     }
 
     private static func comparable(_ text: String) -> String {
@@ -176,7 +185,13 @@ enum ProtectedModifierPolicy {
 
     private static func movementPattern(_ text: String) -> String? {
         if text.contains(" squat ") { return "squat" }
-        if text.contains(" deadlift ") || text.contains(" rdl ") { return "hinge" }
+        if text.contains(" deadlift ") || text.contains(" rdl ") || text.contains(" dl ") {
+            return "hinge"
+        }
+        if text.contains(" push up ") || text.contains(" pushup ") { return "push" }
+        if text.contains(" row ") || text.contains(" pull up ") || text.contains(" pullup ") {
+            return "pull"
+        }
         return nil
     }
 }

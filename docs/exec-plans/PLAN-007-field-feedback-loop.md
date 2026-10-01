@@ -37,7 +37,11 @@ In progress.
 - [x] (2026-09-21) Install the app and manually verify real records, flagged records, owner-only permissions, and repeated quiet evaluation.
 - [x] (2026-09-21) Present the Task B checkpoint and create the explicitly approved daily read-only scheduled review.
 - [x] (2026-09-21) Trigger and inspect scheduled runs, correct report semantics, and accept Task B after real structured, visual, disposition, replay, and accepted-queue review.
-- [ ] Collect resolver signals during the short Task C intake window, then freeze the accepted case IDs before implementation.
+- [x] (2026-09-28) Freeze the Task C field additions to resolver cases
+  `c9529b8b9dbb7963` and `895e09ab7679e85e`; retain the already-approved Task A
+  classification and ordering baseline, and route later signals to a later batch.
+- [x] (2026-09-28) Implement and replay the frozen Task C resolver batch; install the
+  verified local app build and stop for learner review.
 
 ## Surprises & Discoveries
 
@@ -73,12 +77,39 @@ In progress.
   Evidence: the evaluator instead compares the most recent ten interaction events with the preceding ten, exposes sample sizes, and labels sparse selection metrics for caution.
 - Observation: Moving a signal to `acceptedForBatch` removed it from the open-review deck and made the next intervention depend on direct ledger inspection or chat memory.
   Evidence: the evaluator now emits a separate read-only Accepted batch queue with stable IDs and the same bounded interaction and screenshot evidence. The private JSON remains authoritative; the evaluator provides the schema-aware agent read model.
+- Observation: An absolute Application Support screenshot path is readable by the evaluator but cannot be loaded by the sandboxed visualization iframe.
+  Evidence: the review deck produced a broken image when it used that path directly. The automation procedure now requires a size-bounded base64 data URL inside the task-owned visualization fragment, with a visible fallback instead of a broken link.
+- Observation: Persisting visualization state on every rationale keystroke can rebuild the active card and replace the focused textarea.
+  Evidence: the generated signal-review deck accepted focus but lost it after each typed character. The procedure now keeps the textarea DOM node stable, stages input locally, persists it only at interaction boundaries, and requires a focus-and-draft self-check before publishing the deck.
+- Observation: A generated deck can have working card navigation while its dynamically rendered disposition buttons have no effective click wiring.
+  Evidence: rationale entry and Previous/Next passed, but Accept, Defer, and Resolve produced no visible state change. The procedure now uses native buttons with delegated click handling from a stable parent and requires all four tentative choices to pass selection, navigation-persistence, and proposed-batch checks.
+- Observation: The `Australian Row` to `Aussie Pull-up` review equivalence was encoded as
+  a global token rewrite from every `row` to `pull up`.
+  Evidence: field cases ranked `Pull up` at .85 for `Seated Cable Row` and .90 for
+  `seated row`; `push up` also appeared at .75. Narrowing the equivalence to the complete
+  phrase preserves the approved Australian/Aussie case at .999 while removing pull-up
+  and push-up suffix noise from ordinary row autocomplete.
+- Observation: A generic conflict classifier can incorrectly override a more specific
+  prescription-family rule.
+  Evidence: the first Task C replay classified short- versus long-lever Copenhagen as an
+  identity conflict. Applying prescription relations before generic movement conflicts
+  restored the approved linkable-with-confirmation behavior, and the full replay passed.
 
 ## Decision Log
 
 - Decision: Enter Task C before freezing its intervention batch, using a short field-use intake window.
   Rationale: Additional real product use can improve the evidence base before implementation begins. The learner must explicitly freeze accepted resolver case IDs; signals accepted afterward belong to a later batch, and focus-recovery evidence remains routed to Task D.
   Date/Author: 2026-09-21 / Learner and Codex.
+
+- Decision: Freeze the field-signal additions to the first Task C intervention batch at
+  two related user-flag cases, `c9529b8b9dbb7963` and `895e09ab7679e85e`, while
+  retaining Task A's already-approved `DL` classification, total evidence ordering, and
+  visible protected-conflict work.
+  Rationale: Both added cases expose the same bounded ranking problem: the broad
+  `row`-to-`pull up` token equivalence makes weak suffix overlap outrank meaningful row
+  evidence. The fixed batch supports a meaningful before/after replay without absorbing
+  later findings. Focus-recovery cases remain outside this batch and routed to Task D.
+  Date/Author: 2026-09-28 / Learner and Codex.
 
 - Decision: Store raw field interactions and reports privately under the user's Gym Assistant Application Support directory, not in Git.
   Rationale: Queries, observations, and exercise names are necessary to reproduce ranking but may reveal personal programming vocabulary.
@@ -119,9 +150,16 @@ In progress.
 ## Outcomes & Retrospective
 
 Task A established the approved contract. Task B implementation and evidence remain in
-progress. Record the final event counts, detected anomalies, idempotent rerun evidence,
-manual Report Issue result, remaining limitations, and schedule disposition here before
-marking the plan complete.
+progress. Task C froze two accepted row-ranking signals in addition to the approved Task A
+baseline. Before the intervention, the private field evidence placed unrelated `Pull up`
+and `push up` rows above stronger row candidates. After the intervention, the synthetic
+autocomplete replay puts `Seated Cable Row` and `Banded seated row` first and returns no
+pull-up or push-up suffix noise; identity review keeps `Push up` visible but non-linkable.
+`DL` is now protected hinge wording, mixed evidence has one stable total order, and
+categorical evidence remains scoreless. Seventy-eight tests, all 37 resolver fixtures,
+and all eight identity-review fixtures pass with zero false merges, protected leaks,
+authoritative-score leaks, or candidate-caused identity writes. The verified app build
+is installed for learner checkpoint testing. Task D and the final retrospective remain.
 
 ## Context and Orientation
 

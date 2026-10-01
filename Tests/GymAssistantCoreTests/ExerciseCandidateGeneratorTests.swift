@@ -63,6 +63,26 @@ struct ExerciseCandidateGeneratorTests {
         ) == nil)
     }
 
+    @Test("Phrase equivalence does not turn every row into pull-up tokens")
+    func rowPhraseEquivalenceIsNarrow() {
+        let identityReview = ExerciseTextCandidateRanker(policy: .identityReview())
+        let autocomplete = ExerciseTextCandidateRanker(policy: .autocomplete())
+
+        #expect(identityReview.score(query: "Australian Row", candidate: "Aussie Pull-up") == 0.999)
+        #expect(identityReview.score(query: "Seated Cable Row", candidate: "Pull up") == nil)
+        #expect(identityReview.score(query: "Seated Cable Row", candidate: "push up") == nil)
+        #expect(autocomplete.score(query: "seated row", candidate: "Pull up") == nil)
+        #expect(autocomplete.score(query: "seated row", candidate: "push up") == nil)
+    }
+
+    @Test("DL is protected as hinge wording")
+    func dlConflictsWithSquat() {
+        #expect(generator.rank(
+            query: "Single Leg DL",
+            candidates: ["Single Leg Squat"]
+        ).isEmpty)
+    }
+
     @Test("Only normalized-name lookup may reserve a perfect score")
     func scoredCandidatesRemainBelowOne() {
         let rankers = [

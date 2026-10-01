@@ -1108,3 +1108,51 @@ dispositions, and an accepted queue for bounded product improvement.
 Keep collecting and dispositioning field signals during Task C's short intake window.
 Freeze a named resolver batch before changing behavior; route focus-recovery evidence to
 Task D and route signals arriving after freeze to a later batch.
+
+### 2026-10-01 — Exercise 11 — Task C: Measured resolver improvement
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Froze a bounded resolver intervention, converted two related field signals plus the
+already-approved Task A baseline into regression coverage, replayed the complete resolver
+contract, and verified the installed product in Notes before accepting the change.
+
+**Evidence**
+
+- The frozen field additions were durable cases `c9529b8b9dbb7963` and
+  `895e09ab7679e85e`; later signals were excluded from the implementation.
+- The replay exposed that the broad `row` to `pull up` token rewrite supporting
+  `Australian Row` versus `Aussie Pull-up` also ranked unrelated pull-up and push-up
+  names for seated-row observations.
+- The correction preserved the approved Australian/Aussie equivalence at .999 while
+  removing pull-up and push-up suffix noise from ordinary row autocomplete.
+- The first generic protected-conflict implementation incorrectly made Short-Lever and
+  Long-Lever Copenhagen Plank non-linkable. Replay preserved the approved prescription
+  relationship by evaluating specific prescription rules before generic identity
+  conflicts.
+- `DL` is protected hinge wording; squat candidates remain visible but non-linkable;
+  transformations, prescriptions, lexical candidates, and conflicts have a total stable
+  order; categorical evidence remains scoreless.
+- Seventy-eight tests, all 37 resolver fixtures, and all eight identity-review fixtures
+  passed with zero false merges, protected leaks, authoritative-score leaks, or
+  candidate-caused identity writes.
+- The installed Notes autocomplete returned sensible `seated row` results without
+  Pull-up or Push-up noise.
+
+**My reflection**
+
+> I learned that freezing a batch and replaying several related cases encourages a more robust fix than patching each annoying result independently. In this batch, the initial implementation generalized protected conflicts by treating opposing modifiers as different exercise identities. That accidentally classified **Short-Lever Copenhagen Plank** and **Long-Lever Copenhagen Plank** as an identity conflict, making them non-linkable. This contradicted my earlier decision that lever length is a prescription or progression detail: both names may remain confirmed aliases of the same Copenhagen exercise. The replay caught the regression, and the implementation was corrected so specific prescription relationships are evaluated before the general protected-conflict rule.
+>
+> Freezing the batch also fixes the evaluation target. We decided in advance which cases and safety properties the change needed to improve: the two row-ranking signals, `DL` protection, stable evidence ordering, visible non-linkable conflicts, and preservation of existing resolver behavior. New observations can still be collected, but they cannot silently add requirements or provoke extra patches during this cycle. That lets us compare the same defined cases before and after the intervention and attribute the result to one bounded change. Without that boundary, the target would keep moving, a fix for each newly noticed annoyance could interact with earlier behavior, and passing results would not tell us whether the original batch actually improved without regressions.
+
+**Next time / revisit**
+
+Use Task D to turn the focus-return evidence into a self-contained asynchronous Notes
+adapter spike plan. Record a durable trigger for the next resolver batch rather than
+letting new signals interrupt the active task.

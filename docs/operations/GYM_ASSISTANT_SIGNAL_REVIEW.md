@@ -115,12 +115,46 @@ uses `window.openai.sendFollowUpMessage` to send one concise proposed batch cont
 stable IDs, tentative dispositions, and rationales back to the automation task. It must
 not claim or imply that the ledger was updated.
 
+Treat rationale text as an in-progress local draft, not as a reason to rebuild the card.
+Render one stable textarea node for the current card. Its `input` handler may update an
+in-memory draft only; it must not call the card render function, replace card HTML, or
+write widget state. Persist the draft on blur and immediately before Previous, Next, or
+Review queued decisions. A widget-state update must not redraw the active card while a
+text input is focused. Previous and Next save the current draft before changing cards and
+restore it when the reviewer returns.
+
+Before emitting the visualization, exercise a small DOM self-check: focus the rationale
+field, apply at least two input updates, and verify that the same textarea node remains
+focused with its complete value; then navigate away and back and verify the draft is
+restored. If this check fails, fix the fragment rather than publishing a rationale field
+that cannot be typed into.
+
+Implement each disposition choice as a native `button` with `type="button"` and an
+explicit disposition value. Wire the choices through one click handler on a stable parent
+element, so card rendering cannot leave newly created buttons without listeners. A click
+must update the current case's tentative disposition, immediately show one selected state
+with `aria-pressed="true"`, persist the tentative choice in widget state, and remain local;
+it must not submit the batch or mutate the ledger. Before publishing, click-test Accept
+for batch, Defer, Resolve, and Keep open in turn. Verify that each becomes visibly selected,
+survives Next/Previous navigation, and is included accurately in the proposed batch.
+
 The visualization may embed the private panel screenshots needed for this single-user
 review in its task-owned local visualization file. Keep that file outside the repository
 and automation memory. Do not include unrelated Notes content beyond what is already
 visible inside the captured Gym Assistant panel. If Visualize is unavailable or cannot
 render, fall back to one structured Markdown batch and explicitly report the rendering
 limitation rather than reverting to a multi-turn sequential walkthrough.
+
+The evaluator's absolute screenshot path is an input path, not a browser URL. Never put
+that path directly in an HTML `<img src>`, because the visualization sandbox cannot load
+Application Support files. Read the PNG bytes and embed them in the task-owned fragment
+as a `data:image/png;base64,...` URL. The visualization fragment is the authorized local
+review copy; it is neither repository state nor automation memory. Keep the complete
+fragment below the Visualize size limit. If the projected fragment would exceed the
+limit, create a legible resized image only inside the task-owned visualization directory,
+embed that image's bytes, and omit the derivative after authoring when practical. If
+embedding still fails, show a visible screenshot-unavailable error on that card instead
+of emitting a broken path.
 
 When the visualization sends the proposed batch, show one consolidated list of case IDs,
 transitions, and rationales. Invoke the separate interactive setter once only after the

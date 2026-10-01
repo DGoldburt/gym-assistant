@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 11
-Current task: Task C — Improve one bounded resolver batch
+Current task: Task D — Plan the focus-recovery spike and move on
 Current task state: in-progress
-Task completion condition: pass Exercise 11 Task C `STOP / REVIEW — Measured resolver improvement`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–B
-Remaining tasks: Exercise 11 — Tasks C–D
-Most recent checkpoint: Exercise 11 Task B `STOP / REVIEW — Running feedback loop` (passed)
+Task completion condition: pass Exercise 11 Task D `STOP / REVIEW — Durable continuation`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–C
+Remaining tasks: Exercise 11 — Task D
+Most recent checkpoint: Exercise 11 Task C `STOP / REVIEW — Measured resolver improvement` (passed)
 Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 
 ## Completed
@@ -115,6 +115,13 @@ Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 - Field use retained repeated tab-away friction, missing `DL` protected-conflict
   recognition, and mixed-evidence ordering problems as Exercise 11 signals rather
   than expanding Task C indefinitely.
+- Exercise 11 Task C froze two related seated-row ranking signals together with the
+  approved classification and ordering baseline. The implementation narrowed the
+  Australian Row/Aussie Pull-up equivalence to the full phrase, protected `DL` as hinge
+  wording, kept cross-pattern conflicts visible but non-linkable, and established a
+  stable total evidence order. Seventy-eight tests, 37 resolver fixtures, 8 identity-
+  review fixtures, and the installed Notes `seated row` check passed without identity
+  writes or Pull-up/Push-up noise.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -123,14 +130,14 @@ Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: `LEARNING_LOG.md` — 2026-08-18, Exercise 01, Task A; 2026-08-19, Exercise 01, Tasks B–E and Exercise 02, Tasks A–B
+- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-01, Exercise 11 Task C
 - Completed durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; evidence is under `spikes/notes-interaction/`
 - Accepted architecture decision: `docs/decisions/001-notes-integration.md`
 
 ## Next action
 
-Begin Task C with a short field-use intake window. Continue reviewing signals and allow
-additional resolver cases to enter `acceptedForBatch`; keep focus-recovery cases routed
-to Task D. At the learner's explicit freeze instruction, snapshot the accepted resolver
-case IDs as the fixed Task C intervention batch. Signals accepted after that freeze
-belong to a later batch and cannot expand the active implementation.
+Begin Task D by using the captured focus-deactivation and return evidence to write a
+self-contained asynchronous Notes adapter spike plan. Compare the current synchronous
+Service with an Accessibility-backed, context-safe insertion path without changing
+permissions or implementing it. Record the next resolver-review cadence or threshold and
+the stopping rule for Exercise 11.

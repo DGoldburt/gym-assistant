@@ -81,6 +81,58 @@ struct ExerciseIdentityReviewTests {
         #expect(shorterScore < 0.999)
     }
 
+    @Test("Row review keeps push-up conflicts visible but cannot link them")
+    func rowReviewSurfacesPushConflictWithoutPullUpNoise() throws {
+        let fixture = try ReviewFixture()
+        _ = try fixture.library.createExercise(preferredName: "Push up")
+        _ = try fixture.library.createExercise(preferredName: "Pull up")
+        _ = try fixture.library.createExercise(preferredName: "Chest Supported Cable Row")
+        try fixture.stage("Seated Cable Row", id: "seated-row")
+
+        let candidates = try fixture.candidates("seated-row")
+        let pushUp = try #require(candidates.first { $0.preferredName == "Push up" })
+        #expect(pushUp.linkAllowed == false)
+        #expect(pushUp.evidence.first == .identityConflict(
+            "pull and push are different movement identities"
+        ))
+        #expect(candidates.contains { $0.preferredName == "Chest Supported Cable Row" })
+        #expect(!candidates.contains { $0.preferredName == "Pull up" })
+    }
+
+    @Test("Identity review has a total stable evidence order")
+    func totalEvidenceOrdering() throws {
+        let fixture = try ReviewFixture()
+        _ = try fixture.library.createExercise(preferredName: "Dumbbell Floor Press")
+        _ = try fixture.library.createExercise(preferredName: "DB Floor Press Variation")
+        try fixture.stage("DB Floor Press", id: "ordered-evidence")
+
+        let candidates = try fixture.candidates("ordered-evidence")
+        #expect(candidates.first?.preferredName == "Dumbbell Floor Press")
+        #expect(candidates.first?.evidence == [
+            .conservativeTransformation("approved abbreviation expansion")
+        ])
+
+        let lexicalScores = candidates.compactMap { candidate -> Double? in
+            guard case .lexicalSimilarity(let score) = candidate.evidence.first else { return nil }
+            return score
+        }
+        #expect(zip(lexicalScores, lexicalScores.dropFirst()).allSatisfy { $0 >= $1 })
+    }
+
+    @Test("DL hinge wording keeps squat candidates visible but non-linkable")
+    func dlReviewSurfacesSquatConflict() throws {
+        let fixture = try ReviewFixture()
+        _ = try fixture.library.createExercise(preferredName: "Single Leg Squat")
+        try fixture.stage("Single Leg DL", id: "dl-conflict")
+
+        let candidate = try #require(fixture.candidates("dl-conflict").first)
+        #expect(candidate.preferredName == "Single Leg Squat")
+        #expect(candidate.linkAllowed == false)
+        #expect(candidate.evidence == [
+            .identityConflict("hinge and squat are different movement identities")
+        ])
+    }
+
     @Test("Review keeps the winning alias while presenting one exercise identity")
     func reviewCandidatePreservesWinningAlias() throws {
         let fixture = try ReviewFixture()
@@ -243,7 +295,7 @@ struct ExerciseIdentityReviewTests {
             ReviewFixtureDocument.self,
             from: Data(contentsOf: reviewFixtureURL())
         )
-        #expect(document.cases.count == 6)
+        #expect(document.cases.count == 8)
 
         for item in document.cases {
             let fixture = try ReviewFixture()
