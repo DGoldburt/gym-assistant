@@ -1156,3 +1156,47 @@ contract, and verified the installed product in Notes before accepting the chang
 Use Task D to turn the focus-return evidence into a self-contained asynchronous Notes
 adapter spike plan. Record a durable trigger for the next resolver batch rather than
 letting new signals interrupt the active task.
+
+### 2026-10-02 — Exercise 11 — Task D: Durable continuation without immediate fixing
+
+**Skills strengthened**
+
+- `record-decisions` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `scale-capabilities` — Demonstrated
+
+**What I did**
+
+Compared an asynchronous Accessibility-backed Notes spike with retaining the current
+synchronous Service, chose to defer the architecture change, and preserved a monitored
+and restartable path rather than treating deferral as closure.
+
+**Evidence**
+
+- `PLAN-008` preserves the proposed Accessibility permission gate, context validation,
+  stale-note and stale-selection refusal, cancellation, multiple pending invocations,
+  rollback, comparison trials, and promotion criteria, but is explicitly deferred.
+- The current synchronous Notes Service remains the product architecture. No
+  Accessibility permission was requested and no asynchronous insertion path was built.
+- The scheduled evaluator runs weekly on Monday at 09:00 local time. Deferred focus
+  monitoring is exception-based: unchanged cases produce one compact count, while only
+  cases gaining evidence expose bounded details.
+- A later resolver batch requires three related explicitly accepted resolver signals, or
+  one accepted identity-safety signal involving a wrong identity write or linkable
+  protected conflict. Crossing the threshold starts foreground planning only.
+- Focus cases `60b38b464e9cb7e7` and `be7ccb02cf0e75dd` were explicitly moved to
+  `deferred`, not resolved, with retained rationale and history.
+- Fifteen focused field-feedback tests passed, and the installed evaluator reported two
+  retained deferred focus cases with zero new evidence without adding review cards.
+
+**My reflection**
+
+> I’m pleased that choosing not to spend time on the focus issue does not mean forgetting it. I retained the current synchronous Notes architecture and deferred the Accessibility-backed experiment rather than closing or deleting it. `PLAN-008` preserves the proposed mechanism, permission boundary, context-safety requirements, comparison trials, and restart conditions, while `PLAN-007` and the private signal ledger preserve the decision and supporting evidence.
+>
+> The scheduled evaluator will continue monitoring focus friction. Deferred focus cases remain unresolved and can accumulate occurrence and timing evidence, but they stay out of the ordinary decision deck unless new evidence appears. Unchanged cases cost only one compact status line. If the evidence becomes materially repeated or worsening, it can justify a foreground fixing batch; an unattended agent still cannot decide to implement the fix. This lets me move on without either losing the issue or allowing monitoring to dominate product work.
+
+**Next time / revisit**
+
+Reopen `PLAN-008` only through a foreground decision supported by materially stronger
+focus evidence. Begin Exercise 12 by auditing which current checks are actionable from an
+ordinary terminal and which still require macOS UI or human judgment.

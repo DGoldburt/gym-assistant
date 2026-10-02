@@ -7,7 +7,7 @@ approve changes here before updating that configuration.
 ## Schedule
 
 - Name: `Gym Assistant signal review`
-- Cadence: daily at 09:00 local time
+- Cadence: weekly on Monday at 09:00 local time
 - Environment: local `gym_assistant` project
 - Evaluator: `/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/FieldFeedbackReport`
 - Foreground disposition writer: `/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/SetFieldFeedbackDisposition`
@@ -15,6 +15,13 @@ approve changes here before updating that configuration.
 The evaluator binary is packaged by `app/notes-service/build.sh`. Invoking the installed
 binary avoids requiring an unattended task to compile the Swift package or write compiler
 caches. The local machine and Codex desktop app must be running for the task to execute.
+
+Review the resulting open-signal deck after each weekly run; the next scheduled review
+after this procedure update is 2026-10-05 at 09:00 local time. Start planning another
+bounded resolver batch only after three related resolver signals have been explicitly
+accepted, or after one accepted safety signal shows a wrong identity write or a protected
+conflict that remains linkable. A threshold crossing requests foreground planning and
+approval; it never authorizes the scheduled task to modify code or identity data.
 
 The trusted project rule `.codex/rules/field-feedback.rules` permits only the installed
 `FieldFeedbackReport` executable prefix to run outside the workspace sandbox. It does not
@@ -78,6 +85,14 @@ Also summarize the evaluator's separate **Accepted batch queue**. These entries 
 longer open disposition work, but their stable IDs and bounded evidence must remain
 visible as read-only inputs to the next approved intervention. Do not mix them back into
 the interactive disposition deck and do not interpret acceptance as authority to fix.
+
+Treat the evaluator's **Deferred focus monitoring** as an exception-based watch, not
+another review deck. When no deferred focus case gained evidence in the current run,
+include at most one compact status line with the retained and changed counts. Only when a
+case gained evidence should the review show its stable ID, updated occurrence count,
+observation dates, and bounded focus timing evidence. These cases are not open
+disposition work and must not appear as decision cards. Deferral does not close, reopen,
+accept, resolve, or authorize a fix; it preserves the issue while evidence accumulates.
 
 Present the evaluator's interaction-trend Markdown table. It compares the latest ten
 interaction events with the preceding ten and includes sample sizes. Do not compute a

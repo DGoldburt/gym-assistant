@@ -212,6 +212,15 @@ public struct FeedbackReviewPacketBuilder: Sendable {
         )
     }
 
+    public func deferredFocusCases(ledger: [FeedbackLedgerEntry],
+                                   interactions: [FeedbackInteraction]) -> [FeedbackReviewCase] {
+        cases(
+            ledger: ledger.filter { $0.signal.kind == .focusFriction },
+            interactions: interactions,
+            dispositions: [.deferred]
+        )
+    }
+
     private func cases(ledger: [FeedbackLedgerEntry],
                        interactions: [FeedbackInteraction],
                        dispositions: Set<FeedbackSignalDisposition>) -> [FeedbackReviewCase] {

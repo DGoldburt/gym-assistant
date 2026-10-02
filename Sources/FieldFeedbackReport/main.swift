@@ -35,7 +35,28 @@ do {
     printReviewCases(packetBuilder.acceptedBatchCases(
         ledger: ledger,
         interactions: interactions
-    ), store: store, heading: "Accepted batch queue (private, bounded evidence)", includeDecisionOptions: false)
+    ), store: store, heading: "Accepted batch queue (private, bounded evidence)", includeDecisionOptions: false,
+       footer: "These accepted cases are read-only inputs to the next bounded intervention; the evaluator does not implement fixes.")
+    let deferredFocusCases = packetBuilder.deferredFocusCases(
+        ledger: ledger,
+        interactions: interactions
+    )
+    let priorOccurrences = Dictionary(uniqueKeysWithValues: prior.map {
+        ($0.signal.id, $0.occurrenceCount)
+    })
+    let changedDeferredFocusCases = deferredFocusCases.filter {
+        $0.entry.occurrenceCount > (priorOccurrences[$0.entry.signal.id] ?? 0)
+    }
+    print("\nDeferred focus monitoring: \(deferredFocusCases.count) cases retained; \(changedDeferredFocusCases.count) gained evidence in this run.")
+    if !changedDeferredFocusCases.isEmpty {
+        printReviewCases(
+            changedDeferredFocusCases,
+            store: store,
+            heading: "Changed deferred focus cases (private, bounded evidence)",
+            includeDecisionOptions: false,
+            footer: "These cases remain deferred. New occurrences add evidence without reopening, accepting, resolving, or fixing them."
+        )
+    }
 } catch {
     FileHandle.standardError.write(Data("Field feedback report failed: \(error)\n".utf8))
     exit(1)
@@ -78,7 +99,8 @@ private func formatMetric(_ value: Double?, style: MetricStyle, signed: Bool = f
 }
 
 private func printReviewCases(_ cases: [FeedbackReviewCase], store: FeedbackFileStore,
-                              heading: String, includeDecisionOptions: Bool) {
+                              heading: String, includeDecisionOptions: Bool,
+                              footer: String? = nil) {
     print("\n\(heading)")
     guard !cases.isEmpty else {
         print("None.")
@@ -137,8 +159,8 @@ private func printReviewCases(_ cases: [FeedbackReviewCase], store: FeedbackFile
         print("- Resolve — close it while retaining its evidence and history")
         print("- Keep open — make no ledger change")
         print("Disposition requires explicit user approval and the separate SetFieldFeedbackDisposition executable.")
-    } else {
-        print("\nThese accepted cases are read-only inputs to the next bounded intervention; the evaluator does not implement fixes.")
+    } else if let footer {
+        print("\n\(footer)")
     }
 }
 

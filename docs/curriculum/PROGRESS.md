@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 11
-Current task: Task D — Plan the focus-recovery spike and move on
-Current task state: in-progress
-Task completion condition: pass Exercise 11 Task D `STOP / REVIEW — Durable continuation`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–C
-Remaining tasks: Exercise 11 — Task D
-Most recent checkpoint: Exercise 11 Task C `STOP / REVIEW — Measured resolver improvement` (passed)
-Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
+Current exercise: 12
+Current task: Task A — Audit the current harness
+Current task state: not started
+Task completion condition: pass Exercise 12 Task A `STOP / REVIEW`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D
+Remaining tasks: Exercise 12 — Tasks A–D
+Most recent checkpoint: Exercise 11 Task D `STOP / REVIEW — Durable continuation` (passed)
+Relevant skills: verify, review, operate-cli-agents
 
 ## Completed
 
@@ -21,7 +21,7 @@ Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 - [x] 08 — Frictionless new-exercise workflow
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
 - [x] 10 — Exercise identity review and personal-library import
-- [ ] 11 — Field feedback loops and resolver improvement
+- [x] 11 — Field feedback loops and resolver improvement
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
@@ -122,6 +122,11 @@ Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
   stable total evidence order. Seventy-eight tests, 37 resolver fixtures, 8 identity-
   review fixtures, and the installed Notes `seated row` check passed without identity
   writes or Pull-up/Push-up noise.
+- Exercise 11 Task D retained the synchronous Notes architecture and deferred the
+  Accessibility-backed focus-recovery spike without losing it. `PLAN-008` preserves the
+  complete restart path; two focus cases are deferred rather than resolved; unchanged
+  deferred cases cost one compact weekly monitoring line, while new evidence remains
+  available for a later foreground fixing decision.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -136,8 +141,7 @@ Relevant skills: verify, set-boundaries, record-decisions, scale-capabilities
 
 ## Next action
 
-Begin Task D by using the captured focus-deactivation and return evidence to write a
-self-contained asynchronous Notes adapter spike plan. Compare the current synchronous
-Service with an Accessibility-backed, context-safe insertion path without changing
-permissions or implementing it. Record the next resolver-review cadence or threshold and
-the stopping rule for Exercise 11.
+Begin Exercise 12 Task A by auditing the current verification harness. Inventory what an
+ordinary shell can prove, what requires macOS UI or Accessibility control, what still
+requires human judgment, and which missing signal would most improve the agent's
+correction loop. Do not implement the one-command harness before the Task A checkpoint.

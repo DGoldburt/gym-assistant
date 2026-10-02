@@ -97,6 +97,51 @@ struct FieldFeedbackTests {
         #expect(batch[0].interactions == [event])
     }
 
+    @Test("Deferred focus cases remain visible in a dedicated watchlist")
+    func deferredFocusWatchlist() throws {
+        let focusEvent = FeedbackInteraction(
+            eventID: UUID(uuidString: "99999999-9999-9999-9999-999999999999")!,
+            sessionID: sessionID,
+            recordedAt: Date(timeIntervalSince1970: 700),
+            workflow: .autocomplete,
+            queryOrObservation: "private fixture",
+            candidates: [],
+            outcome: .init(kind: .cancelled),
+            deactivationCount: 1
+        )
+        let flagEvent = FeedbackInteraction(
+            eventID: UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!,
+            sessionID: sessionID,
+            recordedAt: Date(timeIntervalSince1970: 701),
+            workflow: .autocomplete,
+            queryOrObservation: "another private fixture",
+            candidates: [],
+            outcome: .init(kind: .cancelled),
+            userFlagged: true
+        )
+        let interactions = [focusEvent, flagEvent]
+        let initial = FeedbackLedger().updating(
+            [], with: FeedbackEvaluator().evaluate(interactions).signals
+        )
+        let deferred = try initial.reduce(initial) { ledger, entry in
+            try FeedbackLedger().settingDisposition(
+                ledger,
+                signalID: entry.signal.id,
+                to: .deferred,
+                authority: "test"
+            )
+        }
+
+        let watchlist = FeedbackReviewPacketBuilder().deferredFocusCases(
+            ledger: deferred,
+            interactions: interactions
+        )
+        #expect(watchlist.count == 1)
+        #expect(watchlist[0].entry.signal.kind == .focusFriction)
+        #expect(watchlist[0].entry.disposition == .deferred)
+        #expect(watchlist[0].interactions == [focusEvent])
+    }
+
     @Test("Only human dispositions can be set and every change is retained")
     func dispositionsAreValidatedAndAudited() throws {
         let signal = FeedbackSignal(id: "case-1", kind: .userFlag, summary: "Fixture", eventIDs: [])
