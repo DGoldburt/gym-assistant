@@ -67,5 +67,6 @@ verification output, and the limits of shell-driven access to graphical applicat
 
 ## scale-capabilities — Apply advanced capabilities deliberately
 
-**Confidence:** Not yet used  
+**Confidence:** Demonstrated
 Use authoritative MCP context, reusable Skills, bounded cloud delegation, and scheduled automation only when the workflow is ready for them.
+**Project example:** Exercise 11 Task B — progressed from a manually verified evaluator to a narrowly permitted scheduled review, interactive evidence deck, human-gated atomic disposition writer, and durable accepted-batch handoff.

@@ -997,3 +997,206 @@ Use Exercise 11 to collect resolver and focus signals during ordinary use, evalu
 mechanical anomalies automatically, retain subjective flags with one action, and improve
 only a fixed approved batch. Keep the larger asynchronous Notes focus change in its own
 spike plan.
+
+### 2026-09-21 — Exercise 11 — Task A: Field-feedback contract
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Turned recurring resolver and cross-application friction into a bounded feedback-loop
+contract rather than fixing each report immediately. Defined private passive capture,
+a one-action Report Issue control, deterministic anomaly checks, a durable signal ledger,
+an unattended read-only evaluation boundary, and a fixed first resolver batch.
+
+**Evidence**
+
+- The contract separates automatic collection and deterministic evaluation from
+  foreground prioritization, product-scope decisions, identity writes, and code changes.
+- Each signal has a durable case ID, occurrence history, disposition, and optional
+  regression-fixture reference so unchanged findings can remain quiet without being lost.
+- The Report Issue interaction is a small icon with explanatory hover text and a
+  Shift-Command-R shortcut; it requires no written explanation and changes no identity.
+- The first improvement batch is fixed to `DL` protected-conflict recognition, total
+  candidate ordering, clear categorical transformation evidence, descending lexical
+  scores, visible disabled conflicts, and replay fixtures.
+- The contract retains first-time human confirmation for `DB` to `Dumbbell`; improving
+  ranking or presentation does not silently broaden deterministic identity authority.
+- The automation maturity path is manual evaluator, idempotent rerun, observed scheduled
+  runs, and only then a separately approved expansion of unattended authority.
+
+**My reflection**
+
+> I learned that evidence collection and deterministic checks can run unattended because they observe product quality without changing the product or exercise identity. The durable signal ledger prevents findings from being forgotten. A foreground human gate determines whether a signal is important enough to prioritize, what update it warrants, and whether that update should receive authority to change product behavior or identity data.
+
+I am excited that structured signals can be reviewed by agents on a schedule and raised
+for my review. This pattern can scale if the product eventually has multiple users, but
+the current exercise deliberately proves it with one private local user before adding
+multi-user collection or infrastructure.
+
+**Next time / revisit**
+
+Implement and manually validate the private event, flag, replay, evaluator, and ledger
+path. Do not create the recurring schedule until its read-only behavior and quiet
+unchanged-state reporting have passed the next checkpoint.
+
+### 2026-09-21 — Cross-cutting reflection: Active slice and durable backlog
+
+**Context**
+
+Field use produced ideas for an Exercise Library maintenance workspace while Exercise 11
+already had an approved feedback-loop slice. The ideas were preserved in the Opportunity
+Solution Tree as Later and unsequenced, while only privacy-minimal session aggregates were
+explicitly approved as a Task B contract amendment.
+
+**My reflection**
+
+> I learned that a strong execution pipeline separates the active slice from a durable backlog. The active slice keeps work bounded enough to finish, verify, and learn from, while the Opportunity Solution Tree preserves worthwhile ideas without silently expanding current scope. A backlog item becomes active only through an explicit prioritization decision informed by evidence. This lets me keep sight of the larger product while still completing one coherent slice at a time.
+
+This standalone reflection records a learning insight. It does not complete Task B,
+advance `PROGRESS.md`, or change a skill-confidence state.
+
+### 2026-09-21 — Exercise 11 — Task B: Running feedback loop
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `scale-capabilities` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Implemented and operated a private local feedback loop that turns Gym Assistant field
+interactions into replayable signals, scheduled AI review, human-controlled durable
+dispositions, and an accepted queue for bounded product improvement.
+
+**Evidence**
+
+- Typed append-only interaction records capture ordered candidates, evidence, scores,
+  outcomes, selection rank and name, timing, focus loss/return, and explicit flags
+  without depending on exercise-library mutation APIs.
+- Report Issue remains one action. It preserves structured evidence and an owner-only
+  Gym Assistant panel screenshot without capturing the Notes window or full screen.
+- The evaluator corrects selection metrics to count only committed choices, distinguishes
+  identity-review undo from generic navigation, and compares the latest ten interaction
+  events with the preceding ten rather than averaging replayed report runs.
+- Repeated evaluation is idempotent. Durable signals retain stable IDs, occurrence
+  history, dispositions, optional rationales, screenshots, and a separate accepted-batch
+  read model after leaving the open review queue.
+- A daily local scheduled task uses a reviewed project command rule to run only the
+  installed evaluator. It prepares an AI assessment and an interactive review deck but
+  cannot alter human dispositions, code, the live exercise library, or identity.
+- A separate no-argument setter queues confirmed dispositions and optional rationales,
+  prints the complete batch, and performs one atomic ledger replacement only after
+  interactive `APPLY` confirmation.
+- Real-host evidence included structured and visual review of autocomplete and identity
+  cases, owner-only screenshot permissions, quiet replay, conversational disposition,
+  and a discoverable accepted resolver-ranking signal.
+- Seventy-two tests across ten suites pass after the accepted-batch read model was added.
+
+**My reflection**
+
+> I learned that an operating feedback loop needs more than telemetry collection. Gym Assistant now captures ordinary interactions and explicit user flags, converts them into durable deduplicated signals, presents enough structured and visual evidence for informed review, and preserves human dispositions outside chat. An unattended evaluator can safely detect, replay, summarize, and prioritize evidence, while human judgment controls whether a signal is accepted, deferred, resolved, or kept open. Comparing distinct interaction cohorts avoids mistaking repeated report runs for product improvement, and the accepted-batch queue creates a durable handoff from observation to a bounded intervention. Constrained read and write tools let Codex provide the conversational interface without granting the scheduled task authority to change the product or exercise identity.
+
+**Next time / revisit**
+
+Keep collecting and dispositioning field signals during Task C's short intake window.
+Freeze a named resolver batch before changing behavior; route focus-recovery evidence to
+Task D and route signals arriving after freeze to a later batch.
+
+### 2026-10-01 — Exercise 11 — Task C: Measured resolver improvement
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Froze a bounded resolver intervention, converted two related field signals plus the
+already-approved Task A baseline into regression coverage, replayed the complete resolver
+contract, and verified the installed product in Notes before accepting the change.
+
+**Evidence**
+
+- The frozen field additions were durable cases `c9529b8b9dbb7963` and
+  `895e09ab7679e85e`; later signals were excluded from the implementation.
+- The replay exposed that the broad `row` to `pull up` token rewrite supporting
+  `Australian Row` versus `Aussie Pull-up` also ranked unrelated pull-up and push-up
+  names for seated-row observations.
+- The correction preserved the approved Australian/Aussie equivalence at .999 while
+  removing pull-up and push-up suffix noise from ordinary row autocomplete.
+- The first generic protected-conflict implementation incorrectly made Short-Lever and
+  Long-Lever Copenhagen Plank non-linkable. Replay preserved the approved prescription
+  relationship by evaluating specific prescription rules before generic identity
+  conflicts.
+- `DL` is protected hinge wording; squat candidates remain visible but non-linkable;
+  transformations, prescriptions, lexical candidates, and conflicts have a total stable
+  order; categorical evidence remains scoreless.
+- Seventy-eight tests, all 37 resolver fixtures, and all eight identity-review fixtures
+  passed with zero false merges, protected leaks, authoritative-score leaks, or
+  candidate-caused identity writes.
+- The installed Notes autocomplete returned sensible `seated row` results without
+  Pull-up or Push-up noise.
+
+**My reflection**
+
+> I learned that freezing a batch and replaying several related cases encourages a more robust fix than patching each annoying result independently. In this batch, the initial implementation generalized protected conflicts by treating opposing modifiers as different exercise identities. That accidentally classified **Short-Lever Copenhagen Plank** and **Long-Lever Copenhagen Plank** as an identity conflict, making them non-linkable. This contradicted my earlier decision that lever length is a prescription or progression detail: both names may remain confirmed aliases of the same Copenhagen exercise. The replay caught the regression, and the implementation was corrected so specific prescription relationships are evaluated before the general protected-conflict rule.
+>
+> Freezing the batch also fixes the evaluation target. We decided in advance which cases and safety properties the change needed to improve: the two row-ranking signals, `DL` protection, stable evidence ordering, visible non-linkable conflicts, and preservation of existing resolver behavior. New observations can still be collected, but they cannot silently add requirements or provoke extra patches during this cycle. That lets us compare the same defined cases before and after the intervention and attribute the result to one bounded change. Without that boundary, the target would keep moving, a fix for each newly noticed annoyance could interact with earlier behavior, and passing results would not tell us whether the original batch actually improved without regressions.
+
+**Next time / revisit**
+
+Use Task D to turn the focus-return evidence into a self-contained asynchronous Notes
+adapter spike plan. Record a durable trigger for the next resolver batch rather than
+letting new signals interrupt the active task.
+
+### 2026-10-02 — Exercise 11 — Task D: Durable continuation without immediate fixing
+
+**Skills strengthened**
+
+- `record-decisions` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `scale-capabilities` — Demonstrated
+
+**What I did**
+
+Compared an asynchronous Accessibility-backed Notes spike with retaining the current
+synchronous Service, chose to defer the architecture change, and preserved a monitored
+and restartable path rather than treating deferral as closure.
+
+**Evidence**
+
+- `PLAN-008` preserves the proposed Accessibility permission gate, context validation,
+  stale-note and stale-selection refusal, cancellation, multiple pending invocations,
+  rollback, comparison trials, and promotion criteria, but is explicitly deferred.
+- The current synchronous Notes Service remains the product architecture. No
+  Accessibility permission was requested and no asynchronous insertion path was built.
+- The scheduled evaluator runs weekly on Monday at 09:00 local time. Deferred focus
+  monitoring is exception-based: unchanged cases produce one compact count, while only
+  cases gaining evidence expose bounded details.
+- A later resolver batch requires three related explicitly accepted resolver signals, or
+  one accepted identity-safety signal involving a wrong identity write or linkable
+  protected conflict. Crossing the threshold starts foreground planning only.
+- Focus cases `60b38b464e9cb7e7` and `be7ccb02cf0e75dd` were explicitly moved to
+  `deferred`, not resolved, with retained rationale and history.
+- Fifteen focused field-feedback tests passed, and the installed evaluator reported two
+  retained deferred focus cases with zero new evidence without adding review cards.
+
+**My reflection**
+
+> I’m pleased that choosing not to spend time on the focus issue does not mean forgetting it. I retained the current synchronous Notes architecture and deferred the Accessibility-backed experiment rather than closing or deleting it. `PLAN-008` preserves the proposed mechanism, permission boundary, context-safety requirements, comparison trials, and restart conditions, while `PLAN-007` and the private signal ledger preserve the decision and supporting evidence.
+>
+> The scheduled evaluator will continue monitoring focus friction. Deferred focus cases remain unresolved and can accumulate occurrence and timing evidence, but they stay out of the ordinary decision deck unless new evidence appears. Unchanged cases cost only one compact status line. If the evidence becomes materially repeated or worsening, it can justify a foreground fixing batch; an unattended agent still cannot decide to implement the fix. This lets me move on without either losing the issue or allowing monitoring to dominate product work.
+
+**Next time / revisit**
+
+Reopen `PLAN-008` only through a foreground decision supported by materially stronger
+focus evidence. Begin Exercise 12 by auditing which current checks are actionable from an
+ordinary terminal and which still require macOS UI or human judgment.

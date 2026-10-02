@@ -186,6 +186,80 @@ This map was seeded from the **Codex research** conversation (`chatgpt-conversat
 
 Add an entry only when it is useful to think with.
 
+### Superpowers: test the development process as software — 2026-09-02
+
+**Links:** [September 2025 workflow](https://blog.fsck.com/2025/10/05/how-im-using-coding-agents-in-september-2025/); [original Superpowers announcement](https://blog.fsck.com/2025/10/09/superpowers/); [current Superpowers repository](https://github.com/obra/superpowers)
+
+**Source note:** The two posts are point-in-time descriptions from 2025. The current repository has evolved into a more elaborate, multi-harness methodology, so I should distinguish the original ideas from later mechanisms rather than treating all three sources as one unchanged specification.
+
+**What I already have:** My harness already separates brainstorming or design from implementation for consequential work, stores self-contained living ExecPlans, uses evidence-producing tests and fixtures, defines human approval boundaries, isolates Git work, and plans self-review plus independent review. My review model already requires explicit dispositions instead of blindly accepting reviewer advice, and it bounds review cycles by risk. Exercise 12 plans a one-command verification harness and Exercise 13 plans independent review and parallel worktrees, but those exercises are not evidence that I have practiced the workflows yet.
+
+**Main ideas that are missing or not yet practiced:**
+
+1. **Behavioral TDD for the harness itself.** Superpowers tests an instruction or Skill by first watching agents fail without it, capturing their actual rationalizations, adding the smallest instruction that addresses those failures, and rerunning realistic pressure scenarios to close loopholes. My harness tests product behavior and records learning, but it does not yet evaluate whether its own instructions change agent behavior under time pressure, sunk cost, confidence, authority, or convenience.
+2. **Skills as tested runtime routing rather than a future packaging exercise.** I understand Skills conceptually and have an optional lab for extracting a repeated workflow, but I have not built a project Skill, tested whether fresh agents discover and obey it, or verified that its bootstrap survives a fresh session or context compaction. The interesting claim is not that a Markdown procedure exists; it is that the harness reliably selects and follows it when doing so is inconvenient.
+3. **A fresh-agent task loop with an explicit dual review gate.** The current Superpowers workflow gives each bounded implementation task a fresh context, then requires distinct verdicts for specification compliance and code quality before moving on, followed by a broad whole-branch review. My planned independent review is feature-level and comparative; I have not tried per-task role separation or measured whether it adds signal worth its token and coordination cost.
+4. **File-backed dispatch and recovery artifacts.** My ExecPlans preserve progress, decisions, surprises, and recovery information, but I do not generate minimal task briefs, implementer reports, anchored diff packages, scoped re-review packages, or a controller ledger designed specifically to survive compaction. Superpowers tries to keep large plans, diffs, and reports out of the controller's active context by handing subagents file paths and short return contracts. This is a concrete extension of my context-window questions.
+5. **Strict red/green/refactor as an enforced implementation protocol.** I require tests for non-trivial behavior and evidence before completion, but I do not require observing a relevant test fail before writing production code. Superpowers treats that order as mandatory. I want to test whether strict test-first work exposes false-positive tests or design mistakes in this project, and whether the benefit justifies the friction for different task shapes rather than adopting it as doctrine.
+6. **Separate debugging and fresh-evidence completion procedures.** My harness says to diagnose, verify, and preserve evidence, but it does not encode a reusable root-cause debugging method or a specific rule that completion claims must be backed by newly run, directly relevant verification. Those procedures may prevent speculative fixes and stale-success claims even when ordinary tests exist.
+7. **Operational orchestration economics.** I have asked how model, reasoning effort, permissions, and token cost should be allocated across subagents. Superpowers turns that into routing rules, compact file handoffs, bounded fix rounds, model escalation after repeated failure, scoped re-review, and a circuit breaker with recorded rulings. My decision-review budget covers some of this conceptually, but I have not measured the operational tradeoffs or practiced recovery from a stuck subagent loop.
+8. **Mining failures into candidate Skills.** The announcement describes clustering past corrections and lessons, then pressure-testing whether a new Skill is actually necessary before writing it. My learning log and map already preserve useful source material, but I do not yet have a method for turning repeated failure patterns into evaluated procedures while rejecting duplicates and one-off advice.
+
+**Tensions to preserve:** Missing does not mean automatically better. Superpowers' mandatory workflows, strict TDD, tiny task granularity, and autonomous controller rulings can add ceremony or move decisions away from the learner. My risk-scaled planning, tutorial checkpoints, product-success criteria, and explicit human authority still take precedence. I should not install or copy the full harness merely because it is comprehensive; I should test individual mechanisms against a simpler control and keep only those that improve observable outcomes.
+
+**Bounded experiments I want to try:**
+
+1. Choose one existing harness rule that agents have an incentive to evade. Run the same realistic scenarios without the rule and with it, record choices and rationalizations verbatim, and revise only for observed failures. A good first candidate is the rule against broadening product success criteria or the independent-review context boundary.
+2. Use one small, well-specified Gym Assistant change to compare the current single-agent workflow with a fresh implementer, a task-scoped reviewer returning separate spec and quality verdicts, and one scoped fix re-review. Compare unique findings, false positives, rework, elapsed time, context size, and token use.
+3. During that trial, use file-backed task, report, and diff artifacts, then deliberately resume from a fresh controller context. Test whether the durable artifacts prevent duplicated work and preserve unresolved findings without replaying the whole conversation.
+4. Try strict red/green/refactor on one non-trivial resolver behavior and compare it with the project's current test discipline. The question is whether observing the initial failure improves test validity or design, not whether I can comply with a ritual.
+5. Only after one workflow succeeds repeatedly, extract the smallest project Skill and pressure-test it with fresh subagents. Compare it with a plain reusable prompt before deciding whether automatic Skill routing earns its maintenance cost.
+
+**Evidence to collect:** Baseline failures, agent rationalizations, instruction-compliance rate, unique review findings, false positives, fix rounds, duplicated work, context or token use where visible, elapsed time, and whether a fresh context can resume correctly from artifacts. Preserve cases where the lighter harness performs as well; complexity is not success.
+
+**Disposition:** test later; incorporate only mechanisms that outperform the current risk-scaled harness on representative work.
+
+### DHH: terminal-native orchestration and human attention — 2026-09-21
+
+**Source:** [DHH multi-agent setup](chatgpt-conversation://6a9b42e8-9560-83e8-9541-bd2d3e67f0f2)
+
+**What seems transferable:** DHH's setup treats coding agents as asynchronous workers
+rather than one pair programmer. Separate terminal sessions keep workstreams distinct;
+Git and the resulting system remain the review surface; different model families can
+implement and review; and a session dashboard becomes useful when the human can no
+longer tell which worker needs attention. The important resource is not only model or
+machine capacity but the number of consequential decisions a person can supervise well.
+
+**What remains an unproven optimization for me:** Multiple physical machines, hardware
+KVMs, Tailscale, tmux, or Herdr may improve isolation, resilience, or monitoring at
+scale, but cloud inference means extra computers are not automatically necessary. I
+should first distinguish an in-session subagent, a fresh CLI conversation, a separate
+process, a Git worktree, a different model, and a different host rather than treating
+them all as equivalent forms of independence.
+
+**macOS and Notes tension:** A shell-first environment is agent-friendly because actions
+and evidence are exposed through files and commands. Gym Assistant intentionally crosses
+into Apple Notes, where command completion cannot prove selection integrity, focus,
+caret behavior, or usability. My goal is therefore not to eliminate the GUI but to give
+terminal agents a narrow, reproducible bridge that returns structured evidence, while
+keeping visual Computer Use and human judgment distinct.
+
+**Bounded learning path:** First use Codex CLI interactively and through `codex exec` on
+one Mac. Then run the verification harness from the CLI, investigate the Notes UI
+boundary with synthetic content, and use separate CLI sessions plus worktrees for
+independent review and parallel work. Add session dashboards, custom agents, remote
+hosts, or more machines only after observed coordination or resource friction makes the
+benefit testable.
+
+**Evidence to collect:** Session configuration and permissions, inherited context,
+working directory and Git state, reproducibility of interactive versus non-interactive
+tasks, unique review findings, duplicated work, elapsed time and token use where
+visible, UI claims the CLI can and cannot verify, and the point where additional
+concurrency reduces rather than improves supervision quality.
+
+**Disposition:** incorporate the CLI and worktree experiments into the learning harness;
+defer orchestration software and additional machines until evidence shows a need.
+
 ### Source title — date
 
 **Link:** <https://example.com>  

@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 11
-Current task: Task A — Define the field-signal contract
+Current exercise: 12
+Current task: Task A — Audit the current harness
 Current task state: not started
-Task completion condition: pass Exercise 11 Task A `STOP / REVIEW — Feedback-loop contract`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C
-Remaining tasks: Exercise 11 — Tasks A–D
-Most recent checkpoint: Exercise 10 Task C `STOP / REVIEW — Import and useful-product pause gate` (passed)
-Relevant skills: frame-work, verify, set-boundaries, record-decisions
+Task completion condition: pass Exercise 12 Task A `STOP / REVIEW`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D
+Remaining tasks: Exercise 12 — Tasks A–D
+Most recent checkpoint: Exercise 11 Task D `STOP / REVIEW — Durable continuation` (passed)
+Relevant skills: verify, review, operate-cli-agents
 
 ## Completed
 
@@ -21,7 +21,7 @@ Relevant skills: frame-work, verify, set-boundaries, record-decisions
 - [x] 08 — Frictionless new-exercise workflow
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
 - [x] 10 — Exercise identity review and personal-library import
-- [ ] 11 — Field feedback loops and resolver improvement
+- [x] 11 — Field feedback loops and resolver improvement
 - [ ] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
@@ -115,6 +115,18 @@ Relevant skills: frame-work, verify, set-boundaries, record-decisions
 - Field use retained repeated tab-away friction, missing `DL` protected-conflict
   recognition, and mixed-evidence ordering problems as Exercise 11 signals rather
   than expanding Task C indefinitely.
+- Exercise 11 Task C froze two related seated-row ranking signals together with the
+  approved classification and ordering baseline. The implementation narrowed the
+  Australian Row/Aussie Pull-up equivalence to the full phrase, protected `DL` as hinge
+  wording, kept cross-pattern conflicts visible but non-linkable, and established a
+  stable total evidence order. Seventy-eight tests, 37 resolver fixtures, 8 identity-
+  review fixtures, and the installed Notes `seated row` check passed without identity
+  writes or Pull-up/Push-up noise.
+- Exercise 11 Task D retained the synchronous Notes architecture and deferred the
+  Accessibility-backed focus-recovery spike without losing it. `PLAN-008` preserves the
+  complete restart path; two focus cases are deferred rather than resolved; unchanged
+  deferred cases cost one compact weekly monitoring line, while new evidence remains
+  available for a later foreground fixing decision.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -123,14 +135,13 @@ Relevant skills: frame-work, verify, set-boundaries, record-decisions
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: `LEARNING_LOG.md` — 2026-08-18, Exercise 01, Task A; 2026-08-19, Exercise 01, Tasks B–E and Exercise 02, Tasks A–B
+- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-01, Exercise 11 Task C
 - Completed durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; evidence is under `spikes/notes-interaction/`
 - Accepted architecture decision: `docs/decisions/001-notes-integration.md`
 
 ## Next action
 
-Begin Exercise 11 Task A by defining the private field-event schema, one-action
-subjective flag, deterministic anomaly checks, baseline metrics, disposition ledger,
-and fixed first resolver batch. Keep collection and evaluation unattended-capable,
-but retain prioritization, identity changes, and product-scope decisions as foreground
-gates.
+Begin Exercise 12 Task A by auditing the current verification harness. Inventory what an
+ordinary shell can prove, what requires macOS UI or Accessibility control, what still
+requires human judgment, and which missing signal would most improve the agent's
+correction loop. Do not implement the one-command harness before the Task A checkpoint.

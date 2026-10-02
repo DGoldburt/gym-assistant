@@ -1,0 +1,35 @@
+# Allow the scheduled field-feedback review to update only its private ledger through
+# the reviewed installed evaluator. This grants no shell, SwiftPM, or service-provider
+# executable authority.
+prefix_rule(
+    pattern = [
+        "/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/FieldFeedbackReport",
+    ],
+    decision = "allow",
+    justification = "Run the reviewed Gym Assistant evaluator outside the workspace sandbox so it can update its owner-only Application Support signal ledger.",
+    match = [
+        "'/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/FieldFeedbackReport'",
+    ],
+    not_match = [
+        "/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/GymAssistantNotesService",
+        "swift run FieldFeedbackReport",
+    ],
+)
+
+# Foreground-only human disposition writer. Prefix rules also match trailing arguments,
+# so the executable itself rejects all arguments before opening the ledger. It prompts
+# for one case ID, one allowed disposition, and an explicit APPLY confirmation.
+prefix_rule(
+    pattern = [
+        "/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/SetFieldFeedbackDisposition",
+    ],
+    decision = "allow",
+    justification = "Record one explicitly approved Gym Assistant signal disposition through the reviewed interactive writer.",
+    match = [
+        "'/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/SetFieldFeedbackDisposition'",
+    ],
+    not_match = [
+        "/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/SetFieldFeedbackDisposition resolved",
+        "/Users/dan/Applications/Gym Assistant.app/Contents/MacOS/FieldFeedbackReport",
+    ],
+)

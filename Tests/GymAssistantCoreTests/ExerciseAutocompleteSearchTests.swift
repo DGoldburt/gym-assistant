@@ -85,6 +85,21 @@ struct ExerciseAutocompleteSearchTests {
         #expect(try fixture.search.search("Short-Lever Copenhagn Plank").isEmpty)
     }
 
+    @Test("Row queries do not surface pull-up or push-up suffix noise")
+    func rowQueriesExcludeUpSuffixNoise() throws {
+        let fixture = try SearchFixture()
+        _ = try fixture.add("Banded seated row")
+        _ = try fixture.add("Seated Cable Row")
+        _ = try fixture.add("Chest Supported Cable Row")
+        _ = try fixture.add("Pull up")
+        _ = try fixture.add("Push up")
+
+        let results = try fixture.search.search("seated row", limit: 10)
+        #expect(results.map(\.preferredName).prefix(2) == ["Seated Cable Row", "Banded seated row"])
+        #expect(!results.contains { $0.preferredName == "Pull up" })
+        #expect(!results.contains { $0.preferredName == "Push up" })
+    }
+
     @Test("Empty and unrelated queries return no stored result")
     func noResultQueries() throws {
         let fixture = try SearchFixture()
