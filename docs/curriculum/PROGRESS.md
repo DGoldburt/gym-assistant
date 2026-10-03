@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 12
-Current task: Task B — Build one-command verification
+Current task: Task C — Agentic manual test
 Current task state: not started
-Task completion condition: pass Exercise 12 Task B `STOP / REVIEW — One-command verification`
+Task completion condition: pass Exercise 12 Task C `STOP / REVIEW — Manual-test evidence`
 Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D
-Remaining tasks: Exercise 12 — Tasks B–D
-Most recent checkpoint: Exercise 12 Task A `STOP / REVIEW` (passed)
+Remaining tasks: Exercise 12 — Tasks C–D
+Most recent checkpoint: Exercise 12 Task B `STOP / REVIEW — One-command verification` (passed)
 Relevant skills: verify, review, operate-cli-agents
 
 ## Completed
@@ -132,6 +132,12 @@ Relevant skills: verify, review, operate-cli-agents
   full fixture reports, and a non-installing bundle smoke check with named failures and
   explicit UI/private-data exclusions. Optional Lab 06 Task A will orient the learner to
   the real CLI boundary before Task B implementation begins.
+- Exercise 12 Task B added `./scripts/verify` with four named deterministic stages and
+  explicit UI/private-data exclusions. Direct and approved interactive runs pass; a
+  bounded unattended `codex exec` reproducibly reports SwiftPM's nested-sandbox boundary
+  rather than skipping checks or claiming success. Optional Lab 06 Tasks A–B record the
+  bundled CLI's state model, first-run daemon setup, TUI limitations, and execution-mode
+  tradeoffs.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -146,6 +152,6 @@ Relevant skills: verify, review, operate-cli-agents
 
 ## Next action
 
-Before implementing Exercise 12 Task B, complete Optional Lab 06 Task A's read-only CLI
-orientation. Then build the approved one-command harness and compare the same checks in
-an ordinary terminal, an interactive Codex CLI session, and bounded `codex exec`.
+Begin Exercise 12 Task C together with Optional Lab 06 Task C. Define one synthetic,
+reversible Notes workflow and identify in advance which claims can be established by
+shell output, structured application evidence, visual inspection, and human judgment.

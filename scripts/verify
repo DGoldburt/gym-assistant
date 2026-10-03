@@ -1,0 +1,75 @@
+#!/bin/bash
+set -u
+set -o pipefail
+
+repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
+swift_bin="${SWIFT_BIN:-swift}"
+
+export CLANG_MODULE_CACHE_PATH="$repo_dir/.build/verify-module-cache"
+export SWIFTPM_MODULECACHE_OVERRIDE="$CLANG_MODULE_CACHE_PATH"
+export XDG_CACHE_HOME="$repo_dir/.build/verify-cache"
+
+stage_number=0
+stage_count=4
+
+print_boundaries() {
+    printf 'Not performed: app installation or Services registration.\n'
+    printf 'Not performed: Apple Notes UI, shortcut, selection, caret, focus, or usability checks.\n'
+    printf 'Not performed: private exercise-library or field-feedback data checks.\n'
+}
+
+run_stage() {
+    stage_number=$((stage_number + 1))
+    stage_name="$1"
+    shift
+
+    printf '\n==> [%s/%s] %s\n' "$stage_number" "$stage_count" "$stage_name"
+    if "$@"; then
+        printf 'PASS: %s\n' "$stage_name"
+    else
+        status=$?
+        printf 'FAIL: %s (exit %s)\n' "$stage_name" "$status" >&2
+        printf 'Verification stopped at stage %s of %s. Inspect the command output above.\n' \
+            "$stage_number" "$stage_count" >&2
+        print_boundaries >&2
+        exit "$status"
+    fi
+}
+
+package_tests() {
+    "$swift_bin" test
+}
+
+resolver_fixtures() {
+    "$swift_bin" run ResolverFixtureRunner Tests/Fixtures/resolver-cases.json
+}
+
+identity_review_fixtures() {
+    "$swift_bin" run IdentityReviewFixtureRunner Tests/Fixtures/identity-review-cases.json
+}
+
+bundle_smoke() {
+    "$repo_dir/app/notes-service/build.sh" || return
+
+    bundle="/private/tmp/gym-assistant-exercise-09/Gym Assistant.app"
+    contents="$bundle/Contents"
+
+    test -x "$contents/MacOS/GymAssistantNotesService" || return
+    test -x "$contents/MacOS/FieldFeedbackReport" || return
+    test -x "$contents/MacOS/SetFieldFeedbackDisposition" || return
+    /usr/bin/codesign --verify --strict "$bundle" || return
+    /usr/bin/plutil -lint "$contents/Info.plist" || return
+    test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:0:NSMessage' "$contents/Info.plist")" = "autocompleteExercise" || return
+    test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:1:NSMessage' "$contents/Info.plist")" = "reviewExercise" || return
+}
+
+cd "$repo_dir" || exit 1
+mkdir -p "$CLANG_MODULE_CACHE_PATH" "$XDG_CACHE_HOME" || exit 1
+
+run_stage "Swift package tests" package_tests
+run_stage "Resolver fixture contract" resolver_fixtures
+run_stage "Identity-review fixture contract" identity_review_fixtures
+run_stage "Non-installing app-bundle smoke check" bundle_smoke
+
+printf '\nVERIFICATION PASSED: %s deterministic stages completed.\n' "$stage_count"
+print_boundaries

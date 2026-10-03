@@ -59,7 +59,7 @@ Use self-review, independent review, and worktree or parallel-agent judgment wit
 
 ## operate-cli-agents — Direct coding agents through terminal workflows
 
-**Confidence:** Used with guidance
+**Confidence:** Demonstrated
 Start, inspect, steer, and safely automate coding-agent sessions from the terminal.
 Choose appropriately between interactive and non-interactive execution; understand
 working directory, repository context, permissions, sandboxing, context boundaries,
@@ -67,6 +67,9 @@ verification output, and the limits of shell-driven access to graphical applicat
 **Project example:** Optional Lab 06 Task A — launched the app-bundled CLI in a read-only
 session, distinguished TUI, persisted task, repository, and configuration state, and
 captured first-run daemon installation plus real navigation limitations.
+Exercise 12 Task B and Lab 06 Task B then compared the same harness through direct,
+interactive, and non-interactive execution, including a narrow approval recovery and an
+honest unattended sandbox failure.
 
 ## scale-capabilities — Apply advanced capabilities deliberately
 

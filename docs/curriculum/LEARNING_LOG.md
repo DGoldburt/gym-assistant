@@ -1287,3 +1287,76 @@ read-only orientation, exited, and compared initial and final Git state.
 Use the same installed CLI explicitly in Exercise 12 Task B and Optional Lab 06 Task B.
 Compare the one-command harness in interactive and non-interactive modes without assuming
 their navigation, permissions, or persistence behavior is identical.
+
+### 2026-10-03 — Exercise 12 — Task B: One-command verification
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Demonstrated
+
+**What I did**
+
+Built one staged verification command, observed a controlled failure, corrected a
+failure-propagation defect in the harness itself, and ran the final command directly and
+through Codex CLI execution modes.
+
+**Evidence**
+
+- `./scripts/verify` names and runs package tests, the complete resolver fixture
+  contract, the complete identity-review fixture contract, and a non-installing signed
+  app-bundle smoke check.
+- The bundle check requires all three executables, a valid strict signature and property
+  list, and the two expected Notes Service entry points.
+- A controlled failing Swift executable stopped at `Swift package tests`, returned a
+  nonzero status, and printed every UI and private-data exclusion.
+- Source inspection found that an early bundle assertion could have been masked by a
+  later success; every bundle assertion now immediately returns failure.
+- The final direct and interactive approved runs passed 79 tests, 37/37 resolver
+  fixtures, 8/8 identity-review fixtures, and the bundle contract.
+
+**My reflection**
+
+> I learned that one-command verification is valuable when it preserves the meaning of its individual checks and makes failures actionable. `./scripts/verify` now names four stages: package tests, resolver fixtures, identity-review fixtures, and a non-installing app-bundle smoke check. A controlled failure identified the exact failed stage, stopped subsequent checks, and still reported what UI and private-data evidence was missing.
+>
+> Running the harness also found a defect in the harness itself: an early bundle assertion could have been masked by a later successful command. Correcting the failure propagation showed that verification code needs the same skeptical inspection as product code. The final direct and approved interactive runs passed 79 tests, 37 resolver fixtures, eight identity-review fixtures, and the bundle contract without claiming that Notes or private product data had been tested.
+
+**Next time / revisit**
+
+Task C must add reproducible Notes evidence without relabeling a successful build or shell
+command as proof of shortcut, insertion, caret, focus, or usability behavior.
+
+### 2026-10-03 — Optional Lab 06 — Task B: Interactive versus non-interactive execution
+
+**Skills strengthened**
+
+- `operate-cli-agents` — Demonstrated
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Ran the same verification harness through interactive Codex and bounded non-interactive
+`codex exec`, preserving both the common sandbox failure and their different responses.
+
+**Evidence**
+
+- Both CLI modes encountered SwiftPM's nested `sandbox-exec` failure inside a
+  `workspace-write` session even with project-local caches.
+- The interactive session requested permission to rerun exactly `./scripts/verify`
+  outside the sandbox and passed after learner approval.
+- `codex exec` with approvals disabled stopped reproducibly at stage one, named the
+  sandbox cause, and repeated all unperformed evidence boundaries.
+- This CLI build accepted approval options only before the `exec` subcommand despite its
+  subcommand help suggesting otherwise.
+
+**My reflection**
+
+> I learned that `codex exec` improves reproducibility because it can run a fixed prompt, working directory, sandbox, approval policy, and command in the same non-interactive form every time. In this trial it reliably exposed the same SwiftPM nested-sandbox failure and accurately reported that later stages were not performed.
+>
+> Non-interactive execution removes live human judgment. With approvals disabled, it could not ask me to authorize the exact command outside the sandbox, so it stopped honestly. The interactive CLI encountered the same failure, explained the narrow cause, requested approval for exactly `./scripts/verify`, and completed after I reviewed that request. A stable non-interactive failure is useful evidence; I should not broaden permissions merely to make it green.
+
+**Next time / revisit**
+
+Use Optional Lab 06 Task C alongside Exercise 12 Task C to identify which Notes claims
+come from shell completion, application telemetry, visual inspection, or human judgment.
