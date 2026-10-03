@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 12
-Current task: Task A — Audit the current harness
+Current task: Task B — Build one-command verification
 Current task state: not started
-Task completion condition: pass Exercise 12 Task A `STOP / REVIEW`
+Task completion condition: pass Exercise 12 Task B `STOP / REVIEW — One-command verification`
 Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D
-Remaining tasks: Exercise 12 — Tasks A–D
-Most recent checkpoint: Exercise 11 Task D `STOP / REVIEW — Durable continuation` (passed)
+Remaining tasks: Exercise 12 — Tasks B–D
+Most recent checkpoint: Exercise 12 Task A `STOP / REVIEW` (passed)
 Relevant skills: verify, review, operate-cli-agents
 
 ## Completed
@@ -127,6 +127,11 @@ Relevant skills: verify, review, operate-cli-agents
   complete restart path; two focus cases are deferred rather than resolved; unchanged
   deferred cases cost one compact weekly monitoring line, while new evidence remains
   available for a later foreground fixing decision.
+- Exercise 12 Task A audited the existing verification surface and approved a staged
+  packaged-product contract. The future one-command harness must run package tests, both
+  full fixture reports, and a non-installing bundle smoke check with named failures and
+  explicit UI/private-data exclusions. Optional Lab 06 Task A will orient the learner to
+  the real CLI boundary before Task B implementation begins.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -141,7 +146,6 @@ Relevant skills: verify, review, operate-cli-agents
 
 ## Next action
 
-Begin Exercise 12 Task A by auditing the current verification harness. Inventory what an
-ordinary shell can prove, what requires macOS UI or Accessibility control, what still
-requires human judgment, and which missing signal would most improve the agent's
-correction loop. Do not implement the one-command harness before the Task A checkpoint.
+Before implementing Exercise 12 Task B, complete Optional Lab 06 Task A's read-only CLI
+orientation. Then build the approved one-command harness and compare the same checks in
+an ordinary terminal, an interactive Codex CLI session, and bounded `codex exec`.

@@ -1200,3 +1200,44 @@ and restartable path rather than treating deferral as closure.
 Reopen `PLAN-008` only through a foreground decision supported by materially stronger
 focus evidence. Begin Exercise 12 by auditing which current checks are actionable from an
 ordinary terminal and which still require macOS UI or human judgment.
+
+### 2026-10-02 — Exercise 12 — Task A: Verification-harness audit
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Not yet used
+
+**What I did**
+
+Audited the repository's existing tests, fixture runners, app-bundle build checks,
+operational evaluator, command rules, UI boundary, and fresh-session assumptions before
+adding a verification entry point.
+
+**Evidence**
+
+- The repository has 79 Swift tests, a 37-case resolver fixture runner, an eight-case
+  identity-review runner, and an app build script that assembles, signs, and validates a
+  temporary bundle, but no single verification command or verification CI workflow.
+- Ordinary shell checks can prove compilation, persistence and resolver invariants,
+  fixture safety, packaging structure, signatures, and permission-rule shape. They
+  cannot prove Notes discovery, shortcut behavior, selection integrity, caret usability,
+  focus behavior, or subjective friction.
+- A fresh CLI session must account for Xcode and Swift versions, writable compiler
+  caches, `/private/tmp`, repository and Application Support sandbox boundaries, private
+  data outside Git, and separate shell, Codex, macOS, and desktop-control permissions.
+- The approved first missing signal is a staged packaged-product contract: one command
+  runs package tests, both complete fixture reports, and a non-installing app-bundle
+  smoke check, names each stage and failure, and explicitly reports UI and private-data
+  checks it did not perform.
+
+**My reflection**
+
+> I learned that an actionable verification check targets a failure that could otherwise escape and returns enough specific evidence to guide correction. In Gym Assistant, source tests can pass while the packaged or installed application is stale, incomplete, or incorrectly configured, so the first missing signal should connect source verification to the actual app artifact.
+>
+> I approved a staged packaged-product contract: one command will run package tests, both complete fixture reports, and a non-installing app-bundle smoke check. Each stage must identify itself and its failure clearly, and the final result must explicitly state which UI and private-data checks were not performed. Adding stricter checks such as spellchecking without a demonstrated failure risk would increase activity without materially improving this correction loop.
+
+**Next time / revisit**
+
+Complete Optional Lab 06 Task A to inspect the actual interactive CLI boundary, then use
+that evidence while building and comparing the one-command harness in Exercise 12 Task B.
