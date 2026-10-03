@@ -1241,3 +1241,49 @@ adding a verification entry point.
 
 Complete Optional Lab 06 Task A to inspect the actual interactive CLI boundary, then use
 that evidence while building and comparing the one-command harness in Exercise 12 Task B.
+
+### 2026-10-03 — Optional Lab 06 — Task A: Interactive CLI orientation
+
+**Skills strengthened**
+
+- `operate-cli-agents` — Used with guidance
+- `orient` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Started the ChatGPT-bundled Codex CLI from a clean shell with an explicit read-only
+sandbox, inspected the live session and repository context, requested a bounded
+read-only orientation, exited, and compared initial and final Git state.
+
+**Evidence**
+
+- The bundled CLI was not on the clean shell's `PATH`; its directly verified executable
+  reported `codex-cli 0.158.0-alpha.2.1`.
+- First TUI launch installed a version-matched app-server daemon package under
+  `~/.codex/packages/app-server-daemon`, showing that CLI bootstrap state is outside the
+  agent tool sandbox even when repository access is read-only.
+- The TUI reported GPT-5.6-Terra with medium reasoning, the correct repository directory,
+  and a named task. Its read-only orientation found the active instructions, Exercise 12
+  Task B authorities, clean synchronized branch, and current prohibitions without edits.
+- Exiting disconnected from the named task and emitted a resume command. Final Git status
+  remained clean and synchronized.
+- `/help` was unavailable; `/ps` was difficult to understand and exit; arrow keys edited
+  the prompt or traversed history instead of scrolling output; the TUI exposed a
+  Control-T transcript view and mouse scrolling remained useful.
+
+**My reflection**
+
+> I learned to separate the Codex terminal interface from the conversation, repository, and persistent configuration it operates on. The foreground CLI process renders the TUI. `--no-alt-screen` preserves terminal output, but the active prompt still uses arrow keys for editing and history rather than ordinary output scrolling; this build exposed a separate Control-T transcript view, and mouse scrolling remained useful.
+>
+> The Codex task can outlive the visible TUI. Exiting disconnected from a named task and produced a resume command, while the local app-server daemon provides the service through which sessions can be discovered and resumed. I should not assume the task exists only inside either the foreground process or the daemon’s running memory.
+>
+> The Git repository is filesystem state managed by Git. Codex inspected it through ordinary read-only Git commands, and comparing initial and final status proved that the orientation changed no repository files. Persistent Codex state is separate: user configuration and support packages live under `~/.codex`, while this repository has scoped command rules under `.codex`. First TUI launch installed a versioned app-server daemon package under `~/.codex/packages` even though the agent session used a read-only sandbox. This showed that agent-tool permissions and the CLI application’s own first-run setup are distinct mutation boundaries.
+>
+> I also learned not to assume TUI commands or navigation. `/help` did not exist, `/ps` was difficult to understand and exit, and arrow keys did not scroll output. Future instructions should be based on the installed version’s visible affordances and should explain how to leave any special view before asking me to enter it.
+
+**Next time / revisit**
+
+Use the same installed CLI explicitly in Exercise 12 Task B and Optional Lab 06 Task B.
+Compare the one-command harness in interactive and non-interactive modes without assuming
+their navigation, permissions, or persistence behavior is identical.
