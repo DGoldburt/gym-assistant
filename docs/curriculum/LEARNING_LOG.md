@@ -1360,3 +1360,50 @@ Ran the same verification harness through interactive Codex and bounded non-inte
 
 Use Optional Lab 06 Task C alongside Exercise 12 Task C to identify which Notes claims
 come from shell completion, application telemetry, visual inspection, or human judgment.
+
+### 2026-10-03 — Exercise 12 Task C + Optional Lab 06 Task C: Service-boundary autocomplete UI test
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Built and ran a bounded automated test across the installed Gym Assistant macOS Service
+boundary, corrected its scope when earlier Notes and manual-test framing overstated what
+the run observed, and preserved a reproducible test protocol with explicit exclusions.
+
+**Evidence**
+
+- The installed Gym Assistant bundle passed strict signature inspection and declared the
+  expected `autocompleteExercise` Service. The installed executable hash was recorded.
+- A temporary CLI-owned AppKit pasteboard invoked the installed Service by name and
+  reported `serviceStarted=true`.
+- Independently authorized desktop automation entered `seated row`, inspected the live
+  candidate list, selected the first row by keyboard, and pressed Return.
+- The selected `seated band row` text returned to the calling CLI pasteboard.
+- The initial sandboxed probe failed because Swift could not write its compiler cache;
+  the same narrow probe reached the Service after explicit authorization. This remained
+  a sandbox-boundary result rather than being mislabeled as a product failure.
+- The standard four-stage `./scripts/verify` rerun passed 79 tests, all 37 resolver
+  fixtures, all eight identity-review fixtures, and the non-installing bundle contract.
+- `evidence/exercise-12/SERVICE_BOUNDARY_AUTOCOMPLETE_UI_TEST.md` names the actual test:
+  installed Service invocation, keyboard interaction with autocomplete, and selected-
+  value return. It makes no claim about Notes or human usability.
+- The test is not yet part of `./scripts/verify`: the observed run coordinated a CLI
+  probe with separate desktop automation and depended on an installed app, live GUI,
+  private library, and modal interaction. A future opt-in runner would first need a
+  fixture library, self-contained authorized UI driver, timeouts, cleanup, and an
+  installed-versus-source version check.
+
+**My reflection**
+
+> I learned that the automated Service-boundary autocomplete UI test verifies that Gym Assistant is installed and callable, that keyboard interaction can select an autocomplete result, and that the selected text returns to the calling CLI process. The current run coordinates a CLI probe with separately authorized desktop automation, so it is not yet a self-contained CLI test. It does not test Notes or human usability, and it should not be added to the deterministic verification command until its installed-app, UI-automation, fixture, timeout, and cleanup dependencies are controlled.
+
+**Next time / revisit**
+
+Use the evidence boundary during Task D self-review. Extract a separate opt-in installed-
+product UI runner only after repeated use justifies controlling its GUI, fixture,
+version, timeout, and cleanup dependencies.
