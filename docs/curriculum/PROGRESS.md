@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 12
-Current task: Task D — Self-review
+Current exercise: 13
+Current task: Task A — Independent review
 Current task state: not started
-Task completion condition: pass Exercise 12 Task D `STOP / REVIEW — Self-review evidence`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D
-Remaining tasks: Exercise 12 — Task D
-Most recent checkpoint: Exercise 12 Task C `STOP / REVIEW — Manual-test evidence` (passed)
-Relevant skills: verify, review, operate-cli-agents
+Task completion condition: pass Exercise 13 Task A `STOP / REVIEW`
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D
+Remaining tasks: Exercise 13 — Tasks A–B
+Most recent checkpoint: Exercise 12 Task D `STOP / REVIEW — Self-review evidence` (passed)
+Relevant skills: review, collaborate, verify, operate-cli-agents
 
 ## Completed
 
@@ -22,7 +22,7 @@ Relevant skills: verify, review, operate-cli-agents
 - [x] 09 — Keyboard autocomplete from an empty Notes cursor
 - [x] 10 — Exercise identity review and personal-library import
 - [x] 11 — Field feedback loops and resolver improvement
-- [ ] 12 — Verification harness and agentic manual testing
+- [x] 12 — Verification harness and agentic manual testing
 - [ ] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
 
@@ -144,6 +144,11 @@ Relevant skills: verify, review, operate-cli-agents
   keyboard, and the text returned to the CLI caller. The evidence explicitly excludes
   Notes and human usability. The prototype remains separate from `./scripts/verify`
   until its installed-app, GUI, fixture, timeout, and cleanup dependencies are controlled.
+- Exercise 12 Task D self-review found that the bundle stage ignored the harness's
+  selected Swift executable and that the UI artifact overstated retained visual
+  evidence. Both were corrected; a controlled tool failure and the complete four-stage
+  rerun passed their expected outcomes. Self-review is now treated as a proportional
+  definition-of-done activity rather than a standalone ceremony for ordinary increments.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -152,12 +157,14 @@ Relevant skills: verify, review, operate-cli-agents
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-01, Exercise 11 Task C
+- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-03, Exercise 12 Task D
 - Completed durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; evidence is under `spikes/notes-interaction/`
 - Accepted architecture decision: `docs/decisions/001-notes-integration.md`
 
 ## Next action
 
-Begin Exercise 12 Task D. Have the implementing context inspect its complete Task B–C
-diff for unnecessary complexity, brittle output, missing checks, architecture drift,
-and misleading success reporting; fix justified findings and rerun verification.
+Complete the Exercise 12 branch review and merge lifecycle, then begin Exercise 13 Task A.
+Choose a recently completed feature, preserve the implementing context's self-review, and
+start a genuinely separate CLI review with the same acceptance criteria, complete diff,
+repository instructions, and verification evidence but without the implementer's
+rationale or self-review conclusions.

@@ -58,7 +58,11 @@ Record consequential decisions, evidence, tradeoffs, and revisit triggers outsid
 
 **Confidence:** Revisit
 Use self-review, independent review, and worktree or parallel-agent judgment without multiplying work unnecessarily.
-**Project example:** a separate Codex chat reviewed the bootstrap while shared project context remained available. Need to practice the recommended guidance of sharing a diff and acceptance criteria and making sure implementers intent is outside of the reviewer's context.
+**Project example:** Exercise 12 Task D used implementing-context self-review to catch an
+inconsistent Swift executable and overstated retained visual evidence after automated
+verification had passed. Exercise 13 must still test whether a genuinely separate review
+context adds unique findings when it receives the acceptance criteria and complete diff
+without the implementer's rationale or self-review conclusions.
 
 ## operate-cli-agents — Direct coding agents through terminal workflows
 

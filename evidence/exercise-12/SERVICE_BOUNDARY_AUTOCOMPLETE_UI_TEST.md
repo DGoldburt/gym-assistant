@@ -29,7 +29,7 @@ result, and inspect the text returned to the CLI pasteboard. The expected return
 | --- | --- | --- |
 | The installed app is signed and declares the `autocompleteExercise` service. | `codesign --verify --strict` and installed `Info.plist` inspection | Pass. Bundle hash: `1565295f208f20d6a42bb72d4aeb6292896d3fa4e3f8e7568248195d1120c14c`. The declaration restricts normal service availability to Notes, while the direct AppKit probe invokes the service by name. |
 | A command-line process can invoke the installed macOS Service. | Temporary AppKit probe using `NSPerformService("Gym Assistant", pasteboard)` | Pass: `serviceStarted=true`. |
-| The service displayed ranked autocomplete candidates for the synthetic query. | Independent Computer Use accessibility state and visual inspection | Pass. The query `seated row` displayed `seated band row` and `Seated Cable Row` at `.999`, followed by lower fuzzy results. |
+| The service displayed ranked autocomplete candidates for the synthetic query. | Independent Computer Use accessibility state and live visual inspection | Pass. The query `seated row` displayed `seated band row` and `Seated Cable Row` at `.999`, followed by lower fuzzy results. The screenshot was shown during the checkpoint but was not retained in the repository; this row is the durable textual record. |
 | The selected result crossed back over the command-line bridge. | Probe pasteboard output | Pass: `returnedText=seated band row`. |
 
 ## Exact command-line bridge

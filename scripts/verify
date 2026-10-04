@@ -49,7 +49,7 @@ identity_review_fixtures() {
 }
 
 bundle_smoke() {
-    "$repo_dir/app/notes-service/build.sh" || return
+    SWIFT_BIN="$swift_bin" "$repo_dir/app/notes-service/build.sh" || return
 
     bundle="/private/tmp/gym-assistant-exercise-09/Gym Assistant.app"
     contents="$bundle/Contents"

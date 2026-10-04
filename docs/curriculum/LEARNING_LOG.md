@@ -1407,3 +1407,43 @@ the run observed, and preserved a reproducible test protocol with explicit exclu
 Use the evidence boundary during Task D self-review. Extract a separate opt-in installed-
 product UI runner only after repeated use justifies controlling its GUI, fixture,
 version, timeout, and cleanup dependencies.
+
+### 2026-10-03 — Exercise 12 — Task D: Self-review
+
+**Skills strengthened**
+
+- `review` — Revisit
+- `verify` — Demonstrated
+
+**What I did**
+
+Reviewed the complete Task B–C diff for unnecessary complexity, brittle output, missing
+checks, architecture drift, and misleading success reporting; fixed two justified
+findings and reran the full verification harness.
+
+**Evidence**
+
+- Self-review found that `scripts/verify` honored `SWIFT_BIN` for its first three stages
+  while the bundle builder silently invoked `swift` directly. The bundle builder now
+  accepts the same override and the harness passes it through.
+- A controlled `SWIFT_BIN=/usr/bin/false` bundle build failed immediately, proving that
+  the selected tool now reaches the bundle stage.
+- The Service-boundary artifact previously named live visual inspection without saying
+  that its screenshot was shown during the checkpoint but not retained. The durable row
+  now states exactly which visual evidence is and is not preserved.
+- Shell syntax and `git diff --check` passed. The corrected four-stage verification
+  rerun passed 79 tests, all 37 resolver fixtures, all eight identity-review fixtures,
+  and the signed non-installing bundle contract.
+- The complete candidate diff contained no private Notes content, client material,
+  credentials, screenshots, or unrelated product work. No architecture drift or reason
+  to add the GUI prototype to the deterministic harness was found.
+
+**My reflection**
+
+> I learned that self-review complements automated checks and UI evidence by inspecting how the verification tools themselves are assembled and described. The automated checks passed, but self-review still found that the bundle stage could use a different Swift executable from the other stages. It also clarified which visual evidence was observed but not retained. Self-review does not replace behavioral checks or UI evidence; it challenges whether those checks use consistent tools and whether their reported conclusions accurately match the evidence preserved.
+
+**Next time / revisit**
+
+Apply lightweight self-review proportionally to every substantive increment rather than
+making it a separate ceremony. Exercise 13 will compare this implementing-context review
+with a genuinely separate review context and measure whether independence adds findings.
