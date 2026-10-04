@@ -2,16 +2,17 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "$0")/../.." && pwd)"
+swift_bin="${SWIFT_BIN:-swift}"
 build_root="/private/tmp/gym-assistant-exercise-09"
 app_dir="$build_root/Gym Assistant.app"
 contents_dir="$app_dir/Contents"
 macos_dir="$contents_dir/MacOS"
 
 cd "$repo_dir"
-swift build --product GymAssistantNotesService
-swift build --product FieldFeedbackReport
-swift build --product SetFieldFeedbackDisposition
-bin_dir="$(swift build --product GymAssistantNotesService --show-bin-path)"
+"$swift_bin" build --product GymAssistantNotesService
+"$swift_bin" build --product FieldFeedbackReport
+"$swift_bin" build --product SetFieldFeedbackDisposition
+bin_dir="$("$swift_bin" build --product GymAssistantNotesService --show-bin-path)"
 
 mkdir -p "$macos_dir"
 cp "$repo_dir/app/notes-service/Info.plist" "$contents_dir/Info.plist"

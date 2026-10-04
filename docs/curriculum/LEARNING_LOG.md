@@ -1200,3 +1200,250 @@ and restartable path rather than treating deferral as closure.
 Reopen `PLAN-008` only through a foreground decision supported by materially stronger
 focus evidence. Begin Exercise 12 by auditing which current checks are actionable from an
 ordinary terminal and which still require macOS UI or human judgment.
+
+### 2026-10-02 — Exercise 12 — Task A: Verification-harness audit
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Not yet used
+
+**What I did**
+
+Audited the repository's existing tests, fixture runners, app-bundle build checks,
+operational evaluator, command rules, UI boundary, and fresh-session assumptions before
+adding a verification entry point.
+
+**Evidence**
+
+- The repository has 79 Swift tests, a 37-case resolver fixture runner, an eight-case
+  identity-review runner, and an app build script that assembles, signs, and validates a
+  temporary bundle, but no single verification command or verification CI workflow.
+- Ordinary shell checks can prove compilation, persistence and resolver invariants,
+  fixture safety, packaging structure, signatures, and permission-rule shape. They
+  cannot prove Notes discovery, shortcut behavior, selection integrity, caret usability,
+  focus behavior, or subjective friction.
+- A fresh CLI session must account for Xcode and Swift versions, writable compiler
+  caches, `/private/tmp`, repository and Application Support sandbox boundaries, private
+  data outside Git, and separate shell, Codex, macOS, and desktop-control permissions.
+- The approved first missing signal is a staged packaged-product contract: one command
+  runs package tests, both complete fixture reports, and a non-installing app-bundle
+  smoke check, names each stage and failure, and explicitly reports UI and private-data
+  checks it did not perform.
+
+**My reflection**
+
+> I learned that an actionable verification check targets a failure that could otherwise escape and returns enough specific evidence to guide correction. In Gym Assistant, source tests can pass while the packaged or installed application is stale, incomplete, or incorrectly configured, so the first missing signal should connect source verification to the actual app artifact.
+>
+> I approved a staged packaged-product contract: one command will run package tests, both complete fixture reports, and a non-installing app-bundle smoke check. Each stage must identify itself and its failure clearly, and the final result must explicitly state which UI and private-data checks were not performed. Adding stricter checks such as spellchecking without a demonstrated failure risk would increase activity without materially improving this correction loop.
+
+**Next time / revisit**
+
+Complete Optional Lab 06 Task A to inspect the actual interactive CLI boundary, then use
+that evidence while building and comparing the one-command harness in Exercise 12 Task B.
+
+### 2026-10-03 — Optional Lab 06 — Task A: Interactive CLI orientation
+
+**Skills strengthened**
+
+- `operate-cli-agents` — Used with guidance
+- `orient` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Started the ChatGPT-bundled Codex CLI from a clean shell with an explicit read-only
+sandbox, inspected the live session and repository context, requested a bounded
+read-only orientation, exited, and compared initial and final Git state.
+
+**Evidence**
+
+- The bundled CLI was not on the clean shell's `PATH`; its directly verified executable
+  reported `codex-cli 0.158.0-alpha.2.1`.
+- First TUI launch installed a version-matched app-server daemon package under
+  `~/.codex/packages/app-server-daemon`, showing that CLI bootstrap state is outside the
+  agent tool sandbox even when repository access is read-only.
+- The TUI reported GPT-5.6-Terra with medium reasoning, the correct repository directory,
+  and a named task. Its read-only orientation found the active instructions, Exercise 12
+  Task B authorities, clean synchronized branch, and current prohibitions without edits.
+- Exiting disconnected from the named task and emitted a resume command. Final Git status
+  remained clean and synchronized.
+- `/help` was unavailable; `/ps` was difficult to understand and exit; arrow keys edited
+  the prompt or traversed history instead of scrolling output; the TUI exposed a
+  Control-T transcript view and mouse scrolling remained useful.
+
+**My reflection**
+
+> I learned to separate the Codex terminal interface from the conversation, repository, and persistent configuration it operates on. The foreground CLI process renders the TUI. `--no-alt-screen` preserves terminal output, but the active prompt still uses arrow keys for editing and history rather than ordinary output scrolling; this build exposed a separate Control-T transcript view, and mouse scrolling remained useful.
+>
+> The Codex task can outlive the visible TUI. Exiting disconnected from a named task and produced a resume command, while the local app-server daemon provides the service through which sessions can be discovered and resumed. I should not assume the task exists only inside either the foreground process or the daemon’s running memory.
+>
+> The Git repository is filesystem state managed by Git. Codex inspected it through ordinary read-only Git commands, and comparing initial and final status proved that the orientation changed no repository files. Persistent Codex state is separate: user configuration and support packages live under `~/.codex`, while this repository has scoped command rules under `.codex`. First TUI launch installed a versioned app-server daemon package under `~/.codex/packages` even though the agent session used a read-only sandbox. This showed that agent-tool permissions and the CLI application’s own first-run setup are distinct mutation boundaries.
+>
+> I also learned not to assume TUI commands or navigation. `/help` did not exist, `/ps` was difficult to understand and exit, and arrow keys did not scroll output. Future instructions should be based on the installed version’s visible affordances and should explain how to leave any special view before asking me to enter it.
+
+**Next time / revisit**
+
+Use the same installed CLI explicitly in Exercise 12 Task B and Optional Lab 06 Task B.
+Compare the one-command harness in interactive and non-interactive modes without assuming
+their navigation, permissions, or persistence behavior is identical.
+
+### 2026-10-03 — Exercise 12 — Task B: One-command verification
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Demonstrated
+
+**What I did**
+
+Built one staged verification command, observed a controlled failure, corrected a
+failure-propagation defect in the harness itself, and ran the final command directly and
+through Codex CLI execution modes.
+
+**Evidence**
+
+- `./scripts/verify` names and runs package tests, the complete resolver fixture
+  contract, the complete identity-review fixture contract, and a non-installing signed
+  app-bundle smoke check.
+- The bundle check requires all three executables, a valid strict signature and property
+  list, and the two expected Notes Service entry points.
+- A controlled failing Swift executable stopped at `Swift package tests`, returned a
+  nonzero status, and printed every UI and private-data exclusion.
+- Source inspection found that an early bundle assertion could have been masked by a
+  later success; every bundle assertion now immediately returns failure.
+- The final direct and interactive approved runs passed 79 tests, 37/37 resolver
+  fixtures, 8/8 identity-review fixtures, and the bundle contract.
+
+**My reflection**
+
+> I learned that one-command verification is valuable when it preserves the meaning of its individual checks and makes failures actionable. `./scripts/verify` now names four stages: package tests, resolver fixtures, identity-review fixtures, and a non-installing app-bundle smoke check. A controlled failure identified the exact failed stage, stopped subsequent checks, and still reported what UI and private-data evidence was missing.
+>
+> Running the harness also found a defect in the harness itself: an early bundle assertion could have been masked by a later successful command. Correcting the failure propagation showed that verification code needs the same skeptical inspection as product code. The final direct and approved interactive runs passed 79 tests, 37 resolver fixtures, eight identity-review fixtures, and the bundle contract without claiming that Notes or private product data had been tested.
+
+**Next time / revisit**
+
+Task C must add reproducible Notes evidence without relabeling a successful build or shell
+command as proof of shortcut, insertion, caret, focus, or usability behavior.
+
+### 2026-10-03 — Optional Lab 06 — Task B: Interactive versus non-interactive execution
+
+**Skills strengthened**
+
+- `operate-cli-agents` — Demonstrated
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Ran the same verification harness through interactive Codex and bounded non-interactive
+`codex exec`, preserving both the common sandbox failure and their different responses.
+
+**Evidence**
+
+- Both CLI modes encountered SwiftPM's nested `sandbox-exec` failure inside a
+  `workspace-write` session even with project-local caches.
+- The interactive session requested permission to rerun exactly `./scripts/verify`
+  outside the sandbox and passed after learner approval.
+- `codex exec` with approvals disabled stopped reproducibly at stage one, named the
+  sandbox cause, and repeated all unperformed evidence boundaries.
+- This CLI build accepted approval options only before the `exec` subcommand despite its
+  subcommand help suggesting otherwise.
+
+**My reflection**
+
+> I learned that `codex exec` improves reproducibility because it can run a fixed prompt, working directory, sandbox, approval policy, and command in the same non-interactive form every time. In this trial it reliably exposed the same SwiftPM nested-sandbox failure and accurately reported that later stages were not performed.
+>
+> Non-interactive execution removes live human judgment. With approvals disabled, it could not ask me to authorize the exact command outside the sandbox, so it stopped honestly. The interactive CLI encountered the same failure, explained the narrow cause, requested approval for exactly `./scripts/verify`, and completed after I reviewed that request. A stable non-interactive failure is useful evidence; I should not broaden permissions merely to make it green.
+
+**Next time / revisit**
+
+Use Optional Lab 06 Task C alongside Exercise 12 Task C to identify which Notes claims
+come from shell completion, application telemetry, visual inspection, or human judgment.
+
+### 2026-10-03 — Exercise 12 Task C + Optional Lab 06 Task C: Service-boundary autocomplete UI test
+
+**Skills strengthened**
+
+- `verify` — Demonstrated
+- `operate-cli-agents` — Demonstrated
+- `set-boundaries` — Demonstrated
+
+**What I did**
+
+Built and ran a bounded automated test across the installed Gym Assistant macOS Service
+boundary, corrected its scope when earlier Notes and manual-test framing overstated what
+the run observed, and preserved a reproducible test protocol with explicit exclusions.
+
+**Evidence**
+
+- The installed Gym Assistant bundle passed strict signature inspection and declared the
+  expected `autocompleteExercise` Service. The installed executable hash was recorded.
+- A temporary CLI-owned AppKit pasteboard invoked the installed Service by name and
+  reported `serviceStarted=true`.
+- Independently authorized desktop automation entered `seated row`, inspected the live
+  candidate list, selected the first row by keyboard, and pressed Return.
+- The selected `seated band row` text returned to the calling CLI pasteboard.
+- The initial sandboxed probe failed because Swift could not write its compiler cache;
+  the same narrow probe reached the Service after explicit authorization. This remained
+  a sandbox-boundary result rather than being mislabeled as a product failure.
+- The standard four-stage `./scripts/verify` rerun passed 79 tests, all 37 resolver
+  fixtures, all eight identity-review fixtures, and the non-installing bundle contract.
+- `evidence/exercise-12/SERVICE_BOUNDARY_AUTOCOMPLETE_UI_TEST.md` names the actual test:
+  installed Service invocation, keyboard interaction with autocomplete, and selected-
+  value return. It makes no claim about Notes or human usability.
+- The test is not yet part of `./scripts/verify`: the observed run coordinated a CLI
+  probe with separate desktop automation and depended on an installed app, live GUI,
+  private library, and modal interaction. A future opt-in runner would first need a
+  fixture library, self-contained authorized UI driver, timeouts, cleanup, and an
+  installed-versus-source version check.
+
+**My reflection**
+
+> I learned that the automated Service-boundary autocomplete UI test verifies that Gym Assistant is installed and callable, that keyboard interaction can select an autocomplete result, and that the selected text returns to the calling CLI process. The current run coordinates a CLI probe with separately authorized desktop automation, so it is not yet a self-contained CLI test. It does not test Notes or human usability, and it should not be added to the deterministic verification command until its installed-app, UI-automation, fixture, timeout, and cleanup dependencies are controlled.
+
+**Next time / revisit**
+
+Use the evidence boundary during Task D self-review. Extract a separate opt-in installed-
+product UI runner only after repeated use justifies controlling its GUI, fixture,
+version, timeout, and cleanup dependencies.
+
+### 2026-10-03 — Exercise 12 — Task D: Self-review
+
+**Skills strengthened**
+
+- `review` — Revisit
+- `verify` — Demonstrated
+
+**What I did**
+
+Reviewed the complete Task B–C diff for unnecessary complexity, brittle output, missing
+checks, architecture drift, and misleading success reporting; fixed two justified
+findings and reran the full verification harness.
+
+**Evidence**
+
+- Self-review found that `scripts/verify` honored `SWIFT_BIN` for its first three stages
+  while the bundle builder silently invoked `swift` directly. The bundle builder now
+  accepts the same override and the harness passes it through.
+- A controlled `SWIFT_BIN=/usr/bin/false` bundle build failed immediately, proving that
+  the selected tool now reaches the bundle stage.
+- The Service-boundary artifact previously named live visual inspection without saying
+  that its screenshot was shown during the checkpoint but not retained. The durable row
+  now states exactly which visual evidence is and is not preserved.
+- Shell syntax and `git diff --check` passed. The corrected four-stage verification
+  rerun passed 79 tests, all 37 resolver fixtures, all eight identity-review fixtures,
+  and the signed non-installing bundle contract.
+- The complete candidate diff contained no private Notes content, client material,
+  credentials, screenshots, or unrelated product work. No architecture drift or reason
+  to add the GUI prototype to the deterministic harness was found.
+
+**My reflection**
+
+> I learned that self-review complements automated checks and UI evidence by inspecting how the verification tools themselves are assembled and described. The automated checks passed, but self-review still found that the bundle stage could use a different Swift executable from the other stages. It also clarified which visual evidence was observed but not retained. Self-review does not replace behavioral checks or UI evidence; it challenges whether those checks use consistent tools and whether their reported conclusions accurately match the evidence preserved.
+
+**Next time / revisit**
+
+Apply lightweight self-review proportionally to every substantive increment rather than
+making it a separate ceremony. Exercise 13 will compare this implementing-context review
+with a genuinely separate review context and measure whether independence adds findings.

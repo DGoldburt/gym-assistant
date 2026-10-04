@@ -44,6 +44,9 @@ Use commits, branches, remotes, pull requests, reviews, merges, and synchronizat
 **Confidence:** Demonstrated
 Turn intended behavior into fixtures, tests, manual artifacts, and reproducible checks that let an agent correct itself.
 **Project example:** Exercise 02 Task C — preserved failed mechanisms and automation calibration, then combined runtime measurements, integrity assertions, and repeated learner judgment to pass the Notes interaction gate.
+Exercise 12 Tasks B–C then separated deterministic source/package verification from an
+installed Service-boundary autocomplete UI test and explicitly excluded Notes and human
+usability claims that the latter did not observe.
 
 ## record-decisions — Preserve durable technical judgment
 
@@ -55,15 +58,27 @@ Record consequential decisions, evidence, tradeoffs, and revisit triggers outsid
 
 **Confidence:** Revisit
 Use self-review, independent review, and worktree or parallel-agent judgment without multiplying work unnecessarily.
-**Project example:** a separate Codex chat reviewed the bootstrap while shared project context remained available. Need to practice the recommended guidance of sharing a diff and acceptance criteria and making sure implementers intent is outside of the reviewer's context.
+**Project example:** Exercise 12 Task D used implementing-context self-review to catch an
+inconsistent Swift executable and overstated retained visual evidence after automated
+verification had passed. Exercise 13 must still test whether a genuinely separate review
+context adds unique findings when it receives the acceptance criteria and complete diff
+without the implementer's rationale or self-review conclusions.
 
 ## operate-cli-agents — Direct coding agents through terminal workflows
 
-**Confidence:** Not yet used
+**Confidence:** Demonstrated
 Start, inspect, steer, and safely automate coding-agent sessions from the terminal.
 Choose appropriately between interactive and non-interactive execution; understand
 working directory, repository context, permissions, sandboxing, context boundaries,
 verification output, and the limits of shell-driven access to graphical applications.
+**Project example:** Optional Lab 06 Task A — launched the app-bundled CLI in a read-only
+session, distinguished TUI, persisted task, repository, and configuration state, and
+captured first-run daemon installation plus real navigation limitations.
+Exercise 12 Task B and Lab 06 Task B then compared the same harness through direct,
+interactive, and non-interactive execution, including a narrow approval recovery and an
+honest unattended sandbox failure. Task C and Lab 06 Task C used a CLI-owned AppKit
+pasteboard plus separately authorized desktop automation to test the installed Service
+round trip without mislabeling it as CLI-only, Notes, or human-usability evidence.
 
 ## scale-capabilities — Apply advanced capabilities deliberately
 
