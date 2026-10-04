@@ -1447,3 +1447,50 @@ findings and reran the full verification harness.
 Apply lightweight self-review proportionally to every substantive increment rather than
 making it a separate ceremony. Exercise 13 will compare this implementing-context review
 with a genuinely separate review context and measure whether independence adds findings.
+
+### 2026-10-04 — Exercise 13 — Task A: Independent review
+
+**Skills strengthened**
+
+- `review` — Demonstrated
+- `verify` — Demonstrated
+- `operate-cli-agents` — Demonstrated
+
+**What I did**
+
+Compared the implementing context's self-review with fresh, ephemeral, read-only Codex
+CLI reviews that received the same acceptance criteria and complete diff without the
+implementer's rationale or prior conclusions. I inspected the actual transcript metadata
+and explicitly selected the model for a repeat review instead of relying on model
+self-reporting.
+
+**Evidence**
+
+- Transcript `thread_settings_applied` and `turn_context` records show that the earlier
+  implementing-context self-review used `gpt-5.6-sol` at low reasoning effort.
+- The first independent review uniquely identified that verification reused the stale
+  `/private/tmp/gym-assistant-exercise-09` bundle directory, allowing concurrent runs to
+  interfere. Verification now supplies a unique `gym-assistant-verify.*` build root and
+  guards cleanup to that prefix.
+- A repeat independent review was invoked explicitly with `gpt-6-sol` at medium effort,
+  in a fresh ephemeral thread with a read-only sandbox. It uniquely identified that a
+  failed bundle deletion could still be reported as success. Cleanup now preserves the
+  path until deletion succeeds and propagates failure to the smoke stage.
+- Both independent reviewers avoided the excluded learner records. Their read-only
+  boundary allowed syntax and diff inspection but not the write-producing Swift build.
+- After both fixes, `./scripts/verify` passed 79 tests, all 37 resolver fixtures, all 8
+  identity-review fixtures, and the isolated non-installing bundle check. The generated
+  temporary bundle was confirmed removed.
+- The review comparison is not a controlled model experiment: model, effort, and context
+  changed together. Optional Lab 07 is approved to hold review variables constant while
+  measuring saturation, then compare OpenCode as a separate harness.
+
+**My reflection**
+
+> I learned that a separate review is less anchored by the implementation context than self-review. My self-review used `gpt-5.6-sol` at low effort and found Swift-tool consistency and evidence-wording issues. A later independent review found the shared stale bundle-directory risk, and an explicitly recorded `gpt-6-sol` review at medium effort found that cleanup failure could still be reported as success. These reviews were complementary, but the model comparison is not controlled because context, model, and reasoning effort changed together. In Optional Lab 07, I want to measure review saturation by holding those variables constant, classifying new findings by value, and stopping after a small review budget or two consecutive runs with no new actionable findings.
+
+**Next time / revisit**
+
+Use Exercise 13 Task B to practice bounded parallel worktrees. Prepare Optional Lab 07 as
+a reusable lab from clean `main`; include both controlled review-saturation trials and an
+OpenCode comparison, and keep it independent from numbered-exercise progress.
