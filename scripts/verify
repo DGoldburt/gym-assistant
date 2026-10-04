@@ -11,6 +11,25 @@ export XDG_CACHE_HOME="$repo_dir/.build/verify-cache"
 
 stage_number=0
 stage_count=4
+verify_build_root=""
+
+cleanup_verify_bundle() {
+    case "$verify_build_root" in
+        /private/tmp/gym-assistant-verify.*)
+            /bin/rm -rf -- "$verify_build_root" || return
+            verify_build_root=""
+            ;;
+        "")
+            ;;
+        *)
+            printf 'Refusing to remove unexpected verification path: %s\n' \
+                "$verify_build_root" >&2
+            return 1
+            ;;
+    esac
+}
+
+trap cleanup_verify_bundle EXIT
 
 print_boundaries() {
     printf 'Not performed: app installation or Services registration.\n'
@@ -49,9 +68,11 @@ identity_review_fixtures() {
 }
 
 bundle_smoke() {
-    SWIFT_BIN="$swift_bin" "$repo_dir/app/notes-service/build.sh" || return
+    verify_build_root="$(mktemp -d /private/tmp/gym-assistant-verify.XXXXXX)" || return
+    BUILD_ROOT="$verify_build_root" SWIFT_BIN="$swift_bin" \
+        "$repo_dir/app/notes-service/build.sh" || return
 
-    bundle="/private/tmp/gym-assistant-exercise-09/Gym Assistant.app"
+    bundle="$verify_build_root/Gym Assistant.app"
     contents="$bundle/Contents"
 
     test -x "$contents/MacOS/GymAssistantNotesService" || return
@@ -61,6 +82,7 @@ bundle_smoke() {
     /usr/bin/plutil -lint "$contents/Info.plist" || return
     test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:0:NSMessage' "$contents/Info.plist")" = "autocompleteExercise" || return
     test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:1:NSMessage' "$contents/Info.plist")" = "reviewExercise" || return
+    cleanup_verify_bundle || return
 }
 
 cd "$repo_dir" || exit 1

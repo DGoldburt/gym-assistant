@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 13
-Current task: Task A — Independent review
+Current task: Task B — Parallel worktrees
 Current task state: not started
-Task completion condition: pass Exercise 13 Task A `STOP / REVIEW`
+Task completion condition: pass Exercise 13 Task B `STOP / REVIEW — Parallel work and merge judgment`
 Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D
-Remaining tasks: Exercise 13 — Tasks A–B
-Most recent checkpoint: Exercise 12 Task D `STOP / REVIEW — Self-review evidence` (passed)
+Remaining tasks: Exercise 13 — Task B
+Most recent checkpoint: Exercise 13 Task A `STOP / REVIEW` (passed)
 Relevant skills: review, collaborate, verify, operate-cli-agents
 
 ## Completed
@@ -149,6 +149,18 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
   evidence. Both were corrected; a controlled tool failure and the complete four-stage
   rerun passed their expected outcomes. Self-review is now treated as a proportional
   definition-of-done activity rather than a standalone ceremony for ordinary increments.
+- Exercise 13 Task A compared that implementing-context self-review (`gpt-5.6-sol`, low
+  effort) with fresh, ephemeral, read-only CLI review. Independent reviews uniquely found
+  a shared temporary-bundle concurrency/staleness hazard and cleanup failure that could
+  be reported as success. Both were fixed; 79 tests, 37 resolver fixtures, 8 identity-
+  review fixtures, and the isolated non-installing bundle check pass, with temporary
+  output confirmed removed. A recorded `gpt-6-sol` medium-effort rerun added useful
+  evidence but was not a controlled model comparison because context and effort also
+  differed.
+- Optional Lab 07 is approved to test both review saturation and OpenCode as a separate
+  harness. Its reusable curriculum artifact must be prepared from clean `main`; the lab
+  will freeze prompt, model, effort, permissions, and code for repeated-review trials,
+  classify marginal findings, and then compare OpenCode without advancing Exercise 13.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -163,8 +175,6 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
 
 ## Next action
 
-Complete the Exercise 12 branch review and merge lifecycle, then begin Exercise 13 Task A.
-Choose a recently completed feature, preserve the implementing context's self-review, and
-start a genuinely separate CLI review with the same acceptance criteria, complete diff,
-repository instructions, and verification evidence but without the implementer's
-rationale or self-review conclusions.
+Begin Exercise 13 Task B by selecting 2–3 genuinely independent, small enhancements.
+Define each worktree's branch, working directory, allowed files, verification contract,
+and stopping condition before launching parallel CLI sessions.

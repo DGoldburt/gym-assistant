@@ -56,13 +56,14 @@ Record consequential decisions, evidence, tradeoffs, and revisit triggers outsid
 
 ## review — Challenge work from more than one perspective
 
-**Confidence:** Revisit
+**Confidence:** Demonstrated
 Use self-review, independent review, and worktree or parallel-agent judgment without multiplying work unnecessarily.
 **Project example:** Exercise 12 Task D used implementing-context self-review to catch an
 inconsistent Swift executable and overstated retained visual evidence after automated
-verification had passed. Exercise 13 must still test whether a genuinely separate review
-context adds unique findings when it receives the acceptance criteria and complete diff
-without the implementer's rationale or self-review conclusions.
+verification had passed. Exercise 13 Task A then gave fresh, ephemeral, read-only CLI
+reviewers the acceptance criteria and complete diff without the implementer's rationale.
+They uniquely found a shared temporary-bundle concurrency hazard and a cleanup failure
+that could be reported as success; both were fixed and the full harness passed again.
 
 ## operate-cli-agents — Direct coding agents through terminal workflows
 
