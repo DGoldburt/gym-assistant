@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
+source "$repo_dir/scripts/verify"
+stage_count=1
+
+test_root="$(mktemp -d /private/tmp/gym-assistant-verify.XXXXXX)"
+cleanup_test_root() {
+    case "$test_root" in
+        /private/tmp/gym-assistant-verify.*) /bin/rm -rf -- "$test_root" ;;
+    esac
+}
+trap cleanup_test_root EXIT
+
+if failure_output="$(
+    {
+        verify_build_root="$test_root"
+        remove_verify_bundle() { return 71; }
+        run_stage "Non-installing app-bundle smoke check" cleanup_verify_bundle
+        printf 'VERIFICATION PASSED\n'
+    } 2>&1
+)"; then
+    printf 'Expected cleanup failure to stop verification.\n' >&2
+    exit 1
+fi
+
+[[ "$failure_output" != *"VERIFICATION PASSED"* ]]
+[[ "$failure_output" == *"FAIL: Temporary verification bundle cleanup:"* ]]
+[[ "$failure_output" == *"FAIL: Non-installing app-bundle smoke check (exit 1)"* ]]
+[[ -d "$test_root" ]]
+
+verify_build_root="$test_root"
+run_stage "Non-installing app-bundle smoke check" cleanup_verify_bundle
+[[ ! -e "$test_root" ]]
+[[ -z "$verify_build_root" ]]
+
+printf 'PASS: cleanup failure stops verification; ordinary cleanup removes the temporary bundle.\n'
