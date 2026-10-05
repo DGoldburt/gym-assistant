@@ -19,3 +19,4 @@ Available labs:
 - `04-stable-before-scheduled.md`
 - `05-documentation-gardening.md`
 - `06-codex-cli-and-notes-ui.md`
+- `07-review-saturation-and-opencode.md`
