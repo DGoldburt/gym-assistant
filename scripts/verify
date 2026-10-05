@@ -10,13 +10,17 @@ export SWIFTPM_MODULECACHE_OVERRIDE="$CLANG_MODULE_CACHE_PATH"
 export XDG_CACHE_HOME="$repo_dir/.build/verify-cache"
 
 stage_number=0
-stage_count=4
+stage_count=5
 verify_build_root=""
 
 cleanup_verify_bundle() {
     case "$verify_build_root" in
         /private/tmp/gym-assistant-verify.*)
-            /bin/rm -rf -- "$verify_build_root" || return
+            if ! remove_verify_bundle "$verify_build_root"; then
+                printf 'FAIL: Temporary verification bundle cleanup: %s\n' \
+                    "$verify_build_root" >&2
+                return 1
+            fi
             verify_build_root=""
             ;;
         "")
@@ -29,7 +33,9 @@ cleanup_verify_bundle() {
     esac
 }
 
-trap cleanup_verify_bundle EXIT
+remove_verify_bundle() {
+    /bin/rm -rf -- "$1"
+}
 
 print_boundaries() {
     printf 'Not performed: app installation or Services registration.\n'
@@ -85,12 +91,20 @@ bundle_smoke() {
     cleanup_verify_bundle || return
 }
 
+# Keep the cleanup and stage functions available to their isolated regression.
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return 0
+fi
+
+trap cleanup_verify_bundle EXIT
+
 cd "$repo_dir" || exit 1
 mkdir -p "$CLANG_MODULE_CACHE_PATH" "$XDG_CACHE_HOME" || exit 1
 
 run_stage "Swift package tests" package_tests
 run_stage "Resolver fixture contract" resolver_fixtures
 run_stage "Identity-review fixture contract" identity_review_fixtures
+run_stage "Verification bundle cleanup regression" bash "$repo_dir/scripts/test-verify-cleanup"
 run_stage "Non-installing app-bundle smoke check" bundle_smoke
 
 printf '\nVERIFICATION PASSED: %s deterministic stages completed.\n' "$stage_count"

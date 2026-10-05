@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 13
-Current task: Task B — Parallel worktrees
+Current exercise: 14
+Current task: Task — Future client-history architecture design
 Current task state: not started
-Task completion condition: pass Exercise 13 Task B `STOP / REVIEW — Parallel work and merge judgment`
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D
-Remaining tasks: Exercise 13 — Task B
-Most recent checkpoint: Exercise 13 Task A `STOP / REVIEW` (passed)
-Relevant skills: review, collaborate, verify, operate-cli-agents
+Task completion condition: pass Exercise 14 `STOP / REVIEW` and approve the final reflection
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D; Exercise 13 — Tasks A–B
+Remaining tasks: Exercise 14 — future client-history architecture design and final reflection
+Most recent checkpoint: Exercise 13 Task B `STOP / REVIEW — Parallel work and merge judgment` (passed)
+Relevant skills: frame-work, plan, record-decisions
 
 ## Completed
 
@@ -23,7 +23,7 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
 - [x] 10 — Exercise identity review and personal-library import
 - [x] 11 — Field feedback loops and resolver improvement
 - [x] 12 — Verification harness and agentic manual testing
-- [ ] 13 — Independent review and worktrees
+- [x] 13 — Independent review and worktrees
 - [ ] 14 — Future client-history architecture (design only)
 
 ## Planned product-extension exercises
@@ -37,8 +37,11 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
 - The repository is initialized locally with repository-local author `Dan Goldburt <8260344+DGoldburt@users.noreply.github.com>`.
 - Private SSH remote `origin` is `git@github.com:DGoldburt/gym-assistant.git`;
   GitHub CLI 2.98.0 is installed through the local Miniconda environment.
-- Local and remote `main` contain learner-free reusable history through branch-model update `2b4dbe1`. The immutable tag `tutorial-start-v1` still resolves to the original clean root `4161f6f`.
-- Local and remote `learner/main` contain merged pull-request commit `feb2e0c` and are the persistent integration target for personal tutorial progress.
+- Local and remote `main` contain learner-free reusable history through Optional Lab 07
+  commit `e4c0d2b`. The immutable tag `tutorial-start-v1` still resolves to the original
+  clean root `4161f6f`.
+- Local and remote `learner/main` contain reusable synchronization commit `851de6d` and
+  remain the persistent integration target for personal tutorial progress.
 - Pull request #1 merged the reviewed `tutorial/exercise-01` state into `learner/main`; local synchronization was verified with a clean working tree.
 - `tutorial/exercise-02` was pushed and merged into `learner/main` as `968f6c7`; local and remote `learner/main` were synchronized before creating local `tutorial/exercise-03` from that exact commit. Reusable `main` remains learner-free at `2b4dbe1`.
 - Exercise 02 Task A verified macOS 26.6, Xcode 26.6, Swift 6.3.3, the selected full-Xcode developer directory, and the macOS SDK without installing or creating anything.
@@ -157,10 +160,25 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
   output confirmed removed. A recorded `gpt-6-sol` medium-effort rerun added useful
   evidence but was not a controlled model comparison because context and effort also
   differed.
-- Optional Lab 07 is approved to test both review saturation and OpenCode as a separate
-  harness. Its reusable curriculum artifact must be prepared from clean `main`; the lab
-  will freeze prompt, model, effort, permissions, and code for repeated-review trials,
-  classify marginal findings, and then compare OpenCode without advancing Exercise 13.
+- Optional Lab 07 is published from clean reusable `main` to test both review saturation
+  and OpenCode as a separate harness. It freezes prompt, model, effort, permissions, and
+  code for repeated-review trials, classifies marginal findings, and then compares
+  OpenCode without advancing a numbered exercise.
+- Exercise 13 Task B supervised three independent worktrees for an interactive editable-
+  query design pass, reusable Optional Lab 07, and an unattended cleanup regression.
+  The workstreams had explicit file scopes, verification contracts, and stopping
+  conditions; none relied on another worktree's uncommitted state. The learner retained
+  the design for later, published Lab 07 through reusable `main`, and approved the
+  cleanup regression for the learner branch.
+- Standalone CLI evidence showed that unattended `codex exec` transcripts persisted and
+  appeared in the CLI Agent Command Center but not as Desktop or mobile tiles. The CLI
+  made thread switching and long-transcript navigation convenient, while Desktop
+  remained preferable for visual diff review. Worktree separation preserved Git state;
+  actual confinement still depended on workspace, sandbox, rules, and approvals.
+- The five-stage verification harness now includes a deterministic cleanup-failure
+  regression. Its integrated run passed 79 package tests, 37 resolver fixtures, eight
+  identity-review fixtures, the cleanup regression, and the non-installing bundle smoke
+  check without leaving its temporary bundle.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -169,12 +187,13 @@ Relevant skills: review, collaborate, verify, operate-cli-agents
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-03, Exercise 12 Task D
+- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-05, Exercise 13 Task B
 - Completed durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; evidence is under `spikes/notes-interaction/`
 - Accepted architecture decision: `docs/decisions/001-notes-integration.md`
 
 ## Next action
 
-Begin Exercise 13 Task B by selecting 2–3 genuinely independent, small enhancements.
-Define each worktree's branch, working directory, allowed files, verification contract,
-and stopping condition before launching parallel CLI sessions.
+Open Exercise 14 and begin the design-only future client-history architecture task.
+Propose the smallest model that preserves stable links to canonical `Exercise.id`, and
+stop before implementing application code, migrations, client records, performance
+records, or load recommendations.
