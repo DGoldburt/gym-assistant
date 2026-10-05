@@ -43,7 +43,11 @@
 
 - Prepare each approved shared-harness, curriculum, or product-documentation update in a clean worktree based on `main`. Inspect its complete candidate diff for learner progress, reflections, identity, private links, credentials, and unrelated files before committing or pushing.
 - Use a commit boundary for one coherent approved update, not mechanically for every conversation. Do not commit rejected drafts or incomplete exploration. If an approved update remains incomplete at handoff, report its worktree path, current status, and remaining work so it is not mistaken for finished work.
-- Once reviewed, commit and push the reusable update promptly. Then synchronize `learner/main` and the active exercise branch with the new `main` before retaining or adding dependent learner state.
+- Once reviewed, commit and push the reusable update promptly. Then synchronize branch ancestry in this order before retaining or adding dependent learner state:
+  1. merge or fast-forward the updated reusable `main` into `learner/main`;
+  2. update the active `tutorial/exercise-NN` branch from that refreshed `learner/main`, rather than independently merging the same `main` update into both diverged branches; and
+  3. verify that `git merge-base --all learner/main tutorial/exercise-NN` yields the one intended base, then inspect the complete `learner/main...tutorial/exercise-NN` diff before pushing or opening a pull request.
+- If synchronization produces multiple merge bases or makes previously merged learner history appear new, stop rather than merging the misleading diff. Rebuild a clean integration branch from current `learner/main`, replay only the approved exercise commits, verify it, and replace the affected exercise branch.
 
 ## Durable context map
 
