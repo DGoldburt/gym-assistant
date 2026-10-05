@@ -37,7 +37,11 @@ Define what the agent may do, what requires explicit approval, and when it must 
 
 **Confidence:** Demonstrated
 Use commits, branches, remotes, pull requests, reviews, merges, and synchronization to make work inspectable.
-**Project example:** Exercise 01 Tasks B and D — published a clean starter separately, established `learner/main`, and inspected a learner-only pull request before merge.
+**Project example:** Exercise 01 Tasks B and D — published a clean starter separately,
+established `learner/main`, and inspected a learner-only pull request before merge.
+Exercise 13 Task B then supervised three isolated worktrees, made independent retention
+decisions, and integrated reusable curriculum separately from learner-only regression
+work.
 
 ## verify — Build an evidence-producing delivery loop
 
@@ -80,6 +84,9 @@ interactive, and non-interactive execution, including a narrow approval recovery
 honest unattended sandbox failure. Task C and Lab 06 Task C used a CLI-owned AppKit
 pasteboard plus separately authorized desktop automation to test the installed Service
 round trip without mislabeling it as CLI-only, Notes, or human-usability evidence.
+Exercise 13 Task B compared interactive standalone CLI use with unattended `codex exec`
+workstreams, recorded their transcript-discovery and diff-review limitations, and
+separated worktree Git isolation from sandbox and approval boundaries.
 
 ## scale-capabilities — Apply advanced capabilities deliberately
 
