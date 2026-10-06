@@ -48,6 +48,7 @@
   2. update the active `tutorial/exercise-NN` branch from that refreshed `learner/main`, rather than independently merging the same `main` update into both diverged branches; and
   3. verify that `git merge-base --all learner/main tutorial/exercise-NN` yields the one intended base, then inspect the complete `learner/main...tutorial/exercise-NN` diff before pushing or opening a pull request.
 - If synchronization produces multiple merge bases or makes previously merged learner history appear new, stop rather than merging the misleading diff. Rebuild a clean integration branch from current `learner/main`, replay only the approved exercise commits, verify it, and replace the affected exercise branch.
+- After a feature, tutorial exercise, or temporary workstream is merged and its target branch is synchronized, close out the source branch: delete its local and remote refs unless it is still needed by an active worktree or explicitly retained as recovery work.
 
 ## Durable context map
 
