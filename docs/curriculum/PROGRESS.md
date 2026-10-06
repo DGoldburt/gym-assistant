@@ -1,12 +1,12 @@
 # Tutorial Progress
 
 Current exercise: 14
-Current task: Task — Future client-history architecture design
+Current task: Final retrospective and capstone framing
 Current task state: not started
-Task completion condition: pass Exercise 14 `STOP / REVIEW` and approve the final reflection
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D; Exercise 13 — Tasks A–B
-Remaining tasks: Exercise 14 — future client-history architecture design and final reflection
-Most recent checkpoint: Exercise 13 Task B `STOP / REVIEW — Parallel work and merge judgment` (passed)
+Task completion condition: answer the seven final-retrospective questions, approve the drafted retrospective and justified learner-record updates, then frame the bounded capstone
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D; Exercise 13 — Tasks A–B; Exercise 14 — future client-history architecture design
+Remaining tasks: Exercise 14 — final retrospective and capstone framing
+Most recent checkpoint: Exercise 14 `STOP / REVIEW — Future client-history architecture` (passed)
 Relevant skills: frame-work, plan, record-decisions
 
 ## Completed
@@ -179,6 +179,16 @@ Relevant skills: frame-work, plan, record-decisions
   regression. Its integrated run passed 79 package tests, 37 resolver fixtures, eight
   identity-review fixtures, the cleanup regression, and the non-installing bundle smoke
   check without leaving its temporary bundle.
+- Exercise 14 retained two explicitly proposed, revisable, non-implementing future
+  designs rather than prematurely accepting an ADR. Programmed sessions may be undated
+  drafts; once dated, they become presumed history after `sessionDate`, and later edits
+  correct the best-known historical account. Zero-to-many client links support individual
+  and shared class history without claiming attendance.
+- The adjacent multi-session design groups concrete sessions into copy-on-use programs,
+  preserves alternating days and explicit progressions, and prevents later source edits
+  from rewriting copied or historical sessions. Draft-program and historical-correction
+  UI remain unimplemented product-design work; the current UI still covers only exercise
+  insertion and exercise-library management.
 - Exercise 01 Tasks A–E evidence and approved reflections are recorded in `LEARNING_LOG.md`.
 - Task C selected a deliberate hybrid from a regular-prompt plan, a Plan-mode plan, and an isolated regular-prompt control without `PLANS.md`. The approved plan requires a lightweight keyboard interaction, separate cold/warm gates, system-latency measurement excluding human decision time, and a stop before product implementation.
 - The temporary post–Task-A root and backup branch were deleted after restoration; obsolete commit `68ecdb2` was pruned and never pushed.
@@ -193,7 +203,7 @@ Relevant skills: frame-work, plan, record-decisions
 
 ## Next action
 
-Open Exercise 14 and begin the design-only future client-history architecture task.
-Propose the smallest model that preserves stable links to canonical `Exercise.id`, and
-stop before implementing application code, migrations, client records, performance
-records, or load recommendations.
+Answer Exercise 14's seven final-retrospective questions in your own words. Use the
+answers to draft one concise first-person retrospective grounded in selected learning
+artifacts, then review and approve the retrospective and justified learner-record
+updates before framing a real, bounded capstone product increment.

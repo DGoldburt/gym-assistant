@@ -1551,3 +1551,54 @@ Prefer Desktop-managed worktrees when visual diff review and mobile steering dom
 Use unattended `codex exec` for bounded background jobs whose worktree, thread ID, and
 verification evidence are captured explicitly. Run Optional Lab 07 separately to study
 review saturation and OpenCode without changing numbered-exercise progress.
+
+### 2026-10-06 — Exercise 14 — Future client-history architecture design
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `plan` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Designed future programmed-session history and an adjacent multi-session program model
+without implementing either capability. Tested the proposals against prior programming-
+selection research, the product Opportunity Solution Tree, photographed workout logs,
+handwritten class sessions, and a tabbed multi-cycle program.
+
+**Evidence**
+
+- `FUTURE_CLIENT_HISTORY_MODEL.md` preserves canonical `Exercise.id` references,
+  different sets and loads, explicit units and assistance, unilateral work, faithful
+  prescription text, photographed-source provenance, and zero-to-many client links.
+- Evidence from the learner's actual workflow simplified parallel planned/performed
+  records into one mutable programmed session: an undated session is a draft, a dated
+  session is presumed performed after `sessionDate`, and a later edit corrects the best-
+  known historical account.
+- The design records a future UI distinction between draft editing and historical
+  correction while explicitly acknowledging that the current product has only exercise-
+  insertion and exercise-library-management interfaces.
+- `FUTURE_PROGRAM_MODEL.md` groups concrete sessions into multi-session programs,
+  represents alternating Session A/Session B progressions, preserves cycle/week/day
+  organization without premature hierarchy tables, and uses copy-on-use snapshots so
+  later source edits cannot rewrite history.
+- Both documents remain explicitly proposed, revisable, and non-implementing. The diff
+  contains no application code, migration, client/session data, program UI, history UI,
+  or load recommendation implementation.
+
+**My reflection**
+
+> I learned that early in design, explicitly proposed, revisable, and non-implementing `FUTURE_*.md` documents can preserve plausible directions outside the chat without granting them the authority or decision-history requirements of an ADR. I used this approach for client history and multi-session programming. Evidence from my actual workflow—that programmed sessions are presumed performed after their date unless I correct them—simplified the proposed model, demonstrating why consequential design should remain revisable while evidence accumulates.
+>
+> When implementation approaches, the accepted architectural choices can be extracted into an ADR rather than necessarily promoting the future design wholesale. The ADR records the chosen architecture, alternatives, and consequences; implementation still requires an approved product slice and ExecPlan. The concurrent library-audit workstream began closer to implementation, so it drafted a proposed ExecPlan and identified the ADR it will require without first needing a separate future-design document.
+>
+> I also learned that an ExecPlan is not implementation authority until I explicitly approve it and its preceding product and architectural decisions are settled. I may ultimately use less planning to increase product-development velocity, but I am deliberately learning the full planning discipline first. After the tutorial capstone, I can calibrate the amount of planning to each change’s risk and complexity.
+
+**Next time / revisit**
+
+Use a future design when evidence is still shaping a domain, an ADR when an enduring
+choice must guide implementation, and an ExecPlan when an approved complex increment is
+ready to be implemented and verified. Revisit the presumed-completion tradeoff before
+using history for consequential load recommendations, and design the draft-program and
+historical-correction interactions in their own approved product slice.
