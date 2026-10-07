@@ -1602,3 +1602,42 @@ choice must guide implementation, and an ExecPlan when an approved complex incre
 ready to be implemented and verified. Revisit the presumed-completion tradeoff before
 using history for consequential load recommendations, and design the draft-program and
 historical-correction interactions in their own approved product slice.
+
+### 2026-10-06 — Exercise 14 — Final retrospective and capstone framing
+
+**Skills consolidated**
+
+- `frame-work` — Demonstrated
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `collaborate` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**Evidence**
+
+- Exercise 04 reduced the exercise model to stable identity, one preferred owned name,
+  and confirmed aliases while preserving future options without implementing them.
+- Exercises 05–07 used resolver fixtures as durable ground truth, began with a
+  deliberately failing harness, and separated deterministic identity evidence from
+  fuzzy suggestions requiring human confirmation.
+- Exercise 12 established a one-command verification harness with named, actionable
+  failures and explicit boundaries around what its automated evidence could claim.
+- Exercise 13 used isolated worktrees and independent review while recording that Git
+  separation does not itself enforce agent confinement.
+- Exercise 14 kept future client history and multi-session programming revisable until
+  a bounded product slice, ADR-level decisions, and an ExecPlan are explicitly approved.
+
+**My reflection**
+
+> I learned to frame an effective Codex task with a bounded scope, explicit approval boundary, known workspace and worktree, verification plan, and definition of done. Durable project-wide expectations belong in `AGENTS.md`; this project uses it to preserve Git policy, product constraints, and the one-task-at-a-time tutorial workflow rather than repeatedly relying on prompts.
+>
+> I learned to treat verification as an evidence-producing system. A verification harness gives the agent one reproducible command that runs the relevant checks and reports actionable failures. Resolver fixtures preserve ground truth about matching, exclusions, and reviewable ambiguity; the deliberately failing fixture harness made missing capabilities visible and then measured improvement without allowing pathological identity merges. Fuzzy matching can help find an exercise, but it must not establish identity silently because a wrong identity relationship is consequential and difficult to reverse.
+>
+> I learned to use worktrees to keep concurrent workstreams separate and inspectable, while remembering that worktree separation does not itself constrain an agent and that integration is where conflicting changes must be reconciled. Across the product, the most important architectural choices were the stable exercise-and-alias identity model and the layered resolver: deterministic normalization and confirmed aliases establish known identity, while fuzzy scoring produces reviewable candidates. Those decisions enabled autocomplete, import review, library hygiene, and future history to share a coherent foundation without giving search or fuzzy matching authority to change identity.
+
+**Capstone handoff**
+
+Use the isolated `feature/client-history` workstream to define the smallest approved
+client-history product slice, settle its ADR-level decisions, and prepare an ExecPlan
+before implementation. This framing preserves momentum without pre-approving the
+feature design or broad client-history implementation.

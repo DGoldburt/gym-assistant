@@ -1,13 +1,13 @@
 # Tutorial Progress
 
-Current exercise: 14
-Current task: Final retrospective and capstone framing
-Current task state: not started
-Task completion condition: answer the seven final-retrospective questions, approve the drafted retrospective and justified learner-record updates, then frame the bounded capstone
-Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D; Exercise 13 — Tasks A–B; Exercise 14 — future client-history architecture design
-Remaining tasks: Exercise 14 — final retrospective and capstone framing
-Most recent checkpoint: Exercise 14 `STOP / REVIEW — Future client-history architecture` (passed)
-Relevant skills: frame-work, plan, record-decisions
+Current exercise: Numbered tutorial complete
+Current task: Bounded capstone handoff
+Current task state: complete
+Task completion condition: Exercise 14 retrospective and learner-record updates approved; capstone continuation framed without pre-approving implementation
+Completed tasks: Exercise 01 — Tasks A–E; Exercise 02 — Tasks A–C; Exercise 03 — architecture decision; Exercise 04 — Tasks A–B; Exercise 05 — Tasks A–B; Exercise 06 — deterministic normalization and alias lookup; Exercise 07 — Tasks A–C; Exercise 08 — Tasks A–C; Exercise 09 — Tasks A–C; Exercise 10 — Tasks A–C; Exercise 11 — Tasks A–D; Exercise 12 — Tasks A–D; Exercise 13 — Tasks A–B; Exercise 14 — future client-history architecture design and final retrospective
+Remaining tasks: None in the numbered tutorial
+Most recent checkpoint: Exercise 14 final retrospective and capstone framing (passed)
+Relevant skills: frame-work, verify, set-boundaries, collaborate, record-decisions
 
 ## Completed
 
@@ -24,7 +24,7 @@ Relevant skills: frame-work, plan, record-decisions
 - [x] 11 — Field feedback loops and resolver improvement
 - [x] 12 — Verification harness and agentic manual testing
 - [x] 13 — Independent review and worktrees
-- [ ] 14 — Future client-history architecture (design only)
+- [x] 14 — Future client-history architecture (design only)
 
 ## Planned product-extension exercises
 
@@ -197,13 +197,13 @@ Relevant skills: frame-work, plan, record-decisions
 
 - Skill confidence: `docs/curriculum/SKILLS.md`
 - Agentic-AI context and outside ideas: `docs/curriculum/AGENTIC_AI_MAP.md`
-- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-05, Exercise 13 Task B
+- Approved learning evidence: `LEARNING_LOG.md` — through 2026-10-06, Exercise 14 final retrospective
 - Completed durable plan: `docs/exec-plans/PLAN-001-notes-interaction-spike.md`; evidence is under `spikes/notes-interaction/`
 - Accepted architecture decision: `docs/decisions/001-notes-integration.md`
 
 ## Next action
 
-Answer Exercise 14's seven final-retrospective questions in your own words. Use the
-answers to draft one concise first-person retrospective grounded in selected learning
-artifacts, then review and approve the retrospective and justified learner-record
-updates before framing a real, bounded capstone product increment.
+Use the isolated `feature/client-history` workstream to define the smallest approved
+client-history product slice, settle its ADR-level decisions, and prepare an ExecPlan
+before implementation. This is the bounded capstone handoff, not prior approval of its
+feature design, success criteria, data migration, or implementation.
