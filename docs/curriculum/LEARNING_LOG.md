@@ -1551,3 +1551,93 @@ Prefer Desktop-managed worktrees when visual diff review and mobile steering dom
 Use unattended `codex exec` for bounded background jobs whose worktree, thread ID, and
 verification evidence are captured explicitly. Run Optional Lab 07 separately to study
 review saturation and OpenCode without changing numbered-exercise progress.
+
+### 2026-10-06 — Exercise 14 — Future client-history architecture design
+
+**Skills strengthened**
+
+- `frame-work` — Demonstrated
+- `plan` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**What I did**
+
+Designed future programmed-session history and an adjacent multi-session program model
+without implementing either capability. Tested the proposals against prior programming-
+selection research, the product Opportunity Solution Tree, photographed workout logs,
+handwritten class sessions, and a tabbed multi-cycle program.
+
+**Evidence**
+
+- `FUTURE_CLIENT_HISTORY_MODEL.md` preserves canonical `Exercise.id` references,
+  different sets and loads, explicit units and assistance, unilateral work, faithful
+  prescription text, photographed-source provenance, and zero-to-many client links.
+- Evidence from the learner's actual workflow simplified parallel planned/performed
+  records into one mutable programmed session: an undated session is a draft, a dated
+  session is presumed performed after `sessionDate`, and a later edit corrects the best-
+  known historical account.
+- The design records a future UI distinction between draft editing and historical
+  correction while explicitly acknowledging that the current product has only exercise-
+  insertion and exercise-library-management interfaces.
+- `FUTURE_PROGRAM_MODEL.md` groups concrete sessions into multi-session programs,
+  represents alternating Session A/Session B progressions, preserves cycle/week/day
+  organization without premature hierarchy tables, and uses copy-on-use snapshots so
+  later source edits cannot rewrite history.
+- Both documents remain explicitly proposed, revisable, and non-implementing. The diff
+  contains no application code, migration, client/session data, program UI, history UI,
+  or load recommendation implementation.
+
+**My reflection**
+
+> I learned that early in design, explicitly proposed, revisable, and non-implementing `FUTURE_*.md` documents can preserve plausible directions outside the chat without granting them the authority or decision-history requirements of an ADR. I used this approach for client history and multi-session programming. Evidence from my actual workflow—that programmed sessions are presumed performed after their date unless I correct them—simplified the proposed model, demonstrating why consequential design should remain revisable while evidence accumulates.
+>
+> When implementation approaches, the accepted architectural choices can be extracted into an ADR rather than necessarily promoting the future design wholesale. The ADR records the chosen architecture, alternatives, and consequences; implementation still requires an approved product slice and ExecPlan. The concurrent library-audit workstream began closer to implementation, so it drafted a proposed ExecPlan and identified the ADR it will require without first needing a separate future-design document.
+>
+> I also learned that an ExecPlan is not implementation authority until I explicitly approve it and its preceding product and architectural decisions are settled. I may ultimately use less planning to increase product-development velocity, but I am deliberately learning the full planning discipline first. After the tutorial capstone, I can calibrate the amount of planning to each change’s risk and complexity.
+
+**Next time / revisit**
+
+Use a future design when evidence is still shaping a domain, an ADR when an enduring
+choice must guide implementation, and an ExecPlan when an approved complex increment is
+ready to be implemented and verified. Revisit the presumed-completion tradeoff before
+using history for consequential load recommendations, and design the draft-program and
+historical-correction interactions in their own approved product slice.
+
+### 2026-10-06 — Exercise 14 — Final retrospective and capstone framing
+
+**Skills consolidated**
+
+- `frame-work` — Demonstrated
+- `verify` — Demonstrated
+- `set-boundaries` — Demonstrated
+- `collaborate` — Demonstrated
+- `record-decisions` — Demonstrated
+
+**Evidence**
+
+- Exercise 04 reduced the exercise model to stable identity, one preferred owned name,
+  and confirmed aliases while preserving future options without implementing them.
+- Exercises 05–07 used resolver fixtures as durable ground truth, began with a
+  deliberately failing harness, and separated deterministic identity evidence from
+  fuzzy suggestions requiring human confirmation.
+- Exercise 12 established a one-command verification harness with named, actionable
+  failures and explicit boundaries around what its automated evidence could claim.
+- Exercise 13 used isolated worktrees and independent review while recording that Git
+  separation does not itself enforce agent confinement.
+- Exercise 14 kept future client history and multi-session programming revisable until
+  a bounded product slice, ADR-level decisions, and an ExecPlan are explicitly approved.
+
+**My reflection**
+
+> I learned to frame an effective Codex task with a bounded scope, explicit approval boundary, known workspace and worktree, verification plan, and definition of done. Durable project-wide expectations belong in `AGENTS.md`; this project uses it to preserve Git policy, product constraints, and the one-task-at-a-time tutorial workflow rather than repeatedly relying on prompts.
+>
+> I learned to treat verification as an evidence-producing system. A verification harness gives the agent one reproducible command that runs the relevant checks and reports actionable failures. Resolver fixtures preserve ground truth about matching, exclusions, and reviewable ambiguity; the deliberately failing fixture harness made missing capabilities visible and then measured improvement without allowing pathological identity merges. Fuzzy matching can help find an exercise, but it must not establish identity silently because a wrong identity relationship is consequential and difficult to reverse.
+>
+> I learned to use worktrees to keep concurrent workstreams separate and inspectable, while remembering that worktree separation does not itself constrain an agent and that integration is where conflicting changes must be reconciled. Across the product, the most important architectural choices were the stable exercise-and-alias identity model and the layered resolver: deterministic normalization and confirmed aliases establish known identity, while fuzzy scoring produces reviewable candidates. Those decisions enabled autocomplete, import review, library hygiene, and future history to share a coherent foundation without giving search or fuzzy matching authority to change identity.
+
+**Capstone handoff**
+
+Use the isolated `feature/client-history` workstream to define the smallest approved
+client-history product slice, settle its ADR-level decisions, and prepare an ExecPlan
+before implementation. This framing preserves momentum without pre-approving the
+feature design or broad client-history implementation.
