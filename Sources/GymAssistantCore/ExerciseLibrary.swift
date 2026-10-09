@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 
-public struct ExerciseID: Hashable, Sendable, RawRepresentable {
+public struct ExerciseID: Hashable, Sendable, RawRepresentable, Codable {
     public let rawValue: UUID
 
     public init(rawValue: UUID) {
@@ -9,7 +9,7 @@ public struct ExerciseID: Hashable, Sendable, RawRepresentable {
     }
 }
 
-public struct ExerciseNameID: Hashable, Sendable, RawRepresentable {
+public struct ExerciseNameID: Hashable, Sendable, RawRepresentable, Codable {
     public let rawValue: UUID
 
     public init(rawValue: UUID) {
@@ -17,20 +17,20 @@ public struct ExerciseNameID: Hashable, Sendable, RawRepresentable {
     }
 }
 
-public enum ExerciseNameProvenance: String, Sendable {
+public enum ExerciseNameProvenance: String, Sendable, Codable {
     case systemSeeded
     case userConfirmed
     case importedConfirmed
 }
 
-public struct Exercise: Equatable, Sendable {
+public struct Exercise: Equatable, Sendable, Codable {
     public let id: ExerciseID
     public let preferredNameID: ExerciseNameID
     public let createdAt: Date
     public let updatedAt: Date
 }
 
-public struct ExerciseName: Equatable, Sendable {
+public struct ExerciseName: Equatable, Sendable, Codable {
     public let id: ExerciseNameID
     public let exerciseID: ExerciseID
     public let text: String
@@ -87,8 +87,14 @@ public final class ExerciseLibrary {
     private var database: OpaquePointer?
     private let normalizer: BasicExerciseNameNormalizer
 
-    public init(databaseURL: URL, normalizer: BasicExerciseNameNormalizer = .init()) throws {
+    public convenience init(databaseURL: URL, normalizer: BasicExerciseNameNormalizer = .init()) throws {
+        try self.init(databaseURL: databaseURL, normalizer: normalizer, beforeUpgradeBackup: {})
+    }
+
+    init(databaseURL: URL, normalizer: BasicExerciseNameNormalizer = .init(), beforeUpgradeBackup: () throws -> Void) throws {
         self.normalizer = normalizer
+
+        try Self.prepareUpgrade(databaseURL: databaseURL, beforeBackup: beforeUpgradeBackup)
 
         guard sqlite3_open(databaseURL.path, &database) == SQLITE_OK else {
             let message = database.map { String(cString: sqlite3_errmsg($0)) } ?? "Unable to open database"
@@ -103,6 +109,9 @@ public final class ExerciseLibrary {
                 throw ExerciseLibraryError.database(message: "SQLite foreign-key enforcement is disabled")
             }
             try migrate()
+            guard try scalarInt("PRAGMA foreign_keys") == 1 else {
+                throw ExerciseLibraryError.database(message: "Foreign-key enforcement was not restored after migration")
+            }
         } catch {
             sqlite3_close(database)
             database = nil
@@ -207,14 +216,15 @@ public final class ExerciseLibrary {
     }
 
     public func preferredName(for exerciseID: ExerciseID) throws -> ExerciseName? {
-        try queryName(
+        guard let root = try resolvedExerciseID(for: exerciseID) else { return nil }
+        return try queryName(
             """
             SELECT n.id, n.exercise_id, n.text, n.normalized_text, n.provenance, n.created_at
             FROM exercise e
             JOIN exercise_name n ON n.exercise_id = e.id AND n.id = e.preferred_name_id
             WHERE e.id = ?
             """,
-            bindings: [.text(exerciseID.rawValue.uuidString)]
+            bindings: [.text(root.rawValue.uuidString)]
         )
     }
 
@@ -701,15 +711,24 @@ public final class ExerciseLibrary {
     }
 
     func undoReviewDecisionAtomically(_ receipt: ExerciseIdentityReviewUndoReceipt) throws {
-        guard let stored = try storedReviewObservation(receipt.observationID),
-              stored.status == receipt.decision,
-              stored.resolvedExerciseID == receipt.resolvedExerciseID else {
-            throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
-        }
-
         try transaction {
+            guard let stored = try storedReviewObservation(receipt.observationID),
+                  stored.status == receipt.decision,
+                  stored.resolvedExerciseID == receipt.resolvedExerciseID,
+                  receipt.previousStatus == .pending || receipt.previousStatus == .deferred else {
+                throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+            }
+            if receipt.decision != .deferred {
+                guard let expected = receipt.libraryFingerprint,
+                      let actual = try? reviewUndoFingerprint(exerciseID: receipt.resolvedExerciseID),
+                      expected == actual else {
+                    throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
+                }
+            }
             if receipt.decision == .created {
                 guard let exerciseID = receipt.resolvedExerciseID,
+                      let writtenNameID = receipt.writtenNameID,
+                      try preferredName(for: exerciseID)?.id == writtenNameID,
                       try scalarInt(
                         "SELECT COUNT(*) FROM exercise_name WHERE exercise_id = ?",
                         bindings: [.text(exerciseID.rawValue.uuidString)]
@@ -728,12 +747,13 @@ public final class ExerciseLibrary {
                     "DELETE FROM exercise WHERE id = ?",
                     bindings: [.text(exerciseID.rawValue.uuidString)]
                 )
-            } else if receipt.decision == .linked {
+            } else if receipt.decision == .linked, let writtenNameID = receipt.writtenNameID {
                 guard let exerciseID = receipt.resolvedExerciseID else {
                     throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
                 }
                 let normalized = try normalizer.normalize(stored.observedName)
                 guard let linkedName = try name(forNormalizedText: normalized),
+                      linkedName.id == writtenNameID,
                       linkedName.exerciseID == exerciseID,
                       try preferredName(for: exerciseID)?.id != linkedName.id else {
                     throw ExerciseIdentityReviewError.incompatibleRepeatedDecision
@@ -779,7 +799,22 @@ public final class ExerciseLibrary {
     }
 
     private func migrate() throws {
+        let hasVersion = try scalarInt("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_version'") == 1
+        let version = hasVersion ? try scalarInt("SELECT COALESCE(MAX(version), 0) FROM schema_version") : 0
+        guard (0...4).contains(version) else {
+            throw ExerciseLibraryError.database(message: "Unsupported library schema version \(version)")
+        }
+        if version == 4 { return }
+        // Rebuild without renaming the old tables: external foreign keys must
+        // keep pointing at their final names. Restore enforcement on every exit.
+        try execute("PRAGMA foreign_keys = OFF")
+        defer { try? execute("PRAGMA foreign_keys = ON") }
         try transaction {
+            if version == 0 {
+                try execute(Self.lifecycleSchema)
+                try execute("ALTER TABLE exercise_v4 RENAME TO exercise; ALTER TABLE exercise_name_v4 RENAME TO exercise_name;")
+                try execute(Self.lifecycleGuards)
+            }
             try execute(
                 """
                 CREATE TABLE IF NOT EXISTS schema_version (
@@ -863,11 +898,28 @@ public final class ExerciseLibrary {
                 INSERT OR IGNORE INTO schema_version(version) VALUES (3);
                 """
             )
+            try validateForeignKeys()
+            if version > 0 {
+                try execute(Self.lifecycleSchema)
+                try execute("""
+                INSERT INTO exercise_v4 (id, preferred_name_id, created_at, updated_at)
+                    SELECT id, preferred_name_id, created_at, updated_at FROM exercise;
+                INSERT INTO exercise_name_v4 SELECT * FROM exercise_name;
+                DROP TABLE exercise_name;
+                DROP TABLE exercise;
+                ALTER TABLE exercise_v4 RENAME TO exercise;
+                ALTER TABLE exercise_name_v4 RENAME TO exercise_name;
+                CREATE INDEX exercise_name_exercise_id ON exercise_name(exercise_id);
+                """)
+                try execute(Self.lifecycleGuards)
+            }
+            try execute("INSERT INTO schema_version(version) VALUES (4)")
+            try validateForeignKeys()
         }
     }
 
-    private func exerciseExists(_ id: ExerciseID) throws -> Bool {
-        try scalarInt("SELECT COUNT(*) FROM exercise WHERE id = ?", bindings: [.text(id.rawValue.uuidString)]) == 1
+    func exerciseExists(_ id: ExerciseID) throws -> Bool {
+        try scalarInt("SELECT COUNT(*) FROM exercise WHERE id = ? AND lifecycle = 'active'", bindings: [.text(id.rawValue.uuidString)]) == 1
     }
 
     private func ownerID(forNormalizedText normalizedText: String) throws -> ExerciseID? {
@@ -892,7 +944,7 @@ public final class ExerciseLibrary {
         return try decodeName(statement)
     }
 
-    private func queryNames(_ sql: String, bindings: [Binding] = []) throws -> [ExerciseName] {
+    func queryNames(_ sql: String, bindings: [Binding] = []) throws -> [ExerciseName] {
         let statement = try prepare(sql, bindings: bindings)
         defer { sqlite3_finalize(statement) }
 
@@ -931,12 +983,12 @@ public final class ExerciseLibrary {
         )
     }
 
-    private enum Binding {
+    enum Binding {
         case text(String)
         case double(Double)
     }
 
-    private func transaction(_ body: () throws -> Void) throws {
+    func transaction(_ body: () throws -> Void) throws {
         try execute("BEGIN IMMEDIATE")
         do {
             try body()
@@ -947,7 +999,7 @@ public final class ExerciseLibrary {
         }
     }
 
-    private func execute(_ sql: String) throws {
+    func execute(_ sql: String) throws {
         var errorMessage: UnsafeMutablePointer<CChar>?
         guard sqlite3_exec(database, sql, nil, nil, &errorMessage) == SQLITE_OK else {
             let message = errorMessage.map { String(cString: $0) } ?? databaseErrorMessage()
@@ -956,20 +1008,20 @@ public final class ExerciseLibrary {
         }
     }
 
-    private func run(_ sql: String, bindings: [Binding]) throws {
+    func run(_ sql: String, bindings: [Binding]) throws {
         let statement = try prepare(sql, bindings: bindings)
         defer { sqlite3_finalize(statement) }
         guard sqlite3_step(statement) == SQLITE_DONE else { throw databaseError() }
     }
 
-    private func scalarInt(_ sql: String, bindings: [Binding] = []) throws -> Int {
+    func scalarInt(_ sql: String, bindings: [Binding] = []) throws -> Int {
         let statement = try prepare(sql, bindings: bindings)
         defer { sqlite3_finalize(statement) }
         guard sqlite3_step(statement) == SQLITE_ROW else { throw databaseError() }
         return Int(sqlite3_column_int64(statement, 0))
     }
 
-    private func prepare(_ sql: String, bindings: [Binding]) throws -> OpaquePointer {
+    func prepare(_ sql: String, bindings: [Binding]) throws -> OpaquePointer {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
             throw databaseError()
@@ -993,11 +1045,11 @@ public final class ExerciseLibrary {
         }
     }
 
-    private func columnText(_ statement: OpaquePointer, _ index: Int32) -> String? {
+    func columnText(_ statement: OpaquePointer, _ index: Int32) -> String? {
         sqlite3_column_text(statement, index).map { String(cString: $0) }
     }
 
-    private func databaseError() -> ExerciseLibraryError {
+    func databaseError() -> ExerciseLibraryError {
         .database(message: databaseErrorMessage())
     }
 

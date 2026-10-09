@@ -1,5 +1,6 @@
 import AppKit
 import GymAssistantCore
+import UniformTypeIdentifiers
 
 private enum WorkflowEventLog {
     static let url = FileManager.default.temporaryDirectory
@@ -25,6 +26,9 @@ private enum WorkflowEventLog {
 
 private enum FieldFeedbackRecorder {
     static func append(_ interaction: FeedbackInteraction, panelScreenshot: Data? = nil) {
+        // Disposable foreground trials must not append synthetic events to the
+        // user's private feedback ledger.
+        guard ProcessInfo.processInfo.environment["GYM_ASSISTANT_DATABASE_PATH"] == nil else { return }
         do {
             let store = try FeedbackFileStore.applicationSupport()
             try store.append(interaction)
@@ -47,7 +51,7 @@ private func panelScreenshotPNG(_ window: NSWindow) -> Data? {
 
 private enum AutocompletePanelResult {
     case insert(String)
-    case reviewLibrary
+    case maintenance(LibraryMaintenanceNavigation)
     case cancel
 }
 
@@ -58,6 +62,7 @@ private struct RankedCandidateItem {
     let matchedName: String
     let detail: String
     let selectable: Bool
+    var nameIDs: [String: ExerciseNameID] = [:]
 
     var otherNames: [String] {
         ([preferredName] + aliases).reduce(into: [String]()) { names, name in
@@ -93,7 +98,7 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
     var onSelectionChange: (() -> Void)?
     private var items: [RankedCandidateItem] = []
     private var rows: [RankedCandidateRow] = []
-    private var expandedExerciseID: ExerciseID?
+    private var expansion = ExerciseChooserExpansion()
 
     override init() {
         super.init()
@@ -127,6 +132,17 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
         }
     }
 
+    var selectedNameID: ExerciseNameID? {
+        guard let item = selectedItem, let name = selectedName else { return nil }
+        return item.nameIDs[name]
+    }
+
+    var isAliasSelected: Bool {
+        guard rows.indices.contains(tableView.selectedRow) else { return false }
+        if case .alias = rows[tableView.selectedRow] { return true }
+        return false
+    }
+
     var selectedExerciseRank: Int? {
         guard let selectedItem, let index = items.firstIndex(where: { $0.exerciseID == selectedItem.exerciseID }) else { return nil }
         return index + 1
@@ -134,7 +150,7 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
 
     func setItems(_ items: [RankedCandidateItem], preselectTop: Bool = true) {
         self.items = items
-        expandedExerciseID = nil
+        expansion.reset()
         rebuildRows()
         if preselectTop, !rows.isEmpty {
             tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
@@ -159,14 +175,30 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
         guard rows.indices.contains(tableView.selectedRow),
               case .exercise(let item) = rows[tableView.selectedRow],
               !item.otherNames.isEmpty else { return }
-        expandedExerciseID = item.exerciseID
+        expansion.expand(item.exerciseID)
         rebuildRows(selecting: item.exerciseID)
     }
 
     func collapseSelection() {
-        guard let item = selectedItem, expandedExerciseID == item.exerciseID else { return }
-        expandedExerciseID = nil
+        guard let item = selectedItem, expansion.expandedIDs.contains(item.exerciseID) else { return }
+        expansion.collapse(item.exerciseID)
         rebuildRows(selecting: item.exerciseID)
+    }
+
+    func restoreSelection(exerciseID: ExerciseID, name: String?) {
+        guard let item = items.first(where: { $0.exerciseID == exerciseID }) else { return }
+        if let name, name != item.matchedName, item.otherNames.contains(name) {
+            expansion.expand(exerciseID)
+            rebuildRows(selecting: exerciseID)
+        }
+        if let index = rows.firstIndex(where: { row in
+            switch row {
+            case .exercise(let candidate): return candidate.exerciseID == exerciseID && candidate.matchedName == name
+            case .alias(let parent, let alias): return parent.exerciseID == exerciseID && alias == name
+            }
+        }) {
+            tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+        }
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
@@ -221,7 +253,7 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
     private func rebuildRows(selecting exerciseID: ExerciseID? = nil) {
         rows = items.flatMap { item -> [RankedCandidateRow] in
             var result: [RankedCandidateRow] = [.exercise(item)]
-            if expandedExerciseID == item.exerciseID {
+            if expansion.expandedIDs.contains(item.exerciseID) {
                 result.append(contentsOf: item.otherNames.map { .alias(parent: item, name: $0) })
             }
             return result
@@ -278,10 +310,11 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
     private let chooser = RankedCandidateChooser()
     private let statusField = NSTextField(labelWithString: "Type to search")
     private lazy var reviewButton = NSButton(
-        title: "Review Library…  ⌘R",
+        title: "Add Exercises…  ⌘R",
         target: self,
         action: #selector(openLibraryReview)
     )
+    private lazy var editButton = NSButton(title: "Edit Library…  ⌘E", target: self, action: #selector(openLibraryEdit))
     private var matches: [ExerciseSearchMatch] = []
     private var result: AutocompletePanelResult = .cancel
     private let sessionID = UUID()
@@ -407,10 +440,16 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         reviewButton.frame = NSRect(x: 24, y: 12, width: 166, height: 30)
         reviewButton.keyEquivalent = "r"
         reviewButton.keyEquivalentModifierMask = [.command]
-        reviewButton.toolTip = "Open the observation review queue (Command-R)"
+        reviewButton.toolTip = "Add an exercise or import candidates (Command-R)"
         content.addSubview(reviewButton)
 
-        statusField.frame = NSRect(x: 200, y: 18, width: 416, height: 22)
+        editButton.frame = NSRect(x: 200, y: 12, width: 166, height: 30)
+        editButton.keyEquivalent = "e"
+        editButton.keyEquivalentModifierMask = [.command]
+        editButton.isEnabled = true
+        content.addSubview(editButton)
+
+        statusField.frame = NSRect(x: 375, y: 18, width: 241, height: 22)
         statusField.textColor = .secondaryLabelColor
         content.addSubview(statusField)
 
@@ -463,7 +502,8 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
             aliases: match.aliases,
             matchedName: match.matchedName,
             detail: resultDetail(for: match),
-            selectable: true
+            selectable: true,
+            nameIDs: Dictionary(uniqueKeysWithValues: match.confirmedNames.map { ($0.text, $0.id) })
         )
     }
 
@@ -513,8 +553,20 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
 
     @objc private func openLibraryReview() {
         record(.init(kind: .opened))
-        result = .reviewLibrary
-        WorkflowEventLog.write("library_review_selected")
+        result = .maintenance(.init(route: .add, query: searchField.stringValue, selection: selectedLibraryIdentity))
+        WorkflowEventLog.write("add_exercises_selected")
+        NSApp.stopModal()
+    }
+
+    private var selectedLibraryIdentity: LibraryMaintenanceSelection? {
+        guard let item = chooser.selectedItem, let nameID = chooser.selectedNameID else { return nil }
+        return .init(exerciseID: item.exerciseID, nameID: nameID)
+    }
+
+    @objc private func openLibraryEdit() {
+        record(.init(kind: .opened))
+        result = .maintenance(.init(route: .edit, query: searchField.stringValue, selection: selectedLibraryIdentity))
+        WorkflowEventLog.write("edit_library_selected")
         NSApp.stopModal()
     }
 
@@ -762,6 +814,9 @@ private final class ExerciseWorkflowPanel: NSObject, NSTableViewDataSource, NSTa
 
 @MainActor
 private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
+    var onReturnToImport: (() -> Void)?
+    private lazy var queueView = NSSegmentedControl(labels: ["To review", "Skipped"], trackingMode: .selectOne, target: self, action: #selector(changeQueueView))
+    private var showsSourceDetails = false
     private let service: ExerciseIdentityReviewService
     private let window: NSWindow
     private let observationField = NSTextField(wrappingLabelWithString: "")
@@ -775,7 +830,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         action: #selector(linkSelected)
     )
     private lazy var backButton = NSButton(
-        title: "← Back",
+        title: "Undo",
         target: self,
         action: #selector(undoLastDecision)
     )
@@ -803,21 +858,27 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         return button
     }()
 
-    init(service: ExerciseIdentityReviewService) {
+    init(service: ExerciseIdentityReviewService, window: NSWindow) {
         self.service = service
-        window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 500),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
+        self.window = window
         super.init()
         chooser.onSelectionChange = { [weak self] in self?.updateLinkAvailability() }
         configureWindow()
     }
 
     func show(returnFocusTo application: NSRunningApplication?) {
+        configureWindow()
         returnFocusTo = application
+        reloadQueue(feedback: feedbackMessage)
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(chooser.tableView)
+        installShortcutMonitor()
+        WorkflowEventLog.write("library_review_ready", details: ["queueCount": queue.count])
+    }
+
+    func resetSession() {
+        showsSourceDetails = false
         skippedThisSession.removeAll()
         lastUndoReceipt = nil
         feedbackMessage = ""
@@ -827,13 +888,12 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         deactivationCount = 0
         returnedAfterDeactivation = false
         lastReturnAt = nil
-        reloadQueue()
-        window.center()
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
-        window.makeFirstResponder(chooser.tableView)
-        installShortcutMonitor()
-        WorkflowEventLog.write("library_review_ready", details: ["queueCount": queue.count])
+        queueView.selectedSegment = 0
+    }
+
+    func deactivate() {
+        if let shortcutMonitor { NSEvent.removeMonitor(shortcutMonitor) }
+        shortcutMonitor = nil
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -859,30 +919,35 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     }
 
     private func configureWindow() {
-        window.title = "Gym Assistant — Review Library"
+        window.title = "Gym Assistant — Review candidates"
         window.isReleasedWhenClosed = false
-        window.delegate = self
         let content = NSView(frame: window.contentRect(forFrameRect: window.frame))
         window.contentView = content
 
-        observationField.frame = NSRect(x: 24, y: 432, width: 592, height: 42)
+        observationField.frame = NSRect(x: 24, y: 400, width: 592, height: 42)
         observationField.font = .systemFont(ofSize: 22, weight: .semibold)
         content.addSubview(observationField)
 
-        metaField.frame = NSRect(x: 24, y: 405, width: 592, height: 20)
+        metaField.frame = NSRect(x: 24, y: 376, width: 440, height: 20)
         metaField.textColor = .secondaryLabelColor
         content.addSubview(metaField)
 
-        sourceField.frame = NSRect(x: 24, y: 332, width: 592, height: 62)
+        sourceField.frame = NSRect(x: 24, y: 316, width: 592, height: 52)
         sourceField.font = .systemFont(ofSize: 12)
         sourceField.textColor = .secondaryLabelColor
-        content.addSubview(sourceField)
+        if showsSourceDetails { content.addSubview(sourceField) }
+        let detailsButton = NSButton(title: showsSourceDetails ? "Hide Details  ⌘D" : "Details  ⌘D", target: self, action: #selector(toggleSourceDetails))
+        detailsButton.frame = NSRect(x: 466, y: 370, width: 150, height: 28)
+        detailsButton.keyEquivalent = "d"
+        detailsButton.keyEquivalentModifierMask = [.command]
+        content.addSubview(detailsButton)
 
-        chooser.scrollView.frame = NSRect(x: 24, y: 112, width: 592, height: 208)
+        chooser.scrollView.frame = NSRect(x: 24, y: 110, width: 592, height: showsSourceDetails ? 194 : 250)
         chooser.tableView.tableColumns.first?.width = 576
         content.addSubview(chooser.scrollView)
 
-        backButton.title = "← Back  ⌘Z"
+        backButton.title = "Undo  ⌘Z"
+        backButton.toolTip = "Undo the last review decision in this session; later library edits may prevent undo."
         backButton.frame = NSRect(x: 24, y: 54, width: 120, height: 32)
         backButton.isEnabled = false
         content.addSubview(backButton)
@@ -908,8 +973,32 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         statusField.textColor = .secondaryLabelColor
         content.addSubview(statusField)
 
-        reportButton.frame = NSRect(x: 588, y: 442, width: 28, height: 28)
+        reportButton.frame = NSRect(x: 588, y: 450, width: 28, height: 28)
         content.addSubview(reportButton)
+
+        queueView.frame = NSRect(x: 24, y: 450, width: 240, height: 30)
+        queueView.selectedSegment = max(0, queueView.selectedSegment)
+        queueView.toolTip = "To review: Command-1 · Skipped: Command-2"
+        content.addSubview(queueView)
+        // Keep queue navigation distinct from undoing a decision.
+        let parentBack = NSButton(title: "← Import  Esc", target: self, action: #selector(closeReview))
+        parentBack.frame = NSRect(x: 430, y: 450, width: 150, height: 28)
+        content.addSubview(parentBack)
+    }
+
+    @objc private func toggleSourceDetails() {
+        let selectedID = chooser.selectedItem?.exerciseID
+        let selectedName = chooser.selectedName
+        showsSourceDetails.toggle()
+        configureWindow()
+        render()
+        if let selectedID { chooser.restoreSelection(exerciseID: selectedID, name: selectedName) }
+        window.makeFirstResponder(chooser.tableView)
+    }
+
+    @objc private func changeQueueView() {
+        skippedThisSession.removeAll()
+        reloadQueue()
     }
 
     private func reloadQueue(
@@ -920,7 +1009,8 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             let fullQueue = try service.reviewQueue()
             pendingCount = fullQueue.filter { $0.status == .pending }.count
             skippedCount = fullQueue.filter { $0.status == .deferred }.count
-            queue = fullQueue.filter { !skippedThisSession.contains($0.observation.id) }
+            let status: ExerciseObservationReviewStatus = queueView.selectedSegment == 1 ? .deferred : .pending
+            queue = fullQueue.filter { $0.status == status && !skippedThisSession.contains($0.observation.id) }
             if let preferredObservationID,
                let index = queue.firstIndex(where: { $0.observation.id == preferredObservationID }) {
                 queue.insert(queue.remove(at: index), at: 0)
@@ -945,13 +1035,13 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
 
     private func render(error: Error? = nil) {
         if let error {
-            window.title = "Gym Assistant — Review Library"
+            window.title = "Gym Assistant — Review candidates"
             observationField.stringValue = "Review unavailable"
             metaField.stringValue = ""
             sourceField.stringValue = ""
             statusField.stringValue = String(describing: error)
         } else if let current {
-            window.title = "Gym Assistant — Review Library · \(pendingCount) to review · \(skippedCount) skipped"
+            window.title = "Gym Assistant — Review candidates · \(pendingCount) to review · \(skippedCount) skipped"
             observationField.stringValue = current.observation.observedName
             let occurrenceSummary = current.observation.occurrenceCount == 1
                 ? "Observed once"
@@ -963,7 +1053,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             }.joined(separator: "\n")
             statusField.stringValue = feedbackMessage
         } else {
-            window.title = "Gym Assistant — Review Library · 0 to review · \(skippedCount) skipped"
+            window.title = "Gym Assistant — Review candidates · \(pendingCount) to review · \(skippedCount) skipped"
             observationField.stringValue = "Nothing needs review"
             metaField.stringValue = ""
             sourceField.stringValue = ""
@@ -1031,7 +1121,8 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     }
 
     @objc private func closeReview() {
-        window.performClose(nil)
+        deactivate()
+        onReturnToImport?()
     }
 
     @objc private func undoLastDecision() {
@@ -1042,6 +1133,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             skippedThisSession.remove(receipt.observationID)
             lastUndoReceipt = nil
             let restored = receipt.previousStatus == .deferred ? "Skipped" : "Ready for review"
+            queueView.selectedSegment = receipt.previousStatus == .deferred ? 1 : 0
             reloadQueue(
                 preferredObservationID: receipt.observationID,
                 feedback: "Undid \(reviewDecisionLabel(receipt.decision)) · restored previous status: \(restored)"
@@ -1064,9 +1156,16 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             guard modifiers == [.command] || modifiers == [.command, .shift],
                   let key = event.charactersIgnoringModifiers?.lowercased() else { return event }
             switch key {
+            case "1" where modifiers == [.command]:
+                self.queueView.selectedSegment = 0
+                self.changeQueueView()
+            case "2" where modifiers == [.command]:
+                self.queueView.selectedSegment = 1
+                self.changeQueueView()
             case "c": self.createCurrent()
             case "l": self.linkSelected()
             case "s": self.skipCurrent()
+            case "d": self.toggleSourceDetails()
             case "z":
                 guard self.backButton.isEnabled else { return event }
                 self.undoLastDecision()
@@ -1083,7 +1182,9 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
             preferredName: candidate.preferredName,
             aliases: candidate.aliases,
             matchedName: candidate.matchedName,
-            detail: candidate.evidence.map(reviewEvidenceText).joined(separator: " · "),
+            detail: showsSourceDetails || !candidate.linkAllowed
+                ? candidate.evidence.map(reviewEvidenceText).joined(separator: " · ")
+                : "Suggested match · confirm to link",
             selectable: candidate.linkAllowed
         )
     }
@@ -1167,6 +1268,519 @@ private func reviewEvidenceText(_ evidence: ExerciseReviewEvidence) -> String {
     }
 }
 
+@MainActor
+private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSSearchFieldDelegate {
+    private let library: ExerciseLibrary
+    private let edits: ExerciseLibraryEditService
+    private let imports: LibraryImportService
+    private let search: ExerciseAutocompleteSearch
+    private let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 500),
+                                  styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+    private let review: LibraryReviewWindowController
+    private var navigation = LibraryMaintenanceNavigation(route: .add, query: "", selection: nil)
+    private var returnFocusTo: NSRunningApplication?
+    private var shortcutMonitor: Any?
+    private let nameField = NSTextField()
+    private var previousActivationPolicy: NSApplication.ActivationPolicy?
+    private let primarySearchField = AutocompleteSearchField()
+    private let primaryChooser = RankedCandidateChooser()
+    private let duplicateSearchField = AutocompleteSearchField()
+    private let duplicateChooser = RankedCandidateChooser()
+    private let duplicateWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 380),
+                                           styleMask: [.titled], backing: .buffered, defer: false)
+    private var searchField: AutocompleteSearchField { findingDuplicate ? duplicateSearchField : primarySearchField }
+    private var chooser: RankedCandidateChooser { findingDuplicate ? duplicateChooser : primaryChooser }
+    private var editingWindow: NSWindow { findingDuplicate ? duplicateWindow : window }
+    private var parentEditQuery = ""
+    private var splitButton: NSButton?
+    private var duplicateButton: NSButton?
+    private var movingAliasID: ExerciseNameID?
+    private let statusField = NSTextField(wrappingLabelWithString: "")
+    private var detail: ExerciseLibraryDetail?
+    private var findingDuplicate = false
+    private var visibleEditMatches: [ExerciseSearchMatch] = []
+    private var retainedDuplicateMatches: [ExerciseSearchMatch]?
+    private var refreshingSearchResults = false
+    private var importURL: URL?
+    private var importPreview: LibraryImportPreview?
+    private var feedback = ""
+
+    init(library: ExerciseLibrary, reviewService: ExerciseIdentityReviewService) {
+        self.library = library
+        edits = .init(library: library)
+        imports = .init(library: library)
+        search = .init(library: library)
+        review = LibraryReviewWindowController(service: reviewService, window: window)
+        super.init()
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        nameField.delegate = self
+        duplicateWindow.isReleasedWhenClosed = false
+        for field in [primarySearchField, duplicateSearchField] {
+            field.delegate = self
+            field.onMove = { [weak self] in self?.chooser.moveSelection($0) }
+            field.onExpand = { [weak self] in self?.chooser.expandSelection() }
+            field.onCollapse = { [weak self] in self?.chooser.collapseSelection() }
+            field.onChoose = { [weak self] in self?.chooseExercise() }
+            field.onCancel = { [weak self] in self?.back() }
+        }
+        primaryChooser.onSelectionChange = { [weak self] in self?.selectSearchResult() }
+        duplicateChooser.onSelectionChange = { [weak self] in self?.selectSearchResult() }
+        review.onReturnToImport = { [weak self] in self?.navigate(.importSource) }
+    }
+
+    func show(navigation: LibraryMaintenanceNavigation, returnFocusTo application: NSRunningApplication?) {
+        dismissDuplicateSheet()
+        review.resetSession()
+        self.navigation = navigation
+        returnFocusTo = application
+        findingDuplicate = false
+        retainedDuplicateMatches = nil
+        feedback = ""
+        render()
+        window.center()
+        if previousActivationPolicy == nil { previousActivationPolicy = NSApp.activationPolicy() }
+        if !NSApp.setActivationPolicy(.regular) {
+            showError(ExerciseLibraryError.database(message: "Could not show Gym Assistant in the Dock"))
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        focusRoute()
+        installShortcutMonitor()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        dismissDuplicateSheet()
+        saveDrafts()
+        review.deactivate()
+        if let shortcutMonitor { NSEvent.removeMonitor(shortcutMonitor) }
+        shortcutMonitor = nil
+        if let previousActivationPolicy {
+            NSApp.setActivationPolicy(previousActivationPolicy)
+            self.previousActivationPolicy = nil
+        }
+        if let application = returnFocusTo,
+           application.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            application.activate(options: [.activateIgnoringOtherApps])
+        }
+    }
+
+    func bringToFront() -> Bool {
+        guard window.isVisible || window.isMiniaturized else { return false }
+        if window.isMiniaturized { window.deminiaturize(nil) }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        return true
+    }
+
+    private func saveDrafts() {
+        if navigation.route == .add { navigation.creationDraft = nameField.stringValue }
+        if navigation.route == .edit {
+            navigation.editQuery = searchField.stringValue
+        }
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        if navigation.route == .reviewCandidates { review.windowDidResignKey(notification) }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if navigation.route == .reviewCandidates { review.windowDidBecomeKey(notification) }
+    }
+
+    private func navigate(_ route: LibraryMaintenanceRoute) {
+        saveDrafts()
+        clearFeedback()
+        review.deactivate()
+        navigation.show(route)
+        render()
+        focusRoute()
+    }
+
+    private func focusRoute() {
+        switch navigation.route {
+        case .add: window.makeFirstResponder(nameField)
+        case .edit:
+            editingWindow.makeFirstResponder(searchField)
+        case .importSource: window.makeFirstResponder(window.contentView?.subviews.compactMap { $0 as? NSButton }.first { $0.title.hasPrefix("Review candidates") })
+        case .reviewCandidates: break
+        }
+        editingWindow.recalculateKeyViewLoop()
+    }
+
+    private func render() {
+        if findingDuplicate {
+            duplicateWindow.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 560, height: 380))
+            do { try renderEdit() } catch { showError(error) }
+            return
+        }
+        if navigation.route == .reviewCandidates {
+            review.show(returnFocusTo: returnFocusTo)
+            return
+        }
+        let content = NSView(frame: NSRect(x: 0, y: 0, width: 640, height: 500))
+        window.contentView = content
+        statusField.frame = NSRect(x: 24, y: 16, width: 592, height: 52)
+        statusField.textColor = .secondaryLabelColor
+        statusField.stringValue = feedback
+        content.addSubview(statusField)
+        do {
+            switch navigation.route {
+            case .add:
+                window.title = "Gym Assistant — Add Exercises"
+                label("Name", x: 24, y: 399, width: 592, height: 24)
+                nameField.frame = NSRect(x: 24, y: 356, width: 592, height: 32)
+                nameField.placeholderString = "Exercise name"
+                nameField.stringValue = navigation.creationDraft
+                content.addSubview(nameField)
+                button("Save Exercise", selector: #selector(createExercise), x: 24, y: 303, width: 160, key: "\r", command: false)
+                let count = try imports.pendingReviewCount()
+                let importButton = button(count == 0 ? "Import…" : "Import…  (\(count))", selector: #selector(showImport), x: 24, y: 235, width: 180, key: "i")
+                importButton.setAccessibilityLabel(count == 0 ? "Import" : "Import, \(count) candidates awaiting review")
+            case .edit: try renderEdit()
+            case .importSource: try renderImport()
+            case .reviewCandidates: break
+            }
+        } catch { showError(error) }
+    }
+
+    private func renderEdit() throws {
+        editingWindow.title = findingDuplicate ? "Merge with…" : "Gym Assistant — Edit Library"
+        let width: CGFloat = findingDuplicate ? 512 : 592
+        let top: CGFloat = findingDuplicate ? 328 : 448
+        if let selection = navigation.selection {
+            detail = try edits.detail(exerciseID: selection.exerciseID)
+            let current = detail!
+            if findingDuplicate {
+                let selected = movingAliasID.flatMap { id in current.names.first { $0.id == id }?.text } ?? current.preferredName.text
+                label(movingAliasID == nil ? "Merge with duplicate of \(selected)" : "Move alias ‘\(selected)’ to exercise", x: 24, y: top, width: width, height: 32)
+            }
+        }
+        if !findingDuplicate { label("↑↓ select · → show aliases", x: 24, y: 448, width: 592, height: 32) }
+        searchField.frame = NSRect(x: 24, y: top - 48, width: width, height: 32)
+        searchField.placeholderString = findingDuplicate ? "Search for a possible duplicate" : "Search exercises"
+        searchField.stringValue = navigation.editQuery
+        editingWindow.contentView?.addSubview(searchField)
+        chooser.scrollView.frame = NSRect(x: 24, y: findingDuplicate ? 76 : 150, width: width, height: findingDuplicate ? 188 : 236)
+        chooser.tableView.tableColumns.first?.width = width - 16
+        editingWindow.contentView?.addSubview(chooser.scrollView)
+        if findingDuplicate {
+            button(movingAliasID == nil ? "Combine…  ↩" : "Move alias…  ↩", selector: #selector(chooseExercise), x: 24, y: 28, width: 220, key: "\r", command: false)
+            button("Cancel  Esc", selector: #selector(back), x: 356, y: 28, width: 180)
+        } else {
+            splitButton = button("Promote to exercise…  ⌘S", selector: #selector(splitSelected), x: 24, y: 100, width: 246, key: "s")
+            splitButton?.toolTip = "Expand an exercise and select an alias to give it its own exercise."
+            duplicateButton = button("Merge with duplicate…  ⌘F", selector: #selector(findDuplicate), x: 270, y: 100, width: 346, key: "f")
+            duplicateButton?.toolTip = "An exercise row combines all names; an alias row moves only that alias."
+        }
+        try updateEditSearch()
+    }
+
+    private func selectSearchResult() {
+        guard navigation.route == .edit, !findingDuplicate else { return }
+        guard let item = chooser.selectedItem, let nameID = chooser.selectedNameID else {
+            detail = nil
+            navigation.selection = nil
+            splitButton?.isEnabled = false
+            duplicateButton?.isEnabled = false
+            return
+        }
+        do {
+            let selection = LibraryMaintenanceSelection(exerciseID: item.exerciseID, nameID: nameID)
+            if !refreshingSearchResults, navigation.selection != selection { clearFeedback() }
+            detail = try edits.detail(exerciseID: item.exerciseID)
+            navigation.selection = selection
+            let actions = LibraryMaintenanceRowActions(isAlias: chooser.isAliasSelected, confirmedNameCount: detail?.names.count ?? 0)
+            splitButton?.isEnabled = actions.canPromote
+            duplicateButton?.isEnabled = actions.canCombine
+        } catch { showError(error) }
+    }
+
+    private func renderImport() throws {
+        window.title = "Gym Assistant — Import"
+        let count = try imports.pendingReviewCount()
+        label("CSV import\nRequired columns:\nobserved_name_verbatim, source_note, source_line_verbatim, occurrence_count, extraction_status, extraction_note\n\nextraction_status must be plausible_exercise.", x: 24, y: 276, width: 592, height: 160)
+        button("Choose CSV…", selector: #selector(chooseCSV), x: 24, y: 234, width: 180, key: "o")
+        if let preview = importPreview {
+            label("\(importURL?.lastPathComponent ?? "CSV")\n\(preview.source.recordCount) records · \(preview.source.observations.count) observations · \(preview.source.occurrenceCount) occurrences\n\(preview.exactReuseCount) observations already match confirmed names", x: 24, y: 145, width: 592, height: 80)
+            button("Import  ⌘I", selector: #selector(applyImport), x: 24, y: 105, width: 130, key: "i")
+        }
+        button("Review candidates  (\(count) to review)  ⌘J", selector: #selector(showReview), x: 220, y: 105, width: 396, key: "j")
+        button("← Add Exercises  Esc", selector: #selector(back), x: 24, y: 70, width: 210)
+    }
+
+    private func updateEditSearch() throws {
+        refreshingSearchResults = true
+        defer { refreshingSearchResults = false }
+        let matches = try (retainedDuplicateMatches ?? search.search(searchField.stringValue, limit: 20))
+            .filter { !findingDuplicate || $0.exerciseID != detail?.exercise.id }
+        visibleEditMatches = matches
+        chooser.setItems(matches.map { match in
+            RankedCandidateItem(exerciseID: match.exerciseID, preferredName: match.preferredName, aliases: match.aliases,
+                                matchedName: match.matchedName, detail: "", selectable: true,
+                                nameIDs: Dictionary(uniqueKeysWithValues: match.confirmedNames.map { ($0.text, $0.id) }))
+        })
+        selectSearchResult()
+    }
+
+    func controlTextDidChange(_ notification: Notification) {
+        clearFeedback()
+        retainedDuplicateMatches = nil
+        saveDrafts()
+        if navigation.route == .edit { do { try updateEditSearch() } catch { showError(error) } }
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        if selector == #selector(NSResponder.insertNewline(_:)) {
+            if navigation.route == .add { createExercise() } else { chooseExercise() }
+            return true
+        }
+        if selector == #selector(NSResponder.moveDown(_:)), control === searchField { chooser.moveSelection(1); return true }
+        if selector == #selector(NSResponder.moveUp(_:)), control === searchField { chooser.moveSelection(-1); return true }
+        if selector == #selector(NSResponder.cancelOperation(_:)) { back(); return true }
+        return false
+    }
+
+    @objc private func showImport() { navigate(.importSource) }
+    @objc private func showReview() { navigate(.reviewCandidates) }
+
+    @objc private func back() {
+        if navigation.route == .importSource {
+            navigate(.add)
+            window.makeFirstResponder(window.contentView?.subviews.compactMap { $0 as? NSButton }.first { $0.title.hasPrefix("Import") })
+        }
+        else if navigation.route == .reviewCandidates { navigate(.importSource) }
+        else if navigation.route == .edit, findingDuplicate {
+            dismissDuplicateSheet()
+            focusRoute()
+        } else { window.performClose(nil) }
+    }
+
+    @objc private func createExercise() {
+        saveDrafts()
+        do {
+            let created = try library.createExercise(preferredName: navigation.creationDraft)
+            navigation.selection = .init(exerciseID: created.exercise.id, nameID: created.preferredName.id)
+            feedback = "Saved ‘\(created.preferredName.text)’. Invoke autocomplete again to insert."
+            render()
+            focusRoute()
+        } catch ExerciseLibraryError.nameOwnershipConflict(_, let owner) {
+            do {
+                let existing = try edits.detail(exerciseID: owner)
+                let name = try library.exactName(for: navigation.creationDraft) ?? existing.preferredName
+                navigation.selection = .init(exerciseID: owner, nameID: name.id)
+                findingDuplicate = false
+                feedback = "That name already exists. No identity was changed."
+                render()
+                focusRoute()
+            } catch { showError(error) }
+        } catch { showError(error) }
+    }
+
+    @objc private func chooseExercise() {
+        guard let item = chooser.selectedItem, let nameID = chooser.selectedNameID else { return }
+        do {
+            if findingDuplicate {
+                clearFeedback()
+                guard let detail else { return }
+                let duplicate = try edits.detail(exerciseID: item.exerciseID)
+                let preview: LibraryEditPreview
+                if let alias = movingAliasID {
+                    preview = try edits.previewMoveName(nameID: alias, from: detail.exercise.id, to: duplicate.exercise.id)
+                    guard preview.before == [detail, duplicate] else { refreshStaleDetail(); return }
+                } else {
+                    preview = try edits.previewCombine(retaining: detail.exercise.id, duplicate: duplicate.exercise.id)
+                    guard preview.before == [duplicate, detail] else { refreshStaleDetail(); return }
+                }
+                confirm(preview)
+            } else {
+                navigation.selection = .init(exerciseID: item.exerciseID, nameID: nameID)
+            }
+        } catch { showError(error) }
+    }
+
+    @objc private func findDuplicate() {
+        guard let detail else { return }
+        clearFeedback()
+        if !findingDuplicate {
+            parentEditQuery = navigation.editQuery
+            movingAliasID = chooser.isAliasSelected ? chooser.selectedNameID : nil
+            let start = LibraryDuplicateSearchStart(selectedName: chooser.selectedName ?? detail.preferredName.text,
+                                                    source: detail.exercise.id, visibleMatches: visibleEditMatches)
+            retainedDuplicateMatches = start.retainedCandidates
+            navigation.editQuery = start.query
+        }
+        findingDuplicate = true
+        render()
+        window.beginSheet(duplicateWindow)
+        focusRoute()
+    }
+
+    private func dismissDuplicateSheet() {
+        guard findingDuplicate else { return }
+        window.endSheet(duplicateWindow)
+        duplicateWindow.orderOut(nil)
+        findingDuplicate = false
+        retainedDuplicateMatches = nil
+        navigation.editQuery = parentEditQuery
+    }
+
+    @objc private func splitSelected() {
+        guard chooser.isAliasSelected, let detail, let selection = navigation.selection else { return }
+        do {
+            let preview = try edits.previewSplit(nameID: selection.nameID, from: detail.exercise.id)
+            guard preview.before == [detail] else { refreshStaleDetail(); return }
+            confirm(preview)
+        }
+        catch { showError(error) }
+    }
+
+    private func refreshStaleDetail() {
+        dismissDuplicateSheet()
+        retainedDuplicateMatches = nil
+        findingDuplicate = false
+        render()
+        showError(LibraryEditError.stalePreview)
+        focusRoute()
+    }
+
+    private func confirm(_ preview: LibraryEditPreview) {
+        let alert = NSAlert()
+        alert.messageText = preview.confirmationPrompt
+        alert.informativeText = preview.confirmationDetails
+        switch preview.action {
+        case .moveName: alert.addButton(withTitle: "Move alias")
+        case .merge: alert.addButton(withTitle: "Combine")
+        case .split: alert.addButton(withTitle: "Promote")
+        }
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: editingWindow) { [weak self] response in
+            guard let self else { return }
+            guard response == .alertFirstButtonReturn else { self.focusRoute(); return }
+            do {
+                let receipt = try self.edits.apply(preview, confirmation: .init(confirming: preview))
+                self.dismissDuplicateSheet()
+                let survivor = receipt.after[0]
+                self.navigation.selection = .init(exerciseID: survivor.exercise.id, nameID: survivor.preferredName.id)
+                self.findingDuplicate = false
+                self.retainedDuplicateMatches = nil
+                self.feedback = "Library updated. Invoke autocomplete again to insert."
+                self.render(); self.focusRoute()
+            } catch {
+                self.dismissDuplicateSheet()
+                self.findingDuplicate = false
+                self.render()
+                self.showError(error)
+            }
+        }
+    }
+
+    @objc private func chooseCSV() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.commaSeparatedText]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard let self, response == .OK, let url = panel.url else { return }
+            do {
+                let preview = try self.imports.preview(data: Data(contentsOf: url), sourceReference: url.lastPathComponent)
+                self.importURL = url; self.importPreview = preview
+                self.feedback = "Preview only — confirm Import to stage candidates."
+                self.render()
+                self.window.makeFirstResponder(self.window.contentView?.subviews.compactMap { $0 as? NSButton }.first { $0.title == "Import  ⌘I" })
+                self.window.recalculateKeyViewLoop()
+            } catch {
+                self.importURL = nil; self.importPreview = nil
+                self.render(); self.showError(error)
+            }
+        }
+    }
+
+    @objc private func applyImport() {
+        guard let preview = importPreview, let url = importURL else { return }
+        do {
+            let result = try imports.apply(preview, currentData: Data(contentsOf: url))
+            feedback = result.alreadyIngested ? "Already imported — no duplicate candidates staged." : "Imported \(result.observationCount) observations with \(result.occurrenceCount) occurrences."
+            render()
+        } catch {
+            importPreview = nil
+            render()
+            showError(error)
+        }
+    }
+
+    private func showError(_ error: Error) {
+        feedback = "Could not complete safely: \(error). Refresh and confirm again."
+        statusField.stringValue = feedback
+        NSSound.beep()
+    }
+
+    private func clearFeedback() {
+        feedback = ""
+        statusField.stringValue = ""
+    }
+
+    private func installShortcutMonitor() {
+        guard shortcutMonitor == nil else { return }
+        shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.editingWindow.isKeyWindow, self.editingWindow.attachedSheet == nil,
+                  self.navigation.route != .reviewCandidates else { return event }
+            if event.keyCode == 53 { self.back(); return nil }
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting([.capsLock, .numericPad, .function])
+            if modifiers == [.command], event.charactersIgnoringModifiers == "a",
+               let editor = self.editingWindow.firstResponder as? NSTextView {
+                editor.selectAll(nil)
+                return nil
+            }
+            if self.navigation.route == .edit {
+                if modifiers.isEmpty, self.searchField.currentEditor() === self.editingWindow.firstResponder {
+                    switch event.keyCode {
+                    case 125: self.chooser.moveSelection(1)
+                    case 126: self.chooser.moveSelection(-1)
+                    case 124: self.chooser.expandSelection()
+                    case 123: self.chooser.collapseSelection()
+                    default: return event
+                    }
+                    return nil
+                }
+            }
+            return event
+        }
+    }
+
+    @discardableResult private func button(_ title: String, selector: Selector, x: CGFloat, y: CGFloat, width: CGFloat, key: String = "", command: Bool = true) -> NSButton {
+        let button = NSButton(title: title, target: self, action: selector)
+        button.frame = NSRect(x: x, y: y, width: width, height: 32)
+        button.keyEquivalent = key
+        button.keyEquivalentModifierMask = command ? [.command] : []
+        editingWindow.contentView?.addSubview(button)
+        return button
+    }
+
+    private func label(_ text: String, x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+        let field = NSTextField(wrappingLabelWithString: text)
+        field.frame = NSRect(x: x, y: y, width: width, height: height)
+        field.isSelectable = true
+        editingWindow.contentView?.addSubview(field)
+    }
+
+    private func scrollText(_ text: String, x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) {
+        let scroll = NSScrollView(frame: NSRect(x: x, y: y, width: width, height: height))
+        let view = NSTextView(frame: NSRect(x: 0, y: 0, width: width - 18, height: height))
+        view.isEditable = false
+        view.isSelectable = true
+        view.font = .systemFont(ofSize: 14)
+        view.string = text
+        view.isVerticallyResizable = true
+        view.isHorizontallyResizable = false
+        view.textContainer?.widthTracksTextView = true
+        view.autoresizingMask = [.width]
+        scroll.hasVerticalScroller = true
+        scroll.documentView = view
+        window.contentView?.addSubview(scroll)
+    }
+}
+
 private func compactScore(_ score: Double) -> String {
     if score == 1 { return "1.00" }
     let formatted = score >= 0.995
@@ -1180,18 +1794,33 @@ private final class ExerciseServiceProvider: NSObject {
     private let workflow: ExerciseNameWorkflow
     private let autocompleteSearch: ExerciseAutocompleteSearch
     private let identityReview: ExerciseIdentityReviewService
-    private var libraryReviewWindow: LibraryReviewWindowController?
+    private let library: ExerciseLibrary
+    private var libraryEditWindow: LibraryEditWindowController?
+
+    func reopenLibraryMaintenance() -> Bool {
+        libraryEditWindow?.bringToFront() ?? false
+    }
 
     override init() {
         do {
-            let baseURL = try FileManager.default.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            ).appendingPathComponent("Gym Assistant", isDirectory: true)
-            try FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
-            let library = try ExerciseLibrary(databaseURL: baseURL.appendingPathComponent("exercise-library.sqlite"))
+            let databaseURL: URL
+            if let explicitPath = ProcessInfo.processInfo.environment["GYM_ASSISTANT_DATABASE_PATH"] {
+                guard explicitPath.hasPrefix("/") else {
+                    throw ExerciseLibraryError.database(message: "Experimental database path must be absolute")
+                }
+                databaseURL = URL(fileURLWithPath: explicitPath)
+            } else {
+                let baseURL = try FileManager.default.url(
+                    for: .applicationSupportDirectory,
+                    in: .userDomainMask,
+                    appropriateFor: nil,
+                    create: true
+                ).appendingPathComponent("Gym Assistant", isDirectory: true)
+                try FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
+                databaseURL = baseURL.appendingPathComponent("exercise-library.sqlite")
+            }
+            let library = try ExerciseLibrary(databaseURL: databaseURL)
+            self.library = library
             workflow = ExerciseNameWorkflow(library: library)
             autocompleteSearch = ExerciseAutocompleteSearch(library: library)
             identityReview = ExerciseIdentityReviewService(library: library)
@@ -1216,9 +1845,9 @@ private final class ExerciseServiceProvider: NSObject {
             pasteboard.clearContents()
             pasteboard.setString(text, forType: .string)
             restoreFocus(to: invokingApplication)
-        case .reviewLibrary:
+        case .maintenance(let navigation):
             DispatchQueue.main.async { [weak self] in
-                self?.showLibraryReview(returnFocusTo: invokingApplication)
+                self?.showLibraryMaintenance(navigation: navigation, returnFocusTo: invokingApplication)
             }
         case .cancel:
             restoreFocus(to: invokingApplication)
@@ -1273,15 +1902,15 @@ private final class ExerciseServiceProvider: NSObject {
         ])
     }
 
-    private func showLibraryReview(returnFocusTo application: NSRunningApplication?) {
-        let controller: LibraryReviewWindowController
-        if let libraryReviewWindow {
-            controller = libraryReviewWindow
+    private func showLibraryMaintenance(navigation: LibraryMaintenanceNavigation, returnFocusTo application: NSRunningApplication?) {
+        let controller: LibraryEditWindowController
+        if let libraryEditWindow {
+            controller = libraryEditWindow
         } else {
-            controller = LibraryReviewWindowController(service: identityReview)
-            libraryReviewWindow = controller
+            controller = LibraryEditWindowController(library: library, reviewService: identityReview)
+            libraryEditWindow = controller
         }
-        controller.show(returnFocusTo: application)
+        controller.show(navigation: navigation, returnFocusTo: application)
     }
 
     private func handlePanel(
@@ -1304,9 +1933,17 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private let serviceProvider = ExerciseServiceProvider()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if let iconURL = Bundle.main.url(forResource: "GymAssistant", withExtension: "icns"),
+           let icon = NSImage(contentsOf: iconURL) {
+            NSApp.applicationIconImage = icon
+        }
         NSApp.servicesProvider = serviceProvider
         NSUpdateDynamicServices()
         WorkflowEventLog.write("application_launched")
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        !serviceProvider.reopenLibraryMaintenance()
     }
 }
 
