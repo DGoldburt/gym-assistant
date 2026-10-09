@@ -185,6 +185,8 @@ public struct ExerciseIdentityReviewUndoReceipt: Equatable, Sendable {
     public let previousStatus: ExerciseObservationReviewStatus
     public let resolvedExerciseID: ExerciseID?
     let previousEvidenceSnapshot: String
+    let libraryFingerprint: String?
+    let writtenNameID: ExerciseNameID?
 }
 
 public enum ExerciseIdentityReviewError: Error, Equatable {
@@ -355,6 +357,9 @@ public final class ExerciseIdentityReviewService {
         observationID: ExerciseObservationID,
         to exerciseID: ExerciseID
     ) throws -> ExerciseIdentityReviewResult {
+        guard try library.exerciseExists(exerciseID) else {
+            throw ExerciseLibraryError.exerciseNotFound(exerciseID)
+        }
         guard let stored = try library.storedReviewObservation(observationID) else {
             throw ExerciseIdentityReviewError.observationNotFound(observationID)
         }
@@ -435,13 +440,16 @@ public final class ExerciseIdentityReviewService {
         guard let stored = try library.storedReviewObservation(observationID) else {
             throw ExerciseIdentityReviewError.observationNotFound(observationID)
         }
+        let existingName = try library.exactName(for: stored.observedName)
         let result = try link(observationID: observationID, to: exerciseID)
         return (result, .init(
             observationID: observationID,
             decision: .linked,
             previousStatus: stored.status,
             resolvedExerciseID: exerciseID,
-            previousEvidenceSnapshot: stored.evidenceSnapshot
+            previousEvidenceSnapshot: stored.evidenceSnapshot,
+            libraryFingerprint: try library.reviewUndoFingerprint(exerciseID: exerciseID),
+            writtenNameID: existingName == nil ? try library.exactName(for: stored.observedName)?.id : nil
         ))
     }
 
@@ -451,6 +459,7 @@ public final class ExerciseIdentityReviewService {
         guard let stored = try library.storedReviewObservation(observationID) else {
             throw ExerciseIdentityReviewError.observationNotFound(observationID)
         }
+        let existingName = try library.exactName(for: stored.observedName)
         let result = try create(observationID: observationID)
         let decision: ExerciseObservationReviewStatus
         let exerciseID: ExerciseID
@@ -469,7 +478,9 @@ public final class ExerciseIdentityReviewService {
             decision: decision,
             previousStatus: stored.status,
             resolvedExerciseID: exerciseID,
-            previousEvidenceSnapshot: stored.evidenceSnapshot
+            previousEvidenceSnapshot: stored.evidenceSnapshot,
+            libraryFingerprint: try library.reviewUndoFingerprint(exerciseID: exerciseID),
+            writtenNameID: existingName == nil ? try library.exactName(for: stored.observedName)?.id : nil
         ))
     }
 
@@ -485,7 +496,9 @@ public final class ExerciseIdentityReviewService {
             decision: .deferred,
             previousStatus: stored.status,
             resolvedExerciseID: nil,
-            previousEvidenceSnapshot: stored.evidenceSnapshot
+            previousEvidenceSnapshot: stored.evidenceSnapshot,
+            libraryFingerprint: nil,
+            writtenNameID: nil
         ))
     }
 

@@ -48,10 +48,12 @@ unmatched wording accumulates without a quick review path.
 - **Later:** evaluate extractor quality against Task A boundary decisions and review
   Task C outcome clusters—especially deferred observations—without treating an
   identity disposition as automatic extraction ground truth.
-- **Later, unsequenced:** evolve the Exercise Library into a small library-maintenance
-  workspace. It may continue directly into **To review**, but must clearly name that
-  mode, show **Skipped** as the only other additions view, and expose source import
-  and existing-exercise management without implying multiple end-user queues.
+- **Now, implementation awaiting integration:** provide a small Edit Library
+  workspace. Approved navigation reaches it from autocomplete alongside Add
+  Exercises as peer routes without cross-navigation. Add Exercises starts with creation
+  from scratch and offers Import as a suboption. Review candidates is a child of
+  Import, whose button carries a pending-review count, with **To review** and **Skipped** as the only
+  additions views, without multiple end-user queues.
   Existing-exercise management should support deliberate duplicate merges and
   separating an incorrectly linked alias into its own exercise with an audit trail.
   The autocomplete chooser may provide a keyboard action that opens management for
@@ -61,6 +63,24 @@ unmatched wording accumulates without a quick review path.
   adapters that preserve provenance and feed extracted observations into the same
   **To review** additions flow. Image transcription and correction remain a later
   experiment within this solution, not a requirement of the first import path.
+- **Later, unsequenced:** import exercises from an instructional video link,
+  including YouTube links encountered while browsing. First design and implement
+  instructional segments attached to durable alias IDs, allowing multiple segments
+  per alias and proposed start/end timestamps. Then implement source extraction
+  and human correction/identity confirmation. Before confirmation, segments remain
+  candidate source evidence. Neither model extension nor extraction belongs to
+  the current CSV/library-edit slice.
+- **Later, unsequenced:** process video/image/feed sources asynchronously, preserving
+  work when the window closes and updating the shared review queue as candidates
+  arrive. Processing progress is separate from the pending-review badge. Implement
+  each source adapter through a separately scoped plan rather than building a
+  general job system in the CSV slice.
+- **Later, unsequenced:** schedule WOD ingestion from a verified workout source,
+  for example the [Old City CrossFit workout page](https://oldcitycrossfit.sites.zenplanner.com/leaderboard-day.cfm?date=2026-02-07).
+  Access/feed availability remains unverified. Preserve URL/date as source
+  provenance, stage observed names in the same queue, and avoid treating workout
+  occurrence as instructional-video evidence. Frequency and extraction policy
+  need later design; this entry creates no schedule or network integration.
 
 Similarity may propose a duplicate or an incorrectly linked alias, but must not
 merge or separate exercise identities without an explicit reviewed action.

@@ -86,6 +86,8 @@ bundle_smoke() {
     test -x "$contents/MacOS/SetFieldFeedbackDisposition" || return
     /usr/bin/codesign --verify --strict "$bundle" || return
     /usr/bin/plutil -lint "$contents/Info.plist" || return
+    test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$contents/Info.plist")" = "GymAssistant.icns" || return
+    test -s "$contents/Resources/GymAssistant.icns" || return
     test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:0:NSMessage' "$contents/Info.plist")" = "autocompleteExercise" || return
     test "$(/usr/libexec/PlistBuddy -c 'Print :NSServices:1:NSMessage' "$contents/Info.plist")" = "reviewExercise" || return
     cleanup_verify_bundle || return

@@ -20,6 +20,7 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
     public let matchedNameIsPreferred: Bool
     public let matchKind: ExerciseSearchMatchKind
     public let score: Double
+    public let confirmedNames: [ExerciseName]
 
     public init(
         exerciseID: ExerciseID,
@@ -28,7 +29,8 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
         matchedName: String,
         matchedNameIsPreferred: Bool,
         matchKind: ExerciseSearchMatchKind,
-        score: Double
+        score: Double,
+        confirmedNames: [ExerciseName] = []
     ) {
         self.exerciseID = exerciseID
         self.preferredName = preferredName
@@ -37,6 +39,7 @@ public struct ExerciseSearchMatch: Equatable, Sendable {
         self.matchedNameIsPreferred = matchedNameIsPreferred
         self.matchKind = matchKind
         self.score = score
+        self.confirmedNames = confirmedNames
     }
 }
 
@@ -98,7 +101,8 @@ public final class ExerciseAutocompleteSearch {
                 matchedName: ranked.name.text,
                 matchedNameIsPreferred: ranked.isPreferred,
                 matchKind: ranked.kind,
-                score: ranked.score
+                score: ranked.score,
+                confirmedNames: namesByExercise[exerciseID, default: []]
             )
         }
         .sorted { lhs, rhs in
