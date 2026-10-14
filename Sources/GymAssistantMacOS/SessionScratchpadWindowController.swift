@@ -19,6 +19,7 @@ import GymAssistantWorkspace
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
     private let noteContext: SessionNoteContext?
+    private let pasteboard: NSPasteboard
     private let editor = NSTextView()
     private let transcript = NSTextView()
     private let composer = ChatComposer()
@@ -36,13 +37,18 @@ import GymAssistantWorkspace
     private var boundaryBrowser: SessionBoundaryBrowser?
     private var preferencesWindow: ProgrammingPreferencesWindow?
     private var preparingRequest = false
+    private let checkedCopy = CheckedScratchpadCopy()
+    private var comparisonTask: Task<Void, Never>?
+    private var comparisonGeneration = UUID()
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation, profile: CoachingProfile,
-                assistant: any ProgrammingAssistant = FakeProgrammingAssistant(), noteContext: SessionNoteContext? = nil) throws {
+                assistant: any ProgrammingAssistant = FakeProgrammingAssistant(), noteContext: SessionNoteContext? = nil,
+                pasteboard: NSPasteboard = .general) throws {
         self.snapshot = snapshot; self.store = store; self.note = note
         self.association = association; self.profile = profile; self.assistant = assistant
         self.noteContext = noteContext
+        self.pasteboard = pasteboard
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
@@ -57,7 +63,7 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
-        window.title = "Session scratchpad — offline synthetic test"
+        window.title = noteContext == nil ? "Session scratchpad — offline synthetic test" : "Session scratchpad"
         window.isReleasedWhenClosed = false
         window.delegate = self
         snapshotDidRestore()
@@ -93,7 +99,9 @@ import GymAssistantWorkspace
     }
     private func configure(rich: NSAttributedString) {
         guard let root = window?.contentView else { return }
-        let description = NSTextField(labelWithString: "Synthetic note · saved locally · fake assistant · no Notes/API access")
+        let description = NSTextField(labelWithString: noteContext == nil
+            ? "Synthetic note · saved locally · fake assistant · no Notes/API access"
+            : "Notes context · scratchpad saved locally · manual handoff")
         description.frame = NSRect(x: 18, y: 646, width: 1000, height: 20)
         description.textColor = .secondaryLabelColor
         root.addSubview(description)
@@ -129,7 +137,9 @@ import GymAssistantWorkspace
         root.addSubview(copy)
         let compare = NSButton(checkboxWithTitle: "Compare with source", target: self, action: #selector(toggleDiff))
         compare.frame = NSRect(x: 16, y: 26, width: 195, height: 24)
-        compare.toolTip = "Compare with the frozen synthetic source; live Notes monitoring is not connected."
+        compare.toolTip = noteContext == nil ? "Compare with the frozen synthetic source; live Notes monitoring is not connected."
+            : "Compare with Notes after a fresh read. Notes changes never replace the scratchpad."
+        diff.identifier = NSUserInterfaceItemIdentifier("notes-comparison")
         root.addSubview(compare)
         sendButton.target = self; sendButton.action = #selector(send)
         sendButton.frame = NSRect(x: 947, y: 54, width: 83, height: 26)
@@ -169,6 +179,7 @@ import GymAssistantWorkspace
         } else {
             status.stringValue = noteContext.failure ?? "Session association needs review. Use Adjust Session Boundary."
         }
+        if showingDiff { renderComparison() }
     }
     public func textDidChange(_ notification: Notification) {
         let changedEditor = notification.object as AnyObject? === editor
@@ -360,31 +371,82 @@ import GymAssistantWorkspace
     }
     @objc public func copyForNotes() {
         saveTask?.cancel(); saveNow()
-        do {
-            try ScratchpadRichTextExporter.publishMarkdown(editor.attributedString(), to: .general)
-            status.stringValue = "Copied—Notes not verified. Synthetic test: use Notes Paste as Markdown."
-        } catch { status.stringValue = "Copy failed; no formatted handoff claimed." }
+        let rich = NSAttributedString(attributedString: editor.attributedString())
+        let copiedRevision = snapshot.revision
+        let anchor = snapshot.anchor
+        let context = noteContext
+        let board = pasteboard
+        status.stringValue = "Preparing Markdown copy…"
+        checkedCopy.start(prepareAndPublish: {
+            try ScratchpadRichTextExporter.publishMarkdown(rich, to: board)
+        }, verify: {
+            guard let context else { return .unavailable }
+            do {
+                let document = try await context.refresh(for: .checkedCopy)
+                let association = try context.association(for: anchor.sessionID)
+                let latest = try document.evidence(in: association.range)
+                guard latest.text == anchor.baselineText else { return .conflict }
+                // Legacy or manually reassociated evidence is not necessarily
+                // the confirmed formatting baseline. Do not claim agreement.
+                guard let baseline = anchor.sourceEvidence, baseline.text == anchor.baselineText else { return .unavailable }
+                return latest == baseline ? .unchanged : .conflict
+            } catch { return .unavailable }
+        }, update: { [weak self] state in
+            guard let self else { return }
+            let suffix = self.snapshot.revision == copiedRevision ? "" : " · Scratchpad changed since copy"
+            switch state {
+            case .copiedChecking: self.status.stringValue = "Copied—checking Notes…" + suffix
+            case .copiedVerified: self.status.stringValue = "Copied—Notes checked. Use Notes Paste as Markdown." + suffix
+            case .copiedUnverified: self.status.stringValue = "Copied—Notes not verified. Check Notes before pasting." + suffix
+            case .copiedConflict: self.status.stringValue = "Copied—Notes changed in this session. Compare before pasting; clipboard unchanged." + suffix
+            case .failed: self.status.stringValue = "Copy failed; no formatted handoff claimed."
+            }
+        })
     }
     @objc private func toggleDiff() {
         showingDiff.toggle()
+        comparisonTask?.cancel()
+        comparisonGeneration = UUID()
         if showingDiff {
-            if association.observationID != note.observationID || !association.range.isParagraphAligned(in: note.text) {
-                diff.string = "Notes association is unresolved. Scratchpad is preserved; comparison is unavailable."
+            if let noteContext {
+                diff.string = "Checking Notes… Scratchpad preserved."
+                let generation = comparisonGeneration
+                comparisonTask = Task { [weak self] in
+                    do {
+                        _ = try await noteContext.refresh(for: .comparison)
+                        guard !Task.isCancelled, let self, self.showingDiff, self.comparisonGeneration == generation else { return }
+                        self.renderComparison()
+                    } catch {
+                        guard !Task.isCancelled, let self, self.showingDiff, self.comparisonGeneration == generation else { return }
+                        self.diff.string = "Notes could not be verified. Scratchpad preserved; comparison is unavailable."
+                    }
+                }
             } else {
-            diff.string = "Frozen synthetic source vs scratchpad r\(snapshot.revision) — NOT live Notes\n"
-                + "Text-only comparison; formatting agreement not verified.\n\n"
-                + SessionComparison.text(before: (note.text as NSString).substring(with: association.range.nsRange), after: snapshot.text)
+                renderComparison()
             }
             diff.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
         }
         editorScroll.isHidden = showingDiff; diffScroll.isHidden = !showingDiff
         if !showingDiff { window?.makeFirstResponder(editor) }
     }
+    private func renderComparison() {
+        if noteContext != nil && (try? noteContext?.association(for: snapshot.anchor.sessionID)) == nil
+            || association.observationID != note.observationID || !association.range.isParagraphAligned(in: note.text) {
+            diff.string = "Notes association is unresolved. Scratchpad is preserved; comparison is unavailable."
+            return
+        }
+        let title = noteContext == nil ? "Frozen synthetic source — NOT live Notes" : "Latest observed Notes"
+        diff.string = "\(title) vs scratchpad r\(snapshot.revision)\n"
+            + "Text-only comparison; formatting agreement not verified.\n\n"
+            + SessionComparison.text(before: (note.text as NSString).substring(with: association.range.nsRange), after: snapshot.text)
+    }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
         stop(); saveTask?.cancel(); return saveNow()
     }
     public func windowWillClose(_ notification: Notification) {
+        checkedCopy.cancel()
+        comparisonTask?.cancel()
         if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
-    public func flushAndStop() -> Bool { stop(); saveTask?.cancel(); return saveNow() }
+    public func flushAndStop() -> Bool { checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow() }
 }

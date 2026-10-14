@@ -44,7 +44,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Implement structured session candidates and set-level stable association, including hierarchy/typos, lettered weeks, Parking Lot, duplicates, renumbering, stale confirmation and occupied ranges. Add bounded semantic HTML import, shared note context with ordered observation delivery, and saved edit-protection state. Older snapshots without source evidence require confirmation rather than inferred identity.
 - [x] (2026-10-14) Connect a read-only boundary browser to the synthetic development window. Native Command-Shift-B, Shift-Down expansion, Command-Return, undo, reopen and blocked shrink observed. Fix a native undo aliasing defect with independent attributed-string snapshots; regression verifies undo/redo text, formatting, range and save. This does not establish live Notes ownership/freshness integration.
 - [x] (2026-10-14) Add per-note context pooling with closed-workspace header discovery, monotonic observation delivery, optional fresh-context chat integration, and read-only preference inspection. Private profile packaging, live boundary/checked-copy/diff wiring, skeleton, decoration and Service entry remain open.
-- [ ] (2026-10-14) Native reader acceptance is waiting on this development app's separate Notes Automation grant. Non-prompting read returned permission without showing consent; explicit fixture-access request was triggered and the user was asked to allow it or report that no dialog appeared. Continue independent verification while awaiting input; no native read pass claimed.
+- [x] (2026-10-14) Coach grants this development app's separate Notes Automation permission. Its explicit synthetic fixture test succeeds: captured-note read, import of 83 supported paragraphs/two session regions, metadata identity and captured-ID reread. No Notes write, body persistence, clipboard change or provider call. This proves the bounded native reader path, not full workspace integration or arbitrary formatting support.
+- [x] (2026-10-14) Wire optional live-context checked copy and comparison: one-time publication concurrent with verification, app-only timeout/late warnings, superseded-operation rejection, fresh comparison reads, and preserved scratchpad on unresolved association. Three copy concurrency regressions and a controller integration regression pass; full five-stage verification passes with 163 tests/23 suites. The default synthetic app still has no live context; native full-path timing and live workspace entry remain outstanding.
+- [ ] (2026-10-14) Native editor-generated Markdown preserves heading tiers at a paragraph boundary but adds blank lines between body paragraphs. Test pastes and the inserted paragraph were undone in the synthetic capability note. Compact-spacing control was blocked before execution because it would overwrite the general clipboard; request explicit approval before repeating that control. No formatting acceptance or clipboard workaround.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -70,6 +72,21 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Actual editor-generated Markdown pastes expose paragraph spacing changes that unit
+serialization expectations did not catch. A mid-paragraph insertion also joins the
+first heading to existing body text; a new-paragraph control preserves its native
+Heading tier. Preserve the fidelity requirement and test compact spacing before
+changing serializer expectations. General-clipboard control requires explicit
+approval after the execution review blocked it; the blocked command did not run.
+
+The development app's explicit Automation grant now permits the synthetic native
+fixture read. The earlier probe grant did not substitute for this app's permission.
+Checked-copy timeout scheduling reserves 50ms for main-run-loop delivery (700ms
+timer against the accepted 750ms wait limit). This is not a measured production
+latency guarantee, especially while main-thread rich-text preparation is running.
+Legacy or reassociated formatting evidence that cannot establish the confirmed
+baseline yields Notes not verified rather than a false agreement claim.
 
 Native boundary undo initially retained a live attributed-string reference instead
 of a detached before-image. Undo then paired newer text with the old range/tracker,
@@ -1282,3 +1299,10 @@ were checked in the final temporary bundle. The app was quit with saved syntheti
 state retained. Local checkpointing preserves the tested increment; production
 Notes/boundary/profile/library work remains the next task. No target-branch merge,
 push, paid API request or unrelated worktree change follows from this checkpoint.
+
+Revision note, 2026-10-14, native reader/checked-copy continuation: record successful
+app-specific consent and the bounded native fixture read. Add tested concurrent
+publication/verification and fresh diff wiring for optional live contexts. Full
+verification passes 163 tests and five stages. Native handoff still fails spacing
+fidelity; compact-spacing control awaits approval to overwrite the clipboard.
+No Service installation, target-branch merge, provider call or client-history change.

@@ -493,8 +493,10 @@ separate access request. `NotesRefreshCoordinator` serializes each note's reads,
 batches consumers received before capture, polls visible notes every five seconds,
 coalesces changed metadata, backs off failures and discards suspended-generation
 results. Foundation `NotesObservationState` preserves last-known content and a
-content identity for parsed-structure reuse. These components are not yet connected
-to the window/Service or validated against native Notes. The registry must share one
+content identity for parsed-structure reuse. The native adapter passed a synthetic
+fixture read/import, metadata and captured-ID reread after its own permission grant.
+An optional window context now supplies fresh chat, checked-copy and comparison
+reads; the default synthetic entry and installed Service do not yet use it. The registry must share one
 coordinator per captured NoteID, explicitly validate on resume, and supply aggregate
 visibility. `SessionNoteContext` consumes ordered observations and shares parsed
 structure and set-level association across saved sessions. Foundation session
@@ -502,7 +504,12 @@ structure compares supported body/formatting evidence, never mutable labels alon
 The semantic Notes importer rejects unsupported HTML instead of rendering web
 resources or silently dropping formatting. Boundary edit protection retains
 deletion/insertion evidence; the synthetic window has a keyboard-accessible read-only
-boundary browser and composite undo. Live Notes window/registry integration, real
+boundary browser and composite undo. `CheckedScratchpadCopy` separates one-time
+clipboard publication from asynchronous verification and timeout/status delivery.
+Generation guards suppress obsolete copy results; late verification never writes
+the clipboard. The comparison remains explicitly text-only, not formatting agreement
+or permission to advance a baseline. Native timing remains unverified.
+Live Notes window/registry integration, real
 profile inspection and library decoration remain incomplete; package tests do not establish their native
 behavior. No module from concurrent client-history
 work is imported or changed by this implementation.

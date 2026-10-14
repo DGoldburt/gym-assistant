@@ -1,5 +1,36 @@
 # Initial offline scratchpad implementation checkpoint
 
+Latest continuation, 2026-10-14: the coach approved the development app's Notes
+Automation dialog. Its explicit native fixture command succeeded: 83 imported
+paragraphs, two session regions, metadata identity and captured-ID reread. It did
+not edit Notes, persist the note body, change the clipboard or call a provider.
+This supersedes the pending-permission statements in the historical evidence below.
+
+Checked copy is now connected when a live note context is supplied to the window.
+Publication does not wait for verification; the 700ms timeout timer reserves 50ms
+for delivery against the accepted 750ms limit. Late results only update app status.
+Three concurrency tests cover timeout/late conflict, superseded copies, publication
+failure and cancellation; an injected-reader controller test uses an isolated
+pasteboard to verify fresh copy/diff reads and scratchpad preservation after an
+equal-date external edit. No test touches the user's general clipboard.
+Full verification passed all five stages, including 163 tests in 23 suites.
+The rebuilt native app restored revision 23 and Command-Shift-C displayed
+Copied—Notes not verified. Unlike the isolated-pasteboard automated tests, this
+manual native command did replace the general clipboard with synthetic Markdown.
+Pasting that output into the synthetic capability note preserved Heading and
+Subheading when the insertion point was a new paragraph, but added blank lines
+between ordinary program paragraphs. An initial mid-paragraph paste also joined
+the first heading to the preceding text; inserting at a paragraph boundary resolved
+that part. Both pastes and the test paragraph insertion were undone. No client note
+was edited. A compact-newline clipboard control was rejected by the execution
+approval reviewer before running because it would replace the general clipboard;
+explicit approval is needed before that control. Do not bypass the rejection or
+claim full formatting acceptance. The synthetic scratchpad copy remains on the
+clipboard, and the development app retains revision 23.
+This is not native latency acceptance or the completed offline slice. Default
+development startup remains synthetic; live entry/boundary integration, formatted
+diff, profile packaging, decoration and handoff acceptance are still outstanding.
+
 Date: 2026-10-14. Partial PLAN 013 implementation, not a completed feature or live
 Notes acceptance. The native test uses a synthetic Session 18, an empty synthetic
 profile and a deliberately delayed fake assistant. No Notes reading, Service

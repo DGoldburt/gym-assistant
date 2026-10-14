@@ -3,9 +3,62 @@ import Testing
 import GymAssistantWorkspace
 @testable import GymAssistantMacOS
 
+private actor WindowNotesReader: NotesContextReading {
+    var body = "<div><h2>Session 1</h2></div><div>B2 Row</div>"
+    var reads = 0
+    func captureSelectedNote() async throws -> NoteSnapshot { try await read(id: NoteID("fixture")) }
+    func read(id: NoteID) async throws -> NoteSnapshot {
+        reads += 1
+        return NoteSnapshot(id: id, text: "", html: body, modifiedAt: Date(timeIntervalSince1970: 1))
+    }
+    func metadata(id: NoteID) async throws -> NoteMetadata { NoteMetadata(id: id, modifiedAt: Date(timeIntervalSince1970: 1)) }
+    func change() { body = "<div><h2>Session 1</h2></div><div>B2 Changed externally</div>" }
+}
+
 @Suite("Native scratchpad controller", .serialized) @MainActor struct ScratchpadWindowTests {
     private func descendants(_ view: NSView) -> [NSView] {
         [view] + view.subviews.flatMap(descendants)
+    }
+    private func eventually(_ condition: () -> Bool) async throws {
+        for _ in 0..<100 {
+            if condition() { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(condition())
+    }
+    @Test func checkedCopyAndDiffReadNotesWithoutReplacingScratchpad() async throws {
+        let reader = WindowNotesReader()
+        let initial = try ProgramDocumentReader.read(await reader.read(id: NoteID("fixture")))
+        let candidate = try #require(initial.0.candidates().first)
+        let anchor = SessionAnchor(noteID: initial.0.snapshot.id, recordedHeading: candidate.label,
+            baselineText: candidate.evidence.text, sourceEvidence: candidate.evidence)
+        let context = try SessionNoteContext(noteID: anchor.noteID, anchors: [anchor], reader: reader)
+        let document = try await context.refresh(for: .resume)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-live-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let snapshot = WorkspaceSnapshot(anchor: anchor, text: initial.1.string, richTextArchive: try RichTextArchive.encode(initial.1))
+        let controller = try SessionScratchpadWindowController(snapshot: snapshot, store: WorkspaceSnapshotStore(directory: root),
+            note: document.snapshot, association: context.association(for: anchor.sessionID),
+            profile: CoachingProfile(version: "empty", entries: []), noteContext: context, pasteboard: board)
+        let views = descendants(try #require(controller.window?.contentView))
+        let status = try #require(views.first { $0.identifier?.rawValue == "workspace-status" } as? NSTextField)
+        let comparison = try #require(views.first { $0.identifier?.rawValue == "notes-comparison" } as? NSTextView)
+        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        let before = await reader.reads
+        controller.copyForNotes()
+        try await eventually { status.stringValue.contains("Notes checked") }
+        #expect(await reader.reads > before)
+        #expect(board.string(forType: .string)?.contains("B2 Row") == true)
+        let copied = board.changeCount
+        await reader.change()
+        toggle.performClick(nil)
+        try await eventually { comparison.string.contains("association is unresolved") }
+        #expect(controller.snapshot.text == snapshot.text)
+        #expect(board.changeCount == copied)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
     }
     @Test func boundaryUndoRestoresIndependentTextFormattingAndRange() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-boundary-" + UUID().uuidString)
