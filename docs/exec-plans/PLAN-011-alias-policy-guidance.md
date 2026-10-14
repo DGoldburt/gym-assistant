@@ -16,7 +16,9 @@ prescriptions. Tempo-bearing wording remains explicitly confirmable without loss
 
 In progress. The user approved this bounded implementation on 2026-10-14 and
 specified that RNT means resistance/remedial execution, not a tempo prescription.
-Prepare a learner/main-only PR; stop before merge or production installation.
+Learner/main-only PR #17. On 2026-10-14 the user approved all foreground
+trial checks and authorized merge only if targeted re-review reports no issues
+and required checks pass. Production installation remains unauthorized.
 
 ## Progress
 
@@ -29,6 +31,7 @@ Prepare a learner/main-only PR; stop before merge or production installation.
 - [x] Repair independent review finding: an explicit conflict wins across every confirmed name of the same exercise ID; regression covers either preferred name and rejected Link without writes.
 - [x] Verify repair: 108 tests in 13 suites and all five deterministic stages pass. Build, sign, seed, and launch a distinct isolated trial Service; foreground manual acceptance remains unperformed.
 - [ ] Obtain isolated manual UI acceptance and one bounded independent review before merge approval.
+- [x] User reports PASS on all six foreground trial checks: layout, guidance by pointer/keyboard, Escape focus restoration, Merge/Import Review, conflict/tempo behavior, and switch-away recovery. Targeted re-review remains pending.
 
 ## Surprises & Discoveries
 
@@ -70,9 +73,11 @@ Date/Author: 2026-10-14 / Codex within approved UI scope.
 
 
 Implementation is complete locally. Automated verification passed all five stages
-with 107 tests, 37 resolver cases and 11 review cases (zero candidate-caused writes),
-including the final keyboard-focus refinement. Manual UI acceptance
-and independent review remain pending. Existing production data is untouched.
+with 108 tests, 37 resolver cases and 11 review cases (zero candidate-caused writes),
+including the repair regression. The user passed all foreground UI acceptance
+checks on the corrected code. Targeted independent re-review remains pending;
+merge is authorized only on a clean result and passing required checks.
+Existing production data is untouched.
 No reusable main, curriculum records, schema, migration, or history feature change
 belongs to this slice. Other worktrees continue independently; overlapping policy
 or AppKit edits require explicit reconciliation at integration.
