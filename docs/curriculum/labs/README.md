@@ -20,3 +20,4 @@ Available labs:
 - `05-documentation-gardening.md`
 - `06-codex-cli-and-notes-ui.md`
 - `07-review-saturation-and-opencode.md`
+- `08-automated-pr-review-and-merge-gates.md`
