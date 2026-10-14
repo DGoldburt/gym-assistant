@@ -25,22 +25,27 @@ fixture. Ordinary Markdown paste, single-item HTML and validated WebArchive did 
 This is a handoff candidate needing product approval, serialization and platform tests,
 not permission to change the production clipboard contract.
 
-Workstream paused at the coach's request, 2026-10-13, for acceptance of the worktree/
-branch fixup in Rethink Assistant Use Cases. The coach selected pursuing Markdown
-handoff. The final selective transfer into this learner-based integration worktree
-is complete; serializer, platform and keyboard validation remain next. Overall
-implementation is not approved. Preserve the source worktree until review; do not
-merge its older OST/architecture wholesale.
+Update, 2026-10-14: the contextual design was committed as `72b1020` and cleanly
+reconciled with current `learner/main` as `e443f37`. The coach selected pursuing
+Markdown handoff. Synthetic serializer checks pass 6/6, and the native Notes
+Markdown command again preserved heading tiers on the current host. Keyboard-only
+invocation and supported-platform behavior remain unverified. Isolated clipboard
+ownership checks pass 13/13, but a cross-process guard/write race prevents claiming
+the accepted exact-copy warning replacement is safe. Overall implementation is
+not approved. Preserve the older source worktree until separately reviewed; do
+not merge its older OST/architecture wholesale.
 
 ## Progress
 
 - [x] (2026-10-13) Record coach approval of explicit checked copy versus immediate Notes-unverified ordinary copy.
 - [x] (2026-10-13) Accept 400ms target/750ms verification wait and concurrent publication; exact div/h1/h2/h3 control produced bold Body, not native headings. Fixture HTML restored exactly, probe quit.
 - [x] (2026-10-13) Record exact-copy ownership requirement for entire warning replacement; any later copy, including identical text, requires app-only warning.
-- [ ] Measure full-path timing, test native ownership/race safety and resolve native-style fidelity fallback.
+- [ ] Measure full-path timing and resolve exact-copy warning replacement safety; isolated ownership cases passed, but atomic cross-process guard/write remains unproven.
 - [x] (2026-10-13) Read clipboard research sources and test single-item HTML, public WebArchive, ordinary Markdown paste and native Paste as Markdown. Only the native Markdown command retained tested semantic heading tiers; fixture restored and probe stopped.
 - [x] (2026-10-13) Coach selected Markdown handoff direction and paused for branch/worktree fixup acceptance.
 - [x] (2026-10-13) Selectively transfer the latest Markdown evidence and exact-copy clipboard decision into the learner-based integration line without replacing its learner architecture/OST.
+- [x] (2026-10-14) Commit contextual design, reconcile current learner/main, run full repository verification and four synthetic suites; no production code changed.
+- [x] (2026-10-14) Run isolated clipboard ownership suite (13/13), synthetic Markdown serializer suite (6/6), and native Markdown paste/readback; restore fixture exactly and quit probe.
 - [ ] Validate serializer fidelity, platform availability, selection replacement and keyboard access before production acceptance.
 - [x] (2026-10-12) Inspect existing Service lifecycle and selected design.
 - [x] (2026-10-12) Record provider/data and bootstrap decisions.
@@ -197,10 +202,14 @@ Decision: Test Notes-specific Automation before requesting Accessibility access.
 ## Outcomes & Retrospective
 
 Current outcome: hierarchy 19/19 (including native snapshots), boundary policy 24/24,
-freshness candidate 15/15, previous text association 39/39. Do not aggregate these
-as native UI acceptance. Full public-format hierarchy copy failed; copy timing
-requires a decision. Original fixture restored and probe quit. Native adjustment/
-tracking, production permissions/recovery and implementation approval are pending.
+freshness candidate 15/15, previous text association 39/39; new isolated clipboard
+ownership 13/13 and synthetic Markdown serialization 6/6. Do not aggregate these
+as native UI acceptance. Native Paste as Markdown retained tested heading tiers,
+but keyboard route, editor extraction, literal escaping round-trip, platform
+availability and full-path copy timing remain open. Strict atomic clipboard warning
+replacement is not established. Original fixture restored and probe quit. Native
+adjustment/tracking, production permissions/recovery and implementation approval
+are pending.
 
 The boundary-change policy has a separate 24/24 synthetic assertion pass. It validates
 policy/model snapshots, not native undo, edit tracking, boundary-browser UI, hierarchy
@@ -375,7 +384,7 @@ Local evidence must establish text and bold preservation, explicitly report head
 
 ## Idempotence and Recovery
 
-Repeated seed/verify overwrites only the named synthetic snapshot. Use no Notes deletion or real program edits. No automatic permission grants, installed Service changes, production edits, Git commits, pushes, or curriculum progress changes. Leave any live test note clearly labeled until the user requests recoverable removal.
+Repeated seed/verify overwrites only the named synthetic snapshot. Use no Notes deletion or real program edits. No automatic permission grants, installed Service changes, production edits, pushes, or curriculum progress changes. Design/evidence commits are separate reviewed checkpoints, not a side effect of rerunning a probe. Leave any live test note clearly labeled until the user requests recoverable removal.
 
 ## Artifacts and Notes
 
@@ -430,3 +439,11 @@ article fully, found Apple's documented Markdown paste route, and tested public
 single-item HTML, validated WebArchive and both Markdown paste commands. Record the
 native Markdown success with platform/serialization/keyboard limits. Restored the
 synthetic fixture exactly; production handoff adoption remains an explicit gate.
+
+Revision note, 2026-10-14: committed the approved design package and reconciled
+the library-edit merge without losing learner architecture or OST. The repo's full
+verification passed. Isolated ownership checks distinguish later identical copies
+but reveal a non-atomic cross-process replacement gap. Synthetic Markdown emission
+passes its limited fixture. Native Notes accepted the menu command again; captured
+API readback verified heading tiers. Restored the test note byte-for-byte and quit
+the probe. No production handoff implementation or tutorial advancement follows.

@@ -614,8 +614,8 @@ RTF verify still exits 1 for the same text/heading losses; no expectations were
 weakened. The final native source compiles in Swift 6 mode. Nine-document link/
 whitespace/basic-private-material checks and `git diff --check` pass. Application
 inventory confirms the probe stopped. Production feature tests were not run because
-none were implemented. The reusable package remains uncommitted in the existing
-contextual-program-assistance worktree, pending decisions and remaining evidence.
+none were implemented. The reusable package was subsequently committed on the
+learner-based contextual integration branch; capability gates remain open.
 
 The read-only context-adapter direction is accepted in ADR 004. Review
 [the proposed implementation plan](SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md) and
@@ -626,9 +626,49 @@ full heading/subheading export fidelity and the new Service branch remain unveri
 Production permission denial/revocation must expose unavailable context rather than
 reuse another note silently. No paid API or model-quality test ran in this checkpoint.
 
-The design package remains uncommitted in the existing
-`codex/contextual-program-assistance` worktree. No production code, installed
+The design package was committed as `72b1020` and reconciled with the then-current
+`learner/main` as `e443f37` on `codex/contextual-learner-integration`. No production code, installed
 application, mock-ups, tutorial progress or real Notes program was changed.
 ADR 004 records the subsequently accepted direction, not production behavior.
 The synthetic Notes test note was populated and modified as
 described above. Temporary outputs contain only synthetic fixtures.
+
+## Follow-up handoff tests, 2026-10-14
+
+The standalone `ClipboardOwnershipProbe.swift` used only an isolated, uniquely
+named pasteboard. Its 13/13 assertions passed for uninterrupted warning
+replacement, an identical later recopy, an unrelated later copy, two successive
+scratchpad copies, and a simulated copy inserted between ownership checks.
+Operation UUID plus `changeCount` distinguishes copies even when text is identical.
+It does **not** implement the accepted strict warning-replacement contract: the
+public pasteboard API exposes no atomic compare-and-write, so another process can
+copy after the final check but before the warning write. Do not ship this routine.
+Use an app-only late-conflict warning when exact ownership cannot be guaranteed;
+changing the product contract needs coach approval.
+
+The standalone `MarkdownHandoffProbe.swift` passed 6/6 synthetic serializer
+assertions for heading tiers, literal punctuation escaping, bold exercise labels,
+leading whitespace, terminal newline and rejection of embedded newlines. It starts
+from typed blocks, not real attributed-string extraction, and does not prove
+escaped literals or spacing survive native Notes paste. Both probes remain outside
+production targets. The isolated pasteboard test needed normal macOS pasteboard
+access; its sandboxed write failed and the approved unsandboxed run passed.
+
+On the current macOS 27 host, the native probe published plain Markdown and Notes
+showed an enabled **Edit → Paste as Markdown** command. Invoking it on the synthetic
+note produced h1:3/h2:6/h3:2 in a captured-target API reread (baseline
+h1:1/h2:4/h3:0), with the labeled tiers, bullet and bold label visible. No keyboard
+shortcut was verified. One Undo removed the paste; a second Undo unexpectedly
+removed part of the pre-test final line, so the agent restored that line explicitly.
+Final captured-target reread matched the exact pre-test HTML (4,649 bytes) and
+plain text (3,624 characters), with 70/70 context lines, end marker, same identity,
+and h1:1/h2:4/h3:0. The synthetic note remains available. The general clipboard
+contains only the marked synthetic Markdown published for this test; no previous
+clipboard contents were saved or restored.
+
+Apple's [current Notes guide](https://support.apple.com/guide/notes/import-export-and-print-notes-not201900c07/mac)
+documents formatted Markdown paste. The [macOS 26 guide](https://support.apple.com/guide/notes/not201900c07/4.13/mac/26)
+documents Markdown file import/export but does not establish clipboard-command
+availability; absence from that page is not evidence the command is absent.
+Supported-platform behavior and keyboard-only invocation remain open tests.
+The test probe was quit; app inventory confirmed it stopped.
