@@ -68,6 +68,10 @@ verification had passed. Exercise 13 Task A then gave fresh, ephemeral, read-onl
 reviewers the acceptance criteria and complete diff without the implementer's rationale.
 They uniquely found a shared temporary-bundle concurrency hazard and a cleanup failure
 that could be reported as success; both were fixed and the full harness passed again.
+Optional Lab 07 Task A held the target and review conditions fixed, audited two
+eligible fresh read-only runs, and stopped after neither added actionable findings.
+The approved reflection distinguishes review saturation from correctness and retains
+unverified foreground UI paths as a separate release gate.
 
 ## operate-cli-agents — Direct coding agents through terminal workflows
 

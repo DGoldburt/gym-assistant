@@ -1641,3 +1641,219 @@ Use the isolated `feature/client-history` workstream to define the smallest appr
 client-history product slice, settle its ADR-level decisions, and prepare an ExecPlan
 before implementation. This framing preserves momentum without pre-approving the
 feature design or broad client-history implementation.
+
+### 2026-10-08 — Optional Lab 07 — Task A: Review saturation
+
+**Skills strengthened**
+
+- `review` — Demonstrated (existing confidence retained)
+- `verify` — Demonstrated (existing confidence retained)
+- `set-boundaries` — Demonstrated (existing confidence retained)
+- `operate-cli-agents` — Demonstrated (existing confidence retained)
+
+**What I did**
+
+Inspected two fresh, independent, read-only reviews of the implemented Library Edit
+change under fixed conditions. Accepted stopping after two eligible runs with no
+new actionable findings, while retaining the remaining foreground UI checks before
+release. The checkpoint and the reflection below were explicitly approved in chat.
+
+**Evidence**
+
+- Baseline HEAD: `7a6a58c0b3082c9f1b4ea647907f187007526498`. The complete
+  code/build/test delta, including new untracked feature files, was frozen as an
+  exact diff with SHA-256
+  `e080f4d40dee09066d4023ba41d17897d02c184c101ad46a13e6750d6e9c677d`.
+  This was broader than the lab's suggested small target; that scope was disclosed.
+- Both runs used CLI 0.160.1, explicit `gpt-5.6-terra`, medium reasoning effort,
+  read-only sandbox, approval policy `never`, ignored user configuration, ephemeral
+  fresh sessions, and identical prompts, separate criteria and verification evidence.
+  Runs executed concurrently without report sharing and were counted in run order.
+- The sanitized snapshot excluded implementation discussions/plans, learner-state
+  files and private Notes/library data. Tool-event audits found no excluded learner
+  content or outside-context reads, target writes, builds, UI actions or external
+  tools. Both runs were eligible; prompt confinement was not claimed as hard read
+  isolation. Logged shell-wrapper notices accompanied successful reads, not a
+  permission escalation. Post-run frozen-file hashes passed unchanged.
+- Run 1 reported zero supported defects and zero new actionable findings; run 2
+  also reported zero and zero. No finding rows required actionable/duplicate/nitpick/
+  false-positive classification. Two consecutive eligible zero-new-finding runs met
+  the stopping rule; no third review or fixes were performed.
+- Supplied verification at freeze passed five stages: 102 tests in 13 suites,
+  37 resolver cases, eight identity-review cases, cleanup regression and bundle
+  smoke check. Reviewers did not rerun verification. The supplied evidence was a
+  controller summary of earlier output, not a saved original stdout transcript.
+- Dock visual/minimized-window recovery and foreground parent refresh after a
+  successful Merge sheet action remain unverified UI paths, not supported defects.
+  The learner accepted retaining these checks before release.
+- Frozen inputs, final/baseline source, full reports, JSON event/access logs and
+  checkpoint packet are retained locally at
+  `/private/tmp/gym-assistant-lab07.gw1aqs/RESULTS.md` and its sibling directories.
+  These temporary artifacts are uncommitted and need preservation before system
+  cleanup for long-term raw-evidence retention. The identifiers and results above
+  remain durable even if those local files become unavailable.
+
+**My reflection**
+
+> I kept the code, prompt, model, effort, and permissions fixed so the reviews were comparable and any new finding referred to the same implementation. Two eligible reviews found no supported defects, meeting the stopping rule. That does not prove correctness: static review can miss issues and did not exercise the remaining UI paths. I chose to stop reviewing and retain those UI checks before release.
+
+**Next time / revisit**
+
+Task A is complete. OpenCode comparison (Task B) has not begun and requires a
+separate setup, account and data-flow approval boundary. Optional Lab 07 does not
+advance a numbered exercise; `PROGRESS.md` remains unchanged. No release,
+installation, commit, push or live-library edit was authorized by this checkpoint.
+
+### 2026-10-13 — Optional Lab 08 — Task A: Evidence and merge authority
+
+**Skills strengthened**
+
+- `review`, `verify`, `set-boundaries`, `collaborate` — existing Demonstrated confidence retained; no confidence-level change.
+
+**What I did**
+
+Inspected the Library Edit PR's evidence and current merge authority, completed the
+reported manual UI checks except minimization, and selected manual macOS UI
+verification plus one manually requested Codex review. Confirmed learner/main as
+the integration target. Approved the reflection with the clarification that the
+verification workflow is manual macOS UI verification, not hosted CI.
+
+**Evidence**
+
+- PR 14 is merged into reusable main at addc99b79083e9d66026c93fd4ba0346f4c38b3f.
+  Ordered synchronization produced learner/main 847ff1bedf8e3cff2fba932d12bf81b7ee69feae
+  and PR 13 head c46f69e7a56d60adf29da26984d1bbfae2492177; one intended merge base
+  and the unchanged 20-file product diff were verified. All five verification stages
+  passed again, including 102 tests, 37 resolver fixtures and eight identity fixtures.
+- GitHub inspection found a public repository, current-account admin permissions,
+  zero Actions workflows, no classic learner/main protection, no rulesets/effective
+  rules, and no PR reviews/checks. These are point-in-time observations, not permanent
+  claims. The learner reports no review instructions and no connected repository.
+- The learner reports manual steps 1–7 and 9–12 PASS: isolated setup and creation,
+  layout, Dock/app-switch return, subordinate Merge cancellation, committed Merge
+  parent refresh, continued-navigation status clearing, and fresh Notes insertion.
+  Step 8 FAIL: Command-M did nothing. Minimized Dock reopening remains untested.
+  Source inspection confirms a miniaturizable parent and deminiaturization handling,
+  but does not prove shortcut behavior or diagnose its failure. No fix was applied.
+- The clarified choice does not authorize a GitHub Actions workflow, repository
+  connection, review comment, protections, merge, installation or live migration.
+  Existing automated local verification remains evidence, not hosted enforcement.
+
+**My reflection**
+
+> I learned that success criteria and the diff define what reviewers inspect, but do not prove correctness. Independent review and observed test results add evidence. Our merge gate is currently procedural, not enforced by GitHub. I chose one manual macOS UI verification workflow and one manually requested Codex review, while keeping configuration and exact-revision merge approval separate.
+
+**Next time / revisit**
+
+Task A is complete. Task B starts with inspection of repository-connection permissions,
+account usage/cost and manual review setup, followed by specific approval before
+connection or dispatch. Hosted CI is not selected; adapt the lab to manual UI and
+existing local deterministic verification, explicitly retaining the enforcement
+limitation. Test yellow-button minimization separately before claiming minimized
+recovery. Optional labs do not change PROGRESS.md. Preserve this learner record
+outside the product PR; it remains local in the original recovery worktree pending
+separate learner-record integration.
+
+### 2026-10-13 — Optional Lab 08 — Task B: Evidence and enforcement
+
+**Skills strengthened**
+
+`review`, `verify`, `set-boundaries`, `collaborate` — existing confidence retained.
+
+**What I did and evidence**
+
+Selected manual macOS UI verification, scripts/verify through GitHub Actions, and
+manually requested Codex review. Published the learner-targeted workflow with a
+standard hosted macOS runner, read-only contents token, pinned checkout, no added
+secrets, and no installation/UI automation. Hosted run 38505278062 passed all five
+stages on corrected PR 13 head 11514c1c35c52ba34f1244bf6279e13367010eab, including
+104 tests. Active ruleset 25044560 requires macOS scripts/verify from GitHub Actions
+on learner/main, with strict/up-to-date coverage and no bypass actors; reusable
+main is excluded. Codex's first GitHub review on 76d5f05 produced two P2 findings;
+corrections and their revision coverage are inspected separately in Task C.
+The learner reports the minimized-window and corrected handoff checks PASS.
+The learner explicitly approved the reflection below. Automatic review on newly
+opened PRs remains off by decision; this is not an independent settings readback.
+
+**My reflection**
+
+> I learned that passing automated tests and a zero-finding Codex review don't prove correctness. Manual UI review can expose issues those checks miss. GitHub now requires scripts/verify to pass, while Codex findings and UI acceptance remain evidence I must judge before approving a merge. We decided to keep automatic Codex review on newly opened PRs off for now and request reviews manually.
+
+**Next time / revisit**
+
+Task B complete. Task C: inspect the two correction dispositions and same-head
+re-review evidence, explain revision coverage, and approve its reflection before
+Task D's explicit merge decision. No numbered progress or confidence level changes.
+This learner entry remains local in the recovery worktree, outside the product PR;
+preserve it for separate learner-record integration. No merge/install authorized.
+
+### 2026-10-13 — Optional Lab 08 — Task C: Disposition and revision coverage
+
+**Skills strengthened**
+
+`review`, `verify`, `set-boundaries` — existing confidence retained.
+
+**What I did and evidence**
+
+Accepted the two P2 findings for exact maintenance-row restoration and failed
+backup artifacts; authorized a bounded correction in PR 13 commit
+11514c1c35c52ba34f1244bf6279e13367010eab. Local verification passed all five stages
+with 104 tests, and required hosted run 38505278062 passed. The learner reported
+corrected alias/parent handoff PASS and resolved both review threads; GitHub
+readback confirms both are resolved. One targeted re-review completed on 11514c1,
+reporting no major issues at
+https://github.com/DGoldburt/gym-assistant/pull/13#issuecomment-6160266325 .
+This is limited review evidence, not correctness proof or merge authorization.
+The learner approved the reflection below and accepted stopping this bounded cycle.
+
+**My reflection**
+
+> I learned that a new commit needs fresh verification and review because earlier evidence may not cover the changed code. Resolving review threads alone doesn't prove the defects are fixed. We tested the corrections, confirmed the UI handoff manually, and obtained a targeted re-review of 11514c1. With no major issues reported, I accept stopping this bounded review cycle.
+
+**Next time / revisit**
+
+Task C complete. Task D is the exact-revision human merge decision; no merge,
+installation or live migration is authorized by this reflection approval. No
+numbered progress or confidence level changes. Retain this learner record locally
+outside the product PR until separate learner-record integration.
+
+### 2026-10-13 — Optional Lab 08 — Task D: Revision-bound merge and release
+
+**Skills strengthened**
+
+`verify`, `collaborate`, `set-boundaries` — existing confidence retained.
+
+**What I did and evidence**
+
+Explained that the human judges enforced tests, review findings and manual UI
+evidence, then explicitly delegates execution of a specific merge. Authorized
+merging PR 13 head 11514c1c35c52ba34f1244bf6279e13367010eab, and separately
+authorized production installation and live migration. Head-guarded merge produced
+ce0815b2972074682dae0e17736957fa8c762e1c. Local learner/main was synchronized to
+its remote; local main matched origin/main at addc99b. Full post-merge verification
+passed all five stages, including 104 tests. Completed integration worktrees were
+archived recoverably and their local/remote refs removed; original dirty recovery
+work and unrelated active branches were preserved.
+
+Production app was built from merged source, signature-verified, installed,
+registered and launched. A verified SQLite backup preceded schema-v3 to v4 live
+migration. Post-upgrade integrity and foreign-key checks passed; all 399 exercise
+identity/default/timestamp records, 835 name records, and historical observations
+were preserved by SQL set comparisons. No edit receipt was created by installation.
+The previous app and restricted-permission backup are retained privately outside
+Git. A new production Notes interaction was not verified; isolated UI passes do
+not substitute for that observation. The learner approved the final reflection.
+
+**My reflection**
+
+> I made the merge decision after enforced tests, reviewed findings, and manual UI checks. The agent executed my specific approval rather than judging its own work. We verified the merged result, synchronized local branches, and separately backed up live data before installation and migration. Passing these checks reduces risk but does not prove correctness.
+
+**Outcome / next time**
+
+Optional Lab 08 complete: Tasks A–D and their reflections approved. Manual UI,
+scripts/verify through Actions, and manually requested Codex review remain distinct
+evidence sources. Required verification applies only to learner/main. Automatic
+Codex review on newly opened PRs stays off by decision. No numbered tutorial
+progress or confidence level changes. Preserve this local learner ledger and the
+other unique recovery-worktree changes for separate learner-record integration;
+do not copy older learner files wholesale over the completed Exercise 14 history.
