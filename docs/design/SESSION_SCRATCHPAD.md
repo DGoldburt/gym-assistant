@@ -128,6 +128,27 @@ user text, so copying is not a guarantee against a mistaken paste. Automatic mer
 is not required. A conflict display, if needed, replaces a view rather than stacking
 multiple editors.
 
+## First-slice formatting controls
+
+Approved 2026-10-14: the scratchpad must support authoring formatting, not only
+preserving imported or programmatically seeded styles. Provide a small **Format**
+menu with **Heading**, **Subheading**, **Body**, **Bold**, and **Bulleted list**,
+with discoverable keyboard shortcuts. No permanent formatting toolbar is required.
+Heading/Subheading/Body and list commands operate on the current paragraph or
+selected paragraphs; Bold operates on selected text or the typing style. These
+must create semantic paragraph styles, not merely larger or bold-looking text.
+Typing Markdown markers is not the formatting interface.
+
+Formatting is a scratchpad edit: it participates in revision/freshness reporting,
+edited-region boundary protection, undo/redo, local persistence and supported
+Markdown handoff. Commands target the scratchpad, not the chat composer, transcript
+or read-only diff. Choose and test local shortcuts without colliding with existing
+commands, especially Adjust Session Boundary and Copy Markdown for Notes.
+Acceptance includes creating these styles from ordinary text using only the
+keyboard, returning a heading/list paragraph to Body, undoing/redoing the change,
+reopening with formatting intact, and pasting the authored content into Notes.
+Programmatically styled sample headings alone do not satisfy this requirement.
+
 ## Starting or resuming
 
 Entry reuses the existing Option-Command-G autocomplete shortcut and branches from

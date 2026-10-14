@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [ ] (2026-10-14, coach-approved side conversation) Implement first-slice Format menu commands and discoverable keyboard shortcuts for Heading, Subheading, Body, Bold and Bulleted list. No permanent toolbar. Verify keyboard authoring, semantic styles, undo/redo, revision/freshness and boundary-protection tracking, persistence and native Notes handoff; existing styled samples are not acceptance evidence.
+
 - [x] (2026-10-14) Coach authorizes local prep and implementation. Move accepted plan to PLAN 013; reserve ADR 005 and PLAN 012 for Notes direction/capability evidence because current learner/main uses ADR 004/PLAN 011 for alias guidance. Mockup artifacts in this checkout match the old source byte-for-byte. App archival is blocked by other-chat ownership; preserve that checkout.
 - [x] (2026-10-14) Commit approved preparation as 0a023a2 and reconcile local learner/main (221544f) into this feature branch as 5e7f4bb. One merge base equals current learner/main; baseline five-stage verification passes. No push or merge into learner/main.
 - [x] (2026-10-14) Start offline implementation: Foundation workspace/request types and reader contract; secure-archive snapshot store with validation/recovery/fault injection; supported Markdown exporter; native synthetic editor/chat/comparison executable. Native launch attempt is blocked by locked Mac; no UI pass claimed. Work is uncommitted pending native validation.
@@ -173,6 +175,13 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+Decision, 2026-10-14, coach-approved side conversation: include a small Format menu
+and discoverable local keyboard shortcuts for Heading, Subheading, Body, Bold and
+Bulleted list in the first slice, without a permanent toolbar. Rationale: preserving
+seeded/imported formatting is insufficient for freely writing a session. This
+records implementation scope and authoring acceptance, not completed controls or
+native test evidence. No broader text-formatting feature set is approved.
 
 Accepted 2026-10-14: the first Markdown handoff may add one blank separator between
 a bulleted list and subsequent ordinary body text. Native controls show that omitting
@@ -489,7 +498,17 @@ chooser or separate week identities. Do not turn repeated week labels into new
 session identities or flatten/remove their progression prescriptions.
 
 The editor supports native bold, headings/subheadings, and bullets with undo and
-free text. A new session copies only the prior session's structural headings, not
+free text. Coach-approved clarification, 2026-10-14: expose these through a small
+Format menu with Heading, Subheading, Body, Bold and Bulleted list commands and
+discoverable keyboard shortcuts; no permanent formatting toolbar. Paragraph-style
+commands apply to the current paragraph or selected paragraphs. Bold applies to
+selected text or the typing style. Use semantic heading/list attributes rather
+than font-size approximations; Markdown markers typed into the editor remain text.
+Keep command routing confined to the editable scratchpad, not the composer,
+transcript or comparison. Choose local bindings that do not collide with existing
+commands such as Adjust Session Boundary and Copy Markdown for Notes.
+Route formatting changes through the same revision, save, freshness and protected
+edit tracking as text edits, with undo/redo. A new session copies only the prior session's structural headings, not
 old exercises, doses, dates, results, or warmup lines. Ambiguous heading/content
 classification is previewed, not silently carried forward. Conversation history
 and Programming preferences are quiet access points, not permanent extra panels.
@@ -979,6 +998,16 @@ with reader/computation counters to verify costs; record measured timings, not a
 promise derived from token length. Failed/stale reads cannot set a false matched
 state, and opening a diff never triggers an API/model call.
 
+Before handoff acceptance, author Heading, Subheading, Body, bold
+text and a bulleted list from ordinary scratchpad text using only the keyboard.
+Discover every shortcut in the Format menu, convert heading/list paragraphs back
+to Body, and verify that unrelated paragraphs and chat text are unchanged. Undo
+and redo must restore both text and semantic attributes; formatting-only edits
+must advance scratchpad freshness and protect the affected region from shrinking.
+Close/reopen must retain the result. Test Notes handoff with this coach-authored
+formatting, not solely programmatically seeded fixtures. No native authoring pass
+is claimed until these interactions are observed.
+
 The explicit copy icon/whole-scratchpad shortcut supplies the approved Notes handoff
 representation; native Paste as Markdown must preserve Heading, Subheading, bold and
 continuing bullets for supported content. Verify conversion rather than assuming
@@ -1339,3 +1368,10 @@ the list-to-body blank separator in the active contract. Implement and test exac
 normalization of observed empty native heading export suffixes so they do not cause
 false extra paragraphs or blanket rejection. Arbitrary styled/text-bearing wrappers
 remain unsupported; native rebuilt round-trip acceptance is still outstanding.
+
+Revision note, 2026-10-14, formatting-authoring scope: the coach approved first-slice
+Format menu commands and discoverable shortcuts for Heading, Subheading, Body,
+Bold and Bulleted list. Add implementation work and keyboard/native acceptance
+coverage because retaining seeded styles alone does not make the scratchpad a
+usable program-writing editor. No toolbar, broader formatting scope, implemented
+control or passing native-authoring test is implied by this documentation update.
