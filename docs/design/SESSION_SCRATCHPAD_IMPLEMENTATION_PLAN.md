@@ -34,6 +34,8 @@ required checkpoint before live API calls; they do not block isolated native tes
 
 ## Progress
 
+- [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
+- [x] (2026-10-14) Reconcile ordinary-copy acceptance with prior approval; native typed Markdown replacement/literal/bold/list tests pass after two serializer regressions were fixed (8/8 local, 8/8 captured-native). Keyboard-only invocation, original spacing/list styles and real copy/check timing remain unproved.
 
 - [x] (2026-10-13 02:33Z) Inspect the capability evidence, reusable checkout, and learner Service/library interfaces; distinguish implemented behavior from design.
 - [x] (2026-10-12 local date) Record accepted read-only adapter direction in ADR 004 and prepare this proposal.
@@ -182,12 +184,12 @@ an external Notes edit and warn before manual paste. Chat, diff, and whole-copy
 use the same Notes freshness check, with distinct outcomes. Partial-text copy is
 unchanged. Date/author: 2026-10-12, user approval following the copy-risk discussion.
 
-Proposed monitoring mechanism: metadata-first checks, body caching/coalescing, and
-one shared validation policy. Fetch changed/missing/uncertain body state, not a full
-body unconditionally for every prompt. Test timestamp resolution and edit/format/
-undo timing before choosing the minimum safeguard for equal-time changes. No model
-calls from monitoring. Rationale: cache validity is the issue, not which UI command
-requested it. Date/author: 2026-10-12, Codex revision approved for design review.
+Monitoring revision after native equal-date edits: idle checks remain metadata-only;
+chat, diff, and explicit checked copy validate body/id/date together, sharing only
+reads that cover each request. Cache parsing and comparisons when content is unchanged.
+Ordinary Command-C has no synchronous check. No model calls from monitoring.
+Rationale: modification time is not a reliable body revision. Date/author:
+2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
 
@@ -335,8 +337,8 @@ revisit the persistence contract before promising it.
 
 Monitor the captured note automatically; there is no Check Notes command or button.
 Refresh full content on entry/resume; chat, diff, and whole-copy use the same shared
-freshness check below. Whole-copy makes a bounded safety attempt before export
-and warns about external changes or failed checking; partial-text copy needs no
+freshness check below. Explicit checked copy publishes concurrently with its bounded
+safety check and warns about external changes or failed checking; ordinary copy needs no
 Notes access. Ordinary monitoring discovers the result of a manual paste. Surface
 Notes changed or Notes unavailable with the last successful check time. Keep
 baseline and fresh observation separate.
@@ -372,14 +374,16 @@ the chooser with their local keyboard equivalents; neither adds a global shortcu
 
 Copy scratchpad is an icon floating in the upper-right of the scratchpad pane,
 not a labeled primary button or a separate handoff panel. It copies the entire
-scratchpad as rich text plus a plain-text compatibility representation. Proposed
+scratchpad with plain-text Markdown for Notes' Paste as Markdown command. A rich
+representation for other paste destinations is subject to separate fidelity testing;
+the timing probe's raw RTF control is not that implementation. Proposed
 local Command-Shift-C invokes that whole-scratchpad command regardless of selection;
 show it in the Edit menu, tooltip, and accessible command name. Keep standard
 Command-C selection semantics. With editor focus, Command-A then Command-C copies
 the full scratchpad immediately through the rich export path, without a synchronous
 Notes check; the explicit icon/whole-copy command is checked. Partial selection
 copies only that range. Command-C in chat still copies chat selection. Test both
-copy paths for equivalent supported formatting; intercepting native copy must not
+copy paths for their separately stated formatting contracts; intercepting native copy must not
 break ordinary selection, undo, or accessibility.
 
 Compare with Notes is a compact diff-view toggle at the scratchpad edge, with an
@@ -405,8 +409,8 @@ after paste needs visible confirmation only if the new target cannot be establis
 unambiguously. Duplicate-heading correction/reassociation likewise retains the
 scratchpad. No automatic Notes merge, write, or scratchpad replacement.
 
-Whole-scratchpad copy is also a safety checkpoint. Before completing the icon,
-whole-copy shortcut export, use the shared freshness
+Explicit whole-scratchpad copy is also a safety checkpoint. Concurrently with icon/
+whole-copy shortcut publication, use the shared freshness
 check and compare current Notes with the last confirmed baseline, not merely the
 scratchpad's edits. Warn Notes changed—review differences before pasting and expose
 the diff if Notes independently changed; if current Notes already equals the
@@ -415,8 +419,10 @@ association must warn Notes could not be verified. Copy remains available with
 warning, not as a claim of safe paste. Partial-text/chat copy retains ordinary
 semantics and does not preflight Notes.
 
-Accepted 2026-10-13: checked icon/whole-copy shortcut requires waiting for Copied;
-ordinary Command-C remains immediate and Notes-unverified at export, including
+Accepted 2026-10-13: wait for publication before pasting. For the explicit checked
+copy, distinguish Copied—checking Notes from a completed check or the bounded
+Copied—Notes not verified fallback; publication alone is not verification.
+Ordinary Command-C remains immediate and Notes-unverified at export, including
 Command-A/Command-C. A simulated 750ms preflight pasted OLD contents before it
 completed at 0.753 seconds; this distinction does not prevent early paste elsewhere.
 
@@ -473,8 +479,9 @@ for chat, diff and checked-copy, sharing only reads that cover each request and
 reusing parsing/diffs when unchanged. Keep idle polling metadata-only, with no
 prompt-only exception. The injected coordinator passes 15/15 tests, not production
 scheduling acceptance. Full reads of a 1,000-line native fixture took 0.227–0.376
-seconds; twenty metadata reads took 1.939 seconds. Copy interaction still needs
-coach approval. Cache the raw body and
+seconds; twenty metadata reads took 1.939 seconds. Checked-versus-ordinary copy and
+the 400ms/750ms timing contract are accepted; production scheduling remains untested.
+Cache the raw body and
 supported formatted/session representation by note identity and content digest;
 if the body is identical, reuse parsed ranges, diff, and context rather than compute
 them again. Cache request-ready note text; do not tokenize it repeatedly on polling
@@ -508,7 +515,8 @@ entire large notes every five seconds.
 
 The Program session branch captures one selected note; ordinary autocomplete does
 not monitor. Workspace entry/resume requires a full read. Prompt submission, diff,
-and whole-copy share metadata/cache freshness validation and conditional body reads.
+and explicit checked copy share body/id/date validation, coalescing only reads that
+cover each request. Ordinary Command-C is immediate and Notes-unverified.
 Visible idle ticks and app reactivation check metadata and fetch changed content
 automatically. Scratchpad edits and partial-text copying require no Notes reads;
 whole-copy warns about external edits before/with completion, and the diff uses a
@@ -726,10 +734,10 @@ flagged automatically within one completed metadata/body-refresh cycle, nominall
 five seconds plus the bounded coalescing/read time when available. Slow/failed reads
 expose freshness limits rather than claim that timing. With a cached unchanged large
 note, 20 scheduled ticks perform metadata reads only: zero body reads, reparses,
-diff recomputations, tokenization passes, or model calls. A user prompt forces a
-metadata/cache freshness check, not an unconditional body read. Diff and whole-copy
-use that same check; uncertain timestamp state requires the same additional body
-validation for all consumers. Rapid edits produce at most one in-flight
+diff recomputations, tokenization passes, or model calls. Chat, diff and explicit
+checked copy require body/id/date validation even when modification time is equal;
+share covering reads and reuse parsing when content is unchanged. Ordinary copy
+does not synchronously check Notes. Rapid edits produce at most one in-flight
 read and bounded coalesced refresh; hidden/sleeping workspaces make no timer reads.
 Two open workspaces for the same note share metadata/body reads rather than doubling
 them. A monitor validates all stored associations affected by renumbering, not just
@@ -739,9 +747,14 @@ with reader/computation counters to verify costs; record measured timings, not a
 promise derived from token length. Failed/stale reads cannot set a false matched
 state, and opening a diff never triggers an API/model call.
 
-Rich copy/paste preserves Heading, Subheading, bold, and native continuing bullets
-in Notes through the copy icon/whole-scratchpad shortcut and editor Command-A/
-Command-C. The shortcut is discoverable in the menu without mouse movement.
+The explicit copy icon/whole-scratchpad shortcut supplies the approved Notes handoff
+representation; native Paste as Markdown must preserve Heading, Subheading, bold and
+continuing bullets for supported content. Verify conversion rather than assuming
+ordinary rich Command-V retains native tiers. The whole-copy shortcut is discoverable
+in the menu without mouse movement. Ordinary editor Command-A/Command-C remains
+immediate rich-selection copy and Notes-unverified, with no synchronous Notes check;
+it does not promise native heading fidelity. This distinction follows the approved
+2026-10-13 interaction, not a new exception introduced by implementation.
 Copy alone never indicates saved/matched; automatic Notes monitoring verifies the
 correct session or stays not verified. The diff toggle shows current or explicitly
 last-known Notes versus the scratchpad in place of the editor, without requiring a
@@ -750,8 +763,10 @@ warmup/result content. Conversations remain accessible after a break without an
 extra permanent context/summary panel.
 
 Externally edit the confirmed Notes session immediately before each whole-copy
-path: the icon, whole-copy shortcut, and Command-A/Command-C must all warn and offer
-the existing diff. A confirmed match must not produce a false overwrite warning.
+checked path: the icon and whole-copy shortcut must warn and offer the existing diff.
+Command-A/Command-C must copy immediately without a Notes preflight and must not claim
+verification; automatic monitoring may independently surface a conflict. A confirmed
+match must not produce a false overwrite warning.
 Read failure/timeout warns without losing the scratchpad or falsely verifying paste.
 Inject a late conflict after a checked copy, with and without intervening copies:
 Gym Assistant shows the conflict and diff, while the clipboard remains unchanged
@@ -972,3 +987,9 @@ app-only late-conflict warning, leaving clipboard contents untouched after copy.
 This supersedes the conditional clipboard-replacement proposal and adds acceptance
 cases for unchanged clipboard and stale-result routing. No production code or
 tutorial progress changed by this design revision.
+
+Revision note, 2026-10-14, checkpoint reconciliation: remove active conditional-body
+read and sequential-copy wording superseded by equal-date evidence and approved
+parallel checked copy. Explicit copy uses the selected Notes Markdown handoff;
+ordinary rich Command-C stays immediate and unverified. Record observed evidence
+without claiming production fidelity, scheduling or implementation approval.

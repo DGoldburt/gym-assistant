@@ -10,7 +10,17 @@ The coach wants a freely editable session scratchpad beside conversation, with t
 
 In progress. The user approved the capability checkpoint on 2026-10-12, OpenAI API use and transmission of note/profile material, and no historical conversation import. No paid API requests or real-program modifications are part of this checkpoint.
 
-Current status, 2026-10-13: checked icon/whole-copy command, separate from immediate
+Current status, 2026-10-14: the coach accepted bounded Markdown menu handoff with
+printed Notes-only shortcut instructions. Local serialization passes 8/8; captured
+native dash and disc variants each pass 8/8. Parallel copy/read samples support the
+400ms target for the bounded warm fixture; delayed notice meets 750ms in three
+margin-adjusted runs, with the initial 759ms failure retained. Saved-state association
+reopen passes in separate processes. All late warnings are app-only, with no later
+clipboard writes. Production rich-boundary tracking, workspace UI recovery,
+configured keyboard invocation, platform support and full app timing remain open.
+Overall production implementation is not approved by this checkpoint.
+
+Historical status, 2026-10-13 (superseded below): checked icon/whole-copy command, separate from immediate
 Notes-unverified Command-C, is accepted. Timing is approved as 400ms target/750ms
 verification wait, with concurrent rich preparation/publication and continued late
 verification; full-path measurement remains pending. Late-conflict clipboard warning
@@ -39,6 +49,17 @@ older OST/architecture wholesale.
 
 ## Progress
 
+- [x] (2026-10-14) Reconcile active implementation/monitoring wording; add coach-facing Notes shortcut guide. Bounded saved-state association reopen checks pass in a fresh process against captured native plaintext (31/31 write, 38/38 read, each includes the existing 30 checks). No production workspace UI or rich association parser is implied.
+- [x] (2026-10-14) Disc-marker control retained native regular ul/headings/bold/literals and selected replacement; 8/8 captured assertions for this variant. Baseline restored exactly.
+- [x] (2026-10-14) Native parallel benchmark: four warm samples 168–180ms, large copy payload/small Notes body. Slow injected read leaves clipboard unchanged; initial 759ms notice fails limit, 700ms dispatch gives 728–742ms in three repeats.
+- [x] (2026-10-14) Coach manually pasted the test Markdown through Notes' menu and confirmed bullets/headings; accepts this bounded handoff checkpoint once Notes-only shortcut setup instructions are supplied. Instructions supplied; no shortcut was configured by the agent and actual keyboard invocation remains unverified.
+- [x] (2026-10-14) Run staged emit-native-disc control after the earlier stopped attempt; native results and restored baseline recorded above.
+- [x] (2026-10-14) Native controls restored; test typed serializer selection replacement, literals/bold and continuing list. Fix two regression failures; 8/8 synthetic and 8/8 captured-native assertions pass. Current baseline, including LEFT RIGHT, restored exactly; probe quit.
+- [ ] Before production acceptance, validate configured keyboard invocation, rich-editor spacing/list-style conversion, platform availability and full app timing. Disc/dash controls and bounded parallel timing already have evidence above.
+- [x] (2026-10-14) Resume in learner-based worktree after reading Rethink Assistant Use Cases; align stale ordinary-copy acceptance with approved immediate, unverified Command-A/Command-C.
+- [x] (2026-10-14) Prepare typed serializer native fixture; original 6/6 assertions retained, expanded to 8/8 after native paste exposed regressions. Native paste subsequently ran as recorded above.
+- [x] (2026-10-14) Isolated copy presentation/publication probe passes 14/14 outside shell sandbox; 1,000-line synthetic preparation/publication takes 50.7ms, excluding Notes/editor extraction.
+- [x] (2026-10-14) Computer-use connection restored; literal and selection tests completed. Earlier missing-tool blocker is superseded; keyboard invocation and full production timing are separate remaining checks.
 - [x] (2026-10-13) Record coach approval of explicit checked copy versus immediate Notes-unverified ordinary copy.
 - [x] (2026-10-13) Accept 400ms target/750ms verification wait and concurrent publication; exact div/h1/h2/h3 control produced bold Body, not native headings. Fixture HTML restored exactly, probe quit.
 - [x] (2026-10-13) Record exact-copy ownership requirement for entire warning replacement; any later copy, including identical text, requires app-only warning.
@@ -76,11 +97,31 @@ older OST/architecture wholesale.
 - [x] (2026-10-13) Alternate public exports and public-only native RTF control fail Subheading. Marked private-format diagnostic only; no encoder adopted.
 - [x] (2026-10-13) Native 750ms simulated-copy test pastes OLD before copy completes at 0.753s; record required handoff decision.
 - [ ] Validate native adjustment controls/keyboard/undo and automatic protected edit regions; models do not prove these interactions.
-- [ ] Establish live session anchoring from Notes representations; synthetic text matching alone does not finish this item. Full rich paste, metadata reliability and copy timing also remain unverified.
-- [ ] Coach handoff decision: public-rich-copy/manual-style correction or private-format investigation; distinguish explicit checked copy from ordinary immediate copy, or require waiting on every whole-copy path.
+- [ ] Establish integrated production session anchoring from rich Notes representations and boundary tracking/UI. Captured plaintext association and fresh-process fixture reopening pass; these do not establish arbitrary rich boundaries or actual workspace relaunch.
+- [x] (2026-10-14) Coach chooses explicit Markdown handoff and checked icon/shortcut, with immediate unverified ordinary copy. Menu-based native formatting and printed Notes-only shortcut instructions satisfy the bounded handoff review; configured keyboard invocation remains untested.
 - [x] (2026-10-12) Record results and explicitly distinguish passes from untested capabilities.
 
 ## Surprises & Discoveries
+
+Continuation: '*' marker imports regular ul, '-' a dashed list. A timer scheduled
+at 750ms produced its notice at 759ms, missing the limit. Candidate 700ms dispatch
+reserves scheduling margin and passed three observed samples. No hard OS latency
+guarantee or arbitrary large-note timing is established.
+
+Native continuation, 2026-10-14: AX suggested bold B2, but API HTML proved literal
+stars around italic text. Serializer block-syntax escaping was incorrectly applied
+to its own bold delimiter. Existing tests stayed unchanged; new bold-paragraph and
+contiguous-list tests failed before repair and pass afterward. Typed native paste
+preserves tested literal punctuation. Markdown hyphens import as dashed lists.
+Native read samples reach 548ms, so a reliable 400ms claim is unsupported. Keyboard
+menu navigation did not invoke the intended command and must not be marked passed.
+
+Resume 2026-10-14: no computer-use tools are exposed to this task; plugin discovery
+found no usable native-control connection. Do not substitute shell UI automation or
+claim live tests ran. The native binary builds but was not installed into the test
+bundle or launched. Named pasteboard access was denied by shell sandbox (10/14,
+exit 1); approved outside-sandbox rerun passed 14/14 without general clipboard/Notes
+access. Failed sandbox timing is not meaningful performance evidence.
 
 Continued execution observes native-date/body collisions, not merely a possible
 granularity risk. Large-note full reads took 0.227–0.376s; twenty metadata reads
@@ -140,6 +181,19 @@ The user subsequently explicitly approved Notes Automation consent. After the re
 The original prototype lacked a usable Quit menu. Computer-use access to system quit utilities was unavailable; the user quit it. A standard Quit menu now works and inventory verified final termination. Do not infer that the prototype's read baseline survives quitting: it is intentionally held only in memory.
 
 ## Decision Log
+
+Decision: accept the bounded Markdown handoff checkpoint based on the coach's manual
+menu paste preserving headings/bullets and supplied Notes-only App Shortcuts setup
+instructions. Rationale: the coach explicitly accepts manual confirmation rather
+than requiring the agent's menu-navigation test or configuration to pass this gate.
+Actual keyboard invocation is still unverified, and broader production keyboard
+criteria are not waived. Date/Author: 2026-10-14, coach approval recorded by Codex.
+
+Decision: align acceptance with the approved distinction: explicit icon/shortcut
+checks Notes; ordinary Command-A/Command-C is immediate and Notes-unverified.
+Late results are app-only per the approved fallback. Rationale: remove contradictory
+instructions without letting implementation choose semantics. Date/Author:
+2026-10-14, Codex recording existing coach decisions.
 
 Decision, 2026-10-13, bounded research: test native Markdown interpretation as a new
 clipboard route because Apple's current user guide documents it; retain HTML/archive
@@ -204,6 +258,47 @@ Decision: Test Notes-specific Automation before requesting Accessibility access.
 
 ## Outcomes & Retrospective
 
+Final review of this bounded checkpoint, 2026-10-14: reconciled active freshness/
+copy wording and supplied end-user documentation. Fresh-process fixture reopening
+passes 31/31 writer and 38/38 reader assertions, including the shared original 30;
+native snapshot association remains 39/39. scripts/verify passes all five stages,
+including 104 package tests. Markdown passes 8/8 local and 8/8 per captured native
+variant; hierarchy 19/19, boundary 24/24, freshness 15/15 and isolated copy 14/14.
+These counts must not be summed as independent native capabilities. Native probe
+compiles with the known deprecated WebArchive control warning. The first repository
+verification attempt failed sandbox writes; the permitted rerun passed unchanged.
+No new live Notes mutations or API calls occurred during this final review.
+The plan remains in progress; actual UI/edit tracking and production acceptance
+need implementation-time tests, not more claims from the fixture harness.
+
+The following paragraphs retain earlier checkpoint snapshots in reverse order;
+their pending/uncommitted statements describe those moments, not current status.
+
+Coach acceptance, 2026-10-14: manual menu paste is confirmed and Notes-only shortcut
+instructions supplied, satisfying this bounded handoff review. No Mac shortcut was
+installed or exercised by the agent. Other PLAN 011 boundary/association work and
+production acceptance remain open; do not call the entire capability plan complete.
+
+Latest continuation establishes disc-marker fidelity and bounded native parallel
+publication/read timing. A 900ms artificial delay validates the not-verified notice
+and continued reading without later clipboard mutation. Keyboard shortcut requires
+coach approval; no settings were changed. Real editor conversion, older hosts, cold/
+large-note timing and implementation approval remain open. Fixture restored; probe
+stopped; continuation changes uncommitted.
+
+Native continuation supersedes the access blocker below: scoped native paste and
+replacement passed the corrected synthetic fixture with 8/8 captured-native checks.
+Baseline HTML/plaintext were restored exactly, including preexisting LEFT RIGHT.
+Keyboard-only entry and full-path timing remain open, as do source spacing/bullet
+style and arbitrary rich-editor extraction. No production implementation is approved.
+
+Latest bounded continuation: serializer 6/6 retained, synthetic fixture ready;
+CopyHandoffTimingProbe 14/14 for timeout-before-publication, app-only late conflict
+and stale-result routing. Measured 50.7ms preparation/publication excludes Notes.
+No live note, normal clipboard or production app changed. Native controls are the
+current prerequisite; implementation approval remains outstanding. This continuation
+is uncommitted.
+
 Current outcome: hierarchy 19/19 (including native snapshots), boundary policy 24/24,
 freshness candidate 15/15, previous text association 39/39; new isolated clipboard
 ownership 13/13 and synthetic Markdown serialization 6/6. Do not aggregate these
@@ -238,6 +333,12 @@ remain pending manual Mac unlock; do not claim this entire plan complete.
 Results are recorded in `docs/design/SCRATCHPAD_CAPABILITY_CHECKPOINT.md`. The RTF suite remains honestly red; the separate secure-archive suite is green. The native access gate is passed for the synthetic fixture after explicit Notes Automation consent: complete HTML/plaintext reads, identity/date retrieval, changed-baseline detection and target preservation across selection changes. The initial permission-negative path also remains evidence. Full copy hierarchy fidelity, session anchoring, production permission onboarding and real scratchpad recovery remain unresolved. Do not silently substitute clipboard import for whole-note access or claim the entire feature is implemented. Recommend a separate read-only Notes Automation context adapter while retaining existing Service invocation/autocomplete and clipboard handoff.
 
 ## Context and Orientation
+
+Current execution checkout is `/Users/dan/.codex/worktrees/contextual-learner-integration/gym_assistant`,
+branch `codex/contextual-learner-integration`, starting tip `f80b57c`. The older
+main-based checkout description below is historical. Do not resume feature work
+there or replace learner product/architecture with its older versions. Leave
+unrelated learner/main workflow edits untouched.
 
 The working checkout is a reusable design worktree on `codex/contextual-program-assistance`, not the learner checkout. `docs/design/SESSION_SCRATCHPAD.md` describes the approved bounded working-copy direction. Production `Sources/GymAssistantNotesService/main.swift` in the learner checkout has a synchronous autocomplete Service and an asynchronous library-review branch. The Service sends/receives plain text, not the complete note. Returning from a Service before opening a long-lived window is an observed existing code pattern, not proof of durable note targeting.
 
@@ -300,6 +401,58 @@ The `automation-permissions` mode checks Notes get-data permission with `askUser
 After the user clears the access gate, create a uniquely named Notes test note through computer use. Test whole-note retrieval including an end marker beyond the visible viewport; note identity across switching/reopen; duplicate session labels; external text edits without changing the scratchpad; manual rich paste including continuing a list and inspecting the heading menu. A production-process read adapter still needs its own permission test: computer-use access alone does not establish that the gym-assistant executable has Notes access. Do not grant new macOS access without confirmation.
 
 ## Concrete Steps
+
+Run saved-state association reopening in distinct processes, using only the
+previously captured synthetic fixture snapshots:
+
+    xcrun swiftc -module-cache-path /private/tmp/gym-assistant-scratchpad-checkpoint/module-cache spikes/session-scratchpad/AssociationProbe.swift -o /private/tmp/gym-assistant-scratchpad-checkpoint/association-probe
+    /private/tmp/gym-assistant-scratchpad-checkpoint/association-probe lifecycle-write /private/tmp/gym-assistant-scratchpad-checkpoint/native-before.json /private/tmp/gym-assistant-scratchpad-checkpoint/association-lifecycle.json /private/tmp/gym-assistant-scratchpad-checkpoint/native-after.json
+    /private/tmp/gym-assistant-scratchpad-checkpoint/association-probe lifecycle-read /private/tmp/gym-assistant-scratchpad-checkpoint/native-before.json /private/tmp/gym-assistant-scratchpad-checkpoint/association-lifecycle.json /private/tmp/gym-assistant-scratchpad-checkpoint/native-after.json
+
+Expect 31/31 then 38/38; both include the existing 30 assertions. The JSON is a
+fixture-only envelope, not the approved production storage schema. Preserve native
+snapshot guards; never substitute real program exports. This tests process reopening
+and text association, not a production window or rich boundary edit tracker.
+
+Generate the separate disc control without changing hyphen expectations:
+
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe emit-native-disc /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-fixture.md
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe verify-native /private/tmp/gym-assistant-scratchpad-checkpoint/disc-native-before.json /private/tmp/gym-assistant-scratchpad-checkpoint/disc-native-after.json
+
+Observed 8/8. Through computer use capture the fixture, then use Measure parallel
+checked copy and Measure with 900ms read delay. No paste is required. Save separate
+copies of parallel-copy-evidence.json in the temporary checkpoint folder; distinguish
+small Notes body from large copy payload and injected delay from native read cost.
+Initial 759ms failure remains evidence; current candidate dispatch is 700ms within
+the 750ms wait budget. Verify baseline before quitting. No shortcut configuration
+or minimum-platform change without approval.
+
+After building/emitting the serializer fixture, native snapshot mode runs:
+
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe verify-native /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-native-before.json /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-native-fixed.json
+
+Expected 8/8 captured-native assertions. These files are sanitized captures of the
+named synthetic note; do not substitute real programs. Native restoration must compare
+the current captured baseline, including any preexisting markers, not historical
+byte counts. Undo grouping is not one operation per tool call; observe each Undo and
+verify baseline before another to avoid crossing into earlier coach edits.
+
+Run the new local probes from the current execution checkout:
+
+    xcrun swiftc -target arm64-apple-macosx13.0 -module-cache-path /private/tmp/gym-assistant-scratchpad-checkpoint/module-cache spikes/session-scratchpad/MarkdownHandoffProbe.swift -o /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe emit-native /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-fixture.md
+    xcrun swiftc -swift-version 6 -parse-as-library -target arm64-apple-macosx13.0 -module-cache-path /private/tmp/gym-assistant-scratchpad-checkpoint/module-cache -framework AppKit spikes/session-scratchpad/CopyHandoffTimingProbe.swift -o /private/tmp/gym-assistant-scratchpad-checkpoint/copy-handoff-probe
+    /private/tmp/gym-assistant-scratchpad-checkpoint/copy-handoff-probe
+
+Expected 8/8 and 14/14. Named-pasteboard execution requires the permitted outside-
+shell-sandbox context; do not weaken assertions for denied access. Once computer use
+is restored, Copy serialized fixture loads the fixed temporary file only, requiring
+COPY PROBE SERIAL prefix and bounded size. Capture the named synthetic Notes baseline,
+append or replace only an explicit synthetic range, invoke Paste as Markdown by
+keyboard and reread API HTML/plaintext. Check literal #, brackets, asterisks,
+underscore, backslash and angle brackets as well as heading/bold/bullets. Restore
+baseline exactly before quitting. Do not assume or silently configure a shortcut.
 
 Run the additional local experiments from this worktree:
 
@@ -400,6 +553,11 @@ Save sanitized results in `docs/design/SCRATCHPAD_CAPABILITY_CHECKPOINT.md`, inc
 
 ## Interfaces and Dependencies
 
+MarkdownHandoffProbe now supports emit-native and verify-native for bounded typed
+fixtures and guarded captured snapshots. NativeNotesProbe's serialized-fixture copy
+is a test-only plaintext Markdown publication. Native application window height was
+increased to expose the test control. No production editor/export adapter is implied.
+
 Use system Swift, Foundation/CryptoKit for synthetic association, AppKit and ApplicationServices without new packages. Define Codable `Snapshot` and `Message` types. Keep probes standalone; do not add them to `Package.swift`, resolver code, or the Notes Service. Native pasteboard tests use `NSPasteboard.withUniqueName()` so the normal clipboard is not modified. The native app's NSAppleScript sends Notes data-read commands only, not UI actions or mutations; ordinary read preflights never request consent. The separate explicit request action uses `askUserIfNeeded: true` only after user consent approval.
 
 Revision note, 2026-10-12: initial bounded plan recorded access rejection, then local RTF failures, a passing secure-archive candidate and live-agent evidence. Native launch approval led to a deployment-target fix and permission-negative evidence. After explicit Notes Automation consent approval, native reads and captured-target change detection passed, including switched selection and non-fixture refusal. Session anchoring and full copy fidelity remain unproven. Permission is enabled only for the test probe; production implementation and production access have not been approved by this checkpoint.
@@ -458,3 +616,16 @@ and diff state, never clipboard contents. This supersedes the 2026-10-13 conditi
 replacement decision. Validate stale-result routing and unchanged clipboard under
 no-copy, identical-recopy, unrelated-copy, and later-scratchpad-copy cases. No
 production code or tutorial progress changed.
+
+Revision note, 2026-10-14, resumed handoff checkpoint: align ordinary-copy acceptance,
+prepare typed serializer fixture and isolated late-result/publication checks.
+14/14 is model/named-pasteboard evidence, not real Notes scheduling. Native controls
+are unavailable; no probe launch or live paste occurred. Preserve pending gates.
+
+Revision note, 2026-10-14, final bounded checkpoint review: reconcile superseded
+active copy/freshness wording, preserve historical failures, add end-user guide and
+fresh-process saved-state association tests. Full repository verification passed
+after sandbox access retry; all scoped probe suites passed. The approved local
+checkpoint commit includes docs and isolated probes only. Production UI recovery,
+rich boundary tracking, configured keyboard invocation and API integration remain
+outside this checkpoint; the plan is not marked complete.

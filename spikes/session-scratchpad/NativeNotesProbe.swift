@@ -15,6 +15,21 @@ struct WatchSample: Encodable {
     let epoch: Double?
     let html: String // Guarded synthetic fixture only; never a real program.
 }
+struct ParallelCopyRead: Sendable {
+    let body: String?
+    let milliseconds: Double
+}
+struct ParallelCopyEvidence: Encodable {
+    let preparationMS: Double
+    let publicationMS: Double
+    let readerMS: Double
+    let totalMS: Double
+    let injectedDelayMS: Int
+    let timeoutMS: Double?
+    let outcome: String
+    let clipboardGenerationUnchanged: Bool
+    let markdownBytes: Int
+}
 
 @MainActor
 final class NativeNotesProbe: NSObject, NSApplicationDelegate {
@@ -26,6 +41,9 @@ final class NativeNotesProbe: NSObject, NSApplicationDelegate {
     private let editor = NSTextView(frame: NSRect(x: 0, y: 0, width: 610, height: 160))
     private var watchTimer: Timer?
     private var samples: [WatchSample] = []
+    private var activeCopy: UUID?
+    private var copyFinished = false
+    private var copyTimeoutMS: Double?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
@@ -42,7 +60,7 @@ final class NativeNotesProbe: NSObject, NSApplicationDelegate {
         editItem.submenu = editMenu
         menu.addItem(editItem)
         NSApp.mainMenu = menu
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 650, height: 860), styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 650, height: 950), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "Gym Assistant Notes Capability Probe"
         window.isReleasedWhenClosed = false
         let read = NSButton(title: "Read selected synthetic note", target: self, action: #selector(readSelected))
@@ -87,6 +105,14 @@ final class NativeNotesProbe: NSObject, NSApplicationDelegate {
         let markdown = NSButton(title: "Copy Markdown control", target: self, action: #selector(copyMarkdown))
         markdown.frame = NSRect(x: 330, y: 800, width: 290, height: 35)
         window.contentView?.addSubview(markdown)
+        let serialized = NSButton(title: "Copy serialized fixture", target: self, action: #selector(copySerializedFixture))
+        serialized.frame = NSRect(x: 330, y: 850, width: 290, height: 35)
+        window.contentView?.addSubview(serialized)
+        for (index, item) in [("Measure parallel checked copy", #selector(measureParallelCopy)), ("Measure with 900ms read delay", #selector(measureDelayedParallelCopy))].enumerated() {
+            let button = NSButton(title: item.0, target: self, action: item.1)
+            button.frame = NSRect(x: 20 + index * 310, y: 900, width: 290, height: 35)
+            window.contentView?.addSubview(button)
+        }
         let scroll = NSScrollView(frame: NSRect(x: 20, y: 120, width: 610, height: 180))
         scroll.hasVerticalScroller = true
         scroll.borderType = .bezelBorder
@@ -226,6 +252,87 @@ final class NativeNotesProbe: NSObject, NSApplicationDelegate {
         let item = NSPasteboardItem()
         item.setString(markdown, forType: .string)
         publishControl(item, label: "Plain Markdown control")
+    }
+
+    @objc private func copySerializedFixture() {
+        guard let markdown = try? String(contentsOfFile: "/private/tmp/gym-assistant-scratchpad-checkpoint/serialized-fixture.md", encoding: .utf8),
+              markdown.hasPrefix("## COPY PROBE SERIAL Session 99"), markdown.utf8.count < 10000 else {
+            status.stringValue = "No valid marked synthetic serializer fixture; clipboard unchanged."; return
+        }
+        let item = NSPasteboardItem()
+        item.setString(markdown, forType: .string)
+        publishControl(item, label: "Serialized typed-block Markdown fixture")
+    }
+
+    @objc private func measureParallelCopy() { measureCopy(injectedDelayMS: 0) }
+    @objc private func measureDelayedParallelCopy() { measureCopy(injectedDelayMS: 900) }
+    private func measureCopy(injectedDelayMS: Int) {
+        let started = ProcessInfo.processInfo.systemUptime
+        guard permission() == noErr, let id = capturedID, let baseline = capturedBody,
+              let fixture = try? String(contentsOfFile: "/private/tmp/gym-assistant-scratchpad-checkpoint/serialized-fixture.md", encoding: .utf8),
+              fixture.hasPrefix("## COPY PROBE SERIAL Session 99") else {
+            status.stringValue = "Capture authorized synthetic fixture and emit serializer fixture first; no copy/read."; return
+        }
+        let operation = UUID()
+        activeCopy = operation; copyFinished = false; copyTimeoutMS = nil
+        let source = """
+        tell application "Notes"
+            set n to first note whose id is \(scriptLiteral(id))
+            if name of n is not "Gym assistant capability test" then error "Refusing non-fixture note"
+            return {body of n, plaintext of n, (modification date of n) as string}
+        end tell
+        """
+        let reader = Task.detached { () -> ParallelCopyRead in
+            if injectedDelayMS > 0 { try? await Task.sleep(for: .milliseconds(injectedDelayMS)) }
+            let began = ProcessInfo.processInfo.systemUptime
+            var error: NSDictionary?
+            let result = NSAppleScript(source: source)?.executeAndReturnError(&error)
+            let text = result?.atIndex(2)?.stringValue
+            let body = error == nil && text?.contains("END OF SYNTHETIC NOTE 2026-10-12") == true
+                ? result?.atIndex(1)?.stringValue : nil
+            return ParallelCopyRead(body: body, milliseconds: (ProcessInfo.processInfo.systemUptime-began)*1000)
+        }
+        // Large synthetic copy payload; the captured Notes fixture remains unchanged.
+        let markdown = fixture + "\n" + (1...1000).map { "Synthetic context line \($0): light, controlled exercise preparation." }.joined(separator: "\n")
+        let rich = NSAttributedString(string: markdown, attributes: [.font: NSFont.systemFont(ofSize: 17)])
+        guard let rtf = try? rich.data(from: NSRange(location: 0, length: rich.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) else {
+            reader.cancel(); status.stringValue = "Synthetic rich preparation failed; no publication."; return
+        }
+        let prepared = ProcessInfo.processInfo.systemUptime
+        let item = NSPasteboardItem()
+        item.setString(markdown, forType: .string); item.setData(rtf, forType: .rtf)
+        let board = NSPasteboard.general
+        board.clearContents()
+        guard board.writeObjects([item]) else { reader.cancel(); status.stringValue = "Publication failed; not Copied."; return }
+        let published = ProcessInfo.processInfo.systemUptime
+        let generation = board.changeCount
+        status.stringValue = "Copied—checking Notes. Measured prototype; no paste required."
+        Task { [weak self] in
+            // Reserve 50ms of the 750ms wait budget for main-actor scheduling.
+            // This is a measured prototype margin, not a hard OS latency guarantee.
+            let remaining = max(0, 0.700 - (ProcessInfo.processInfo.systemUptime-started))
+            try? await Task.sleep(for: .seconds(remaining))
+            guard let self, self.activeCopy == operation, !self.copyFinished else { return }
+            self.copyTimeoutMS = (ProcessInfo.processInfo.systemUptime-started)*1000
+            self.status.stringValue = "Copied—Notes not verified. Continuing verification; no later clipboard writes."
+        }
+        Task { [weak self] in
+            let result = await reader.value
+            guard let self, self.activeCopy == operation else { return }
+            self.copyFinished = true
+            let outcome = result.body.map { $0 == baseline ? "fixture baseline matches" : "fixture changed" } ?? "read unavailable"
+            let evidence = ParallelCopyEvidence(preparationMS: (prepared-started)*1000,
+                publicationMS: (published-prepared)*1000, readerMS: result.milliseconds,
+                totalMS: (ProcessInfo.processInfo.systemUptime-started)*1000,
+                injectedDelayMS: injectedDelayMS, timeoutMS: self.copyTimeoutMS, outcome: outcome,
+                clipboardGenerationUnchanged: NSPasteboard.general.changeCount == generation, markdownBytes: markdown.utf8.count)
+            if let data = try? JSONEncoder().encode(evidence) {
+                try? data.write(to: URL(fileURLWithPath: "/private/tmp/gym-assistant-scratchpad-checkpoint/parallel-copy-evidence.json"), options: .atomic)
+            }
+            self.status.stringValue = String(format: "Parallel prototype: %@; publication %.1fms; native read %.1fms; total %.1fms; injected delay %dms; deadline %@; clipboard generation unchanged %@. No paste or session-scoped production claim.",
+                outcome, (published-started)*1000, result.milliseconds, evidence.totalMS, injectedDelayMS,
+                self.copyTimeoutMS.map { String(format: "%.1fms", $0) } ?? "not reached", String(evidence.clipboardGenerationUnchanged))
+        }
     }
 
     @objc private func copyPublicControl() {

@@ -175,6 +175,11 @@ does not supply that context.
 
 ## One handoff surface
 
+Coach-facing Notes-only shortcut setup and a safe Markdown paste example are in
+the [user guide](../USER_GUIDE.md#paste-formatted-markdown-into-apple-notes). This is
+separate from the product contract and implementation evidence. The scratchpad
+feature remains in development; setup instructions do not claim it is shipped.
+
 Delete the duplicated Review Change / Compare with Notes surfaces from the mock.
 The ordinary view has one session editor and one conversation.
 
@@ -349,6 +354,15 @@ first slice exposes the existing profile read-only; it does not learn a new one.
     ensure the next question uses the revised scratchpad without locking the editor.
 
 ## Remaining implementation gates
+
+Current checkpoint status, 2026-10-14: the bounded Markdown handoff is accepted;
+the end-user shortcut instructions are supplied. Captured Notes plaintext tests
+cover renumbering/collisions, and separate-process saved-state reopening preserves
+scratchpads and conversations. Native reading and bounded parallel timing have
+evidence. These do not prove production workspace recovery, rich boundary/edit
+tracking, configured keyboard invocation or arbitrary-note performance. The dated
+entries below explain earlier findings; they are not fresh blockers or additional
+implementation approval.
 
 **Capability evidence, not more UI scope:** test complete-note access, reliable
 session association across reopen, read freshness/external-change visibility and

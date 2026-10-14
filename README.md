@@ -31,6 +31,10 @@ Future direction, deliberately **not implemented in the initial tutorial**:
 
 ## How to use this tutorial
 
+For coach-facing usage instructions, see the [Gym Assistant user guide](docs/USER_GUIDE.md).
+It currently covers the Notes Markdown paste setup; the rest of this README is for
+learning and developing the app.
+
 1. Put these files in a local project folder and open that folder in Codex.
 2. Ask Codex: “Start or resume the tutorial.”
 3. Work through one `STOP / REVIEW` checkpoint at a time.

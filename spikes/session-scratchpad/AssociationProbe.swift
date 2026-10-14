@@ -19,12 +19,22 @@ struct Section: Equatable {
     let range: NSRange
     let body: String
 }
-struct Anchor {
+struct Anchor: Codable, Equatable {
     let sessionID: String
     let label: String
     let baselineBody: String
     let scratchpad: String
     let closed: Bool
+}
+// Fixture-only durable envelope, not the production persistence format.
+struct SavedWorkspace: Codable, Equatable {
+    let anchor: Anchor
+    let revision: Int
+    let conversation: [String]
+}
+struct SavedFixture: Codable, Equatable {
+    let noteID: String
+    let workspaces: [SavedWorkspace]
 }
 struct Resolution {
     var mappings: [String: Section] = [:]
@@ -202,7 +212,52 @@ let overlap = Confirmation(sessionID: "workspace-1", noteID: unsupported.noteID,
 rejects("Overlapping manual range rejected") { try confirm(overlap, anchors: anchors, observation: unsupported, registry: &manualRegistry) }
 let partial = Confirmation(sessionID: "workspace-1", noteID: unsupported.noteID, observationDigest: unsupported.digest, range: NSRange(location: 2, length: 4))
 rejects("Partial-paragraph range rejected") { try confirm(partial, anchors: anchors, observation: unsupported, registry: &manualRegistry) }
-if CommandLine.arguments.count == 5 && CommandLine.arguments[1] == "native" {
+if CommandLine.arguments.count == 5 && ["lifecycle-write", "lifecycle-read"].contains(CommandLine.arguments[1]) {
+    do {
+        let inputPath = CommandLine.arguments[2]
+        let statePath = CommandLine.arguments[3]
+        let afterPath = CommandLine.arguments[4]
+        let prefix = "/private/tmp/gym-assistant-scratchpad-checkpoint/"
+        guard [inputPath, afterPath].allSatisfy({ $0.hasPrefix(prefix + "native-") }),
+              statePath == prefix + "association-lifecycle.json" else { throw ConfirmationError.invalidRange }
+        func captured(_ path: String) throws -> NoteObservation {
+            let fixture = try JSONDecoder().decode(NativeFixtureEvidence.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+            guard fixture.noteID == "synthetic-fixture", !fixture.html.isEmpty,
+                  fixture.text.contains("Gym assistant capability test"),
+                  fixture.text.contains("END OF SYNTHETIC NOTE 2026-10-12") else { throw ConfirmationError.invalidRange }
+            return NoteObservation(noteID: fixture.noteID, text: fixture.text)
+        }
+        let before = try captured(inputPath)
+        let expected = SavedFixture(noteID: before.noteID, workspaces: sections(before).enumerated().map {
+            SavedWorkspace(anchor: anchor("persisted-\($0.offset)", $0.element, closed: $0.offset == 1),
+                           revision: $0.offset + 7, conversation: ["Coach question \($0.offset)", "Synthetic reply \($0.offset)"])
+        })
+        if CommandLine.arguments[1] == "lifecycle-write" {
+            try JSONEncoder().encode(expected).write(to: URL(fileURLWithPath: statePath), options: .atomic)
+            check(expected.workspaces.count == 4, "Save four captured-fixture workspaces with stable identities")
+        } else {
+            let saved = try JSONDecoder().decode(SavedFixture.self, from: Data(contentsOf: URL(fileURLWithPath: statePath)))
+            check(saved == expected, "Fresh process restores exact scratchpads, revisions, conversations and closed state")
+            let after = try captured(afterPath)
+            let anchors = saved.workspaces.map(\.anchor)
+            let result = resolve(anchors, in: after)
+            check(result.mappings.count == 4 && result.unresolved.isEmpty, "Reopened saved identities follow captured native renumbering")
+            check(result.mappings["persisted-1"]?.label == "14" && anchors[1].closed, "Closed workspace does not steal old label 13 on reopen")
+            check(result.mappings["persisted-3"]?.body.contains("Week 3") == true, "Reopened lettered workspace retains all weeks")
+            let changed = NoteObservation(noteID: after.noteID, text: after.text.replacingOccurrences(of: anchors[1].baselineBody, with: "Externally changed session content\n"))
+            check(resolve(anchors, in: changed).unresolved.contains("persisted-1"), "Changed body on reopen requires review rather than a label guess")
+            check(saved == expected, "Reassociation and unresolved results never mutate saved coach content")
+            let shifted = NoteObservation(noteID: after.noteID, text: "New surrounding prose\n" + after.text)
+            check(resolve(anchors, in: shifted).mappings.count == 4, "Moved offsets on reopen retain all saved identities")
+            let wrongNote = NoteObservation(noteID: "other-fixture", text: after.text)
+            var wrongRegistry = Registry(noteID: wrongNote.noteID, observationDigest: wrongNote.digest, mappings: [:])
+            let payload = Confirmation(sessionID: anchors[0].sessionID, noteID: saved.noteID, observationDigest: wrongNote.digest, range: sections(wrongNote)[0].range)
+            rejects("Reopened workspace cannot confirm association to another note") {
+                try confirm(payload, anchors: anchors, observation: wrongNote, registry: &wrongRegistry)
+            }
+        }
+    } catch { check(false, "Fixture lifecycle: \(error)") }
+} else if CommandLine.arguments.count == 5 && CommandLine.arguments[1] == "native" {
     do {
         func load(_ path: String) throws -> (NoteObservation, String) {
             guard path.hasPrefix("/private/tmp/gym-assistant-scratchpad-checkpoint/native-") else { throw ConfirmationError.invalidRange }
@@ -234,7 +289,7 @@ if CommandLine.arguments.count == 5 && CommandLine.arguments[1] == "native" {
         print("Native snapshot checks use API-captured plaintext; rich-format equality and confirmation UI remain untested")
     } catch { check(false, "Read and validate synthetic native snapshots: \(error)") }
 } else if CommandLine.arguments.count != 1 {
-    check(false, "Usage: association-probe [native before.json collision.json after.json]")
+    check(false, "Usage: association-probe [native before.json collision.json after.json | lifecycle-write/read before.json state.json after.json]")
 }
 print("RESULT \(count - failures)/\(count) association assertions passed; production and rich-structure parsing not tested")
 exit(failures == 0 ? 0 : 1)

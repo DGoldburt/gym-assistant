@@ -1,5 +1,172 @@
 # Session-scratchpad capability checkpoint
 
+## Resumed handoff checkpoint, 2026-10-14
+
+### Saved-state session reopening
+
+AssociationProbe adds a fixture-only Codable envelope with stable identity, baseline,
+coach scratchpad text, revision, conversation and closed state. A writer process
+saves four workspaces from the guarded native-before snapshot; a distinct reader
+process restores them exactly and resolves against native-after. Write mode passes
+31/31 (30 existing assertions plus save); read mode passes 38/38 (30 existing plus
+eight reopen assertions). Native collision/renumbering mode still passes 39/39.
+Reopen covers closed identity following body rather than reused label 13, all weeks
+remaining in Session A, changed body requiring review, shifted offsets and refusal
+to confirm another note. Association never rewrites saved coach content.
+
+This is fresh-process fixture persistence over previously API-captured plaintext,
+not a live production window reopen, rich-format association parser, crash-recovery
+test or native boundary-adjustment UI. No new Notes mutations were needed.
+
+### Coach manual handoff acceptance
+
+The coach reported Control-F2/Fn-Control-F2 did nothing, but mouse navigation to
+Paste as Markdown preserved the test headings/bullets. The coach accepts the bounded
+handoff checkpoint after printed Notes-only keyboard shortcut setup instructions.
+Instructions use System Settings → Keyboard → Keyboard Shortcuts → App Shortcuts,
+Application Notes (not All Applications), exact menu title Paste as Markdown, and
+suggested Control–Option–Command–V subject to a conflict check. This is App Shortcuts,
+not the Shortcuts app. Source: [Apple's app shortcut instructions](https://support.apple.com/guide/mac-help/create-keyboard-shortcuts-for-apps-mchlp2271/mac).
+No settings were changed or actual keyboard shortcut demonstrated. This closes the
+coach's bounded handoff review, not the entire capability plan or production approval.
+
+### Disc bullets and parallel native copy experiment
+
+The staged emit-native-disc control subsequently passed: replacing LEFT RIGHT yielded
+regular `<ul>` rather than Apple-dash-list, preserving headings, bold and literal
+text. Native snapshot verification passes 8/8 for this variant too, not eight new
+independent capabilities. Snapshot: 5207 HTML bytes, 3834 text characters. Source
+list styles must be mapped deliberately by the future editor adapter.
+
+Two test-only buttons now prepare/publish synthetic content concurrently with a
+captured, title/marker-guarded Notes body/plaintext/date read in a detached task.
+They require existing Automation permission and a captured synthetic baseline.
+Payload is 1,000 synthetic lines, 68,147 Markdown bytes plus RTF compatibility control;
+RTF contains control text, not faithful rich-scratchpad reconstruction. No paste.
+Notes remains the small 3,624-character fixture, NOT a 1,000-line Notes benchmark.
+Late completion changes presentation only. Timing JSON stores no body or real ID.
+
+Four warm normal samples: total 174.6, 167.9, 170.3, 180.1ms; publication 44.9, 30.3,
+28.6, 41.8ms; reader 146.4, 139.9, 145.3, 143.0ms. All matched the fixture baseline
+and reported unchanged publication generation. This supports the 400ms target for
+this bounded warm fixture, not cold start/arbitrary length/production extraction.
+
+Initial injected 900ms-delay run: publication 25.5ms, timeout notice 759.3ms, total
+1070.5ms. This MISSED the 750ms notice limit and is retained as failure evidence.
+Candidate dispatch at 700ms reserves 50ms scheduling margin without changing that
+criterion. Three repeats: notices 742.0, 728.1, 733.1ms; publication 33.1, 29.1,
+28.8ms; completion 1089.3, 1082.7, 1086.9ms. The not-verified label was observed during
+delayed runs; generation stayed unchanged through late completion. Injected delay is
+not native latency. This is an experimental margin, not a hard real-time OS guarantee
+or approved production default. Matching native reads do not prove real session-scoped
+conflict routing; the separate event model covers late-conflict/stale-result policy.
+
+Keyboard-only Paste as Markdown remains unproved. Proposed Notes-only shortcut:
+Control–Option–Command–V, subject to conflict check and coach approval. No settings
+changed. Original rich spacing/list-style extraction, older hosts, actual large-note
+or cold timing, and production end-to-end acceptance remain open.
+
+After disc undo and read-only timing tests, captured HTML/plaintext match the current
+4649/3624 baseline exactly, including LEFT RIGHT. Probe quit and inventory confirmed
+absence. Clipboard holds marked large synthetic Markdown/RTF control. Swift 6 build
+and diff checks pass with the known deprecated WebArchive warning. No production code,
+real programs, tutorial progress, commits or publication changed.
+
+### Native continuation after connection restoration
+
+Computer-use controls became available after the user corrected/enabled the local
+MCP connection. Native Notes and the capability probe were accessed successfully.
+Do not attribute the earlier disabled toggle to a known cause; no configuration
+history established it. The task changed no MCP settings or OS permissions.
+
+The fixture baseline now includes the previously present LEFT RIGHT marker. Captured
+baseline: 4649 HTML bytes, 3624 plaintext characters, 70/70 context lines, end marker,
+h1:1/h2:4/h3:0. Preserve this current baseline, not the older 4627-byte version.
+Serialized typed blocks were pasted through Edit → Paste as Markdown while selecting
+only LEFT RIGHT. The first pass exposed paragraph-leading **B2** being escaped as
+literal block syntax, returning `*<i>B2</i>*`, despite misleading bold-looking AX
+output. Consecutive bullets also became two lists because the serializer inserted
+blank lines. Two new regression expectations failed (6/8); correcting serialization
+made all 8/8 pass without weakening the original six expectations.
+
+The corrected native replacement snapshot passes 8/8 captured-native assertions:
+Heading/Subheading retained, bold A1 inside the list and B2 in a paragraph, literal
+#/brackets/stars/underscore/backslash/angle brackets preserved in plaintext, consecutive
+bullets in one list, baseline HTML prefix unchanged, and selected marker replaced
+exactly once. Corrected snapshot: 5231 HTML bytes, 3834 text characters, h1:1/h2:6/h3:2
+(extra tags represent line-break markup, not duplicate labeled headings). Return
+after A1 followed by a typed synthetic label produced a third native li in the same
+list. Snapshots are guarded synthetic JSON in temporary storage, with no real ID.
+
+The Markdown '-' marker imports as Apple-dash-list, not proof of preserving a disc
+bullet style. Paragraph separation includes blank paragraphs by the current typed
+block serializer; arbitrary original spacing and rich-editor extraction remain
+unproved. Keyboard navigation of an accessibility-opened menu did not invoke Paste
+as Markdown; keys affected the underlying editor instead. Help shortcut and Control-F2
+did not establish a keyboard route. The successful paste used the menu item action,
+not an assumed shortcut. No keyboard settings were changed.
+
+Current native read measurements included 0.548s on capture and 0.224–0.458s on tested
+rereads (other samples 0.255–0.315s). These are body/id/date reads, not full parallel
+handoff. Do not claim the 400ms target is consistently achieved from them; the
+750ms deadline/coalescing still needs an actual coordinator test.
+
+Cleanup exposed native undo grouping: typing and list insertion were grouped, so
+two Undos restored the baseline, and a third crossed into the previous marker edit.
+One Redo recovered that exact current baseline. Final API comparison confirmed
+both HTML and plaintext byte-for-byte equal to captured baseline, LEFT RIGHT present,
+identity unchanged. Probe quit was reported as App quit and inventory confirmed it
+absent. Clipboard contains synthetic serialized Markdown only; earlier clipboard
+content was not backed up. No real program, production behavior or curriculum changed.
+
+Native snapshot verification command from this worktree:
+
+    /private/tmp/gym-assistant-scratchpad-checkpoint/markdown-probe verify-native /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-native-before.json /private/tmp/gym-assistant-scratchpad-checkpoint/serialized-native-fixed.json
+
+Observed 8/8 captured-native assertions, separately from 8/8 synthetic serializer
+and 14/14 isolated handoff-event checks. These are not full product acceptance.
+
+### Earlier same-day staging snapshots (superseded by results above)
+
+A separate emit-native-disc control replaces the synthetic '-' markers with '*'
+without changing the tested hyphen serializer. The control was generated and staged,
+but not pasted: the computer-use server reported a user window change, and fresh
+state showed a different Notes window. Testing stopped rather than redirecting the
+coach's active Notes work. Captured-ID reread confirmed fixture still at 4649/3624
+and baseline unchanged; no disc-style result is claimed. Probe quit and inventory
+confirmed it absent. Clipboard now holds marked synthetic disc-control Markdown.
+
+Work continues in the reconciled learner-based worktree at starting commit f80b57c.
+The referenced thread's approved app-only late-conflict fallback supersedes the old
+clipboard-replacement experiment. Stale implementation acceptance requiring
+Command-A/Command-C preflight was aligned with the approved immediate, Notes-unverified
+ordinary copy; the explicit icon/shortcut remains checked.
+
+MarkdownHandoffProbe's existing 6/6 assertions still pass. New emit-native mode
+creates a typed synthetic session with Heading/Subheading, warmup bullets, bold A1/B2,
+exercise/dose lines and literal Markdown punctuation. The native probe's new guarded
+Copy serialized fixture action is built but not launched. Rich editor extraction,
+native literal preservation and selection replacement remain untested.
+
+CopyHandoffTimingProbe passes 14/14 isolated assertions outside the shell sandbox.
+It measures a 1,000-line, 67,930-byte synthetic text and RTF-compatibility export to a
+uniquely named pasteboard: Markdown construction 0.9ms, RTF encoding 47.5ms,
+publication 2.3ms, total 50.7ms. This is one host sample, NOT full checked-copy timing;
+the RTF is a compatibility/control representation, not a native Notes fidelity pass.
+The probe has no Notes reader, real deadline timer, parallel scheduling or native
+editor extraction. Its event model checks pending export never says Copied, late
+conflict changes app presentation only, identical/unrelated/later scratchpad copies
+remain intact, and stale operation/revision results cannot override newer state.
+The shell-sandbox run failed publication (10/14); retain that failure as access
+evidence, not a timing result. No expectations were weakened.
+
+The current task exposes no computer-use tools. Plugin-management discovery found
+no usable native-control integration to restore. No Notes read, probe launch,
+normal clipboard write or fixture mutation occurred this turn. Native Swift 6 build
+passes with the known deprecated WebArchive warning; documentation diff checks pass.
+Unrelated learner/main workflow edits were untouched. These capability changes are
+uncommitted; no production implementation or tutorial advancement is approved.
+
 Date: 2026-10-12. Status: **native whole-note reading and captured-target change detection passed; formatting and session-anchor limits recorded**.
 This is evidence from a disposable prototype, not production implementation or
 approval to advance the tutorial. See [the bounded ExecPlan](../exec-plans/PLAN-011-scratchpad-capability-checkpoint.md).
