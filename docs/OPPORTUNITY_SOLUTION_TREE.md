@@ -27,6 +27,46 @@ This evidence supports a product direction broader than name matching: the usefu
 assistant eventually helps retrieve, choose, combine, and review exercises. It
 does not justify implementing every opportunity now.
 
+A later review of individual, youth, and group-class programming conversations
+exposed a repeated handoff: the coach supplies a draft, considers several ideas,
+manually incorporates some into the program, and must supply the revised draft
+before continuing. This handoff is an opportunity in its own right, beyond faster
+exercise-name entry.
+
+## Opportunity: continue a programming conversation around the current program
+
+The assistant should reason from the program being written and continue from the
+coach's edits without repeated context sharing. The selected design direction is
+one persistent scratchpad for a session, with free-form conversation beside it.
+The coach edits useful ideas into the scratchpad. Apple Notes remains the recorded
+program destination, with the scratchpad as a bounded working copy.
+
+### Solutions and experiments
+
+- **Next candidate, selected design:** resume one scratchpad for an associated
+  session, read its current text before each follow-up, and supply the associated
+  program note as context. Enter this workspace from the existing autocomplete
+  shortcut without changing autocomplete's ordinary interaction. See
+  [the selected interaction direction](design/SESSION_SCRATCHPAD.md).
+- **Next candidate, selected design:** let the coach manually edit the scratchpad
+  in response to conversational suggestions. Show minimal, truthful distinction
+  between wording with a confirmed library match and wording without one. Keep
+  the existing coaching profile discoverable and read-only.
+- **Next candidate, accepted adapter direction:** capture one Notes document
+  identity for read-only context under [ADR 004](decisions/004-read-only-notes-context.md),
+  flag external changes, and use a reviewed manual handoff back to Notes. Session
+  association, rich-text fidelity, and recovery remain open in the
+  [implementation proposal](design/SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md).
+- **Later:** use approved program structure, programming history, client context,
+  and an explicit coaching profile as additional evidence. Preference learning,
+  unsolicited suggestions, and broader cycle reasoning remain separate candidates.
+
+Including an idea in the scratchpad does not confirm an alias, create an exercise,
+establish a global preference, or make an unused suggestion permanently unwanted.
+OpenAI API use and transmission of note/profile information were approved for this
+design. Credential handling, retention settings, model and spend choices, and
+optional web access still need decisions before real implementation.
+
 ## Opportunity: maintain a trustworthy exercise library without interrupting work
 
 The library loses value if adding a genuinely new exercise is cumbersome or if
@@ -132,15 +172,14 @@ product scope until explicitly approved.
 
 ## Horizon summary
 
-**Now** completes the already-started new-exercise workflow and records the product
-redirection. **Next** proves keyboard autocomplete from an empty Notes cursor, then
-builds the reusable identity-review workflow, ingests the personal source into a
-non-blocking queue, reviews a useful subset, and reaches an explicit useful-product
-pause gate. Conservative transformations extend autocomplete only if field use
-justifies continuing. **Later** contains reusable completed-program observation
-extraction, library hygiene, intent-based retrieval, blocks, programming
-tendencies, contextual pairing, and progression relationships. **Future** contains
-client-specific history and load-aware assistance.
+The original **Now** and **Next** sequence led through new-exercise entry,
+autocomplete, and reusable identity review. Those numbered tutorial exercises are
+complete. The current capstone handoff concerns a bounded client-history slice;
+contextual program assistance is a **Next candidate** undergoing separate design
+and capability checks. Promoting it to an active implementation slice requires an
+explicit sequencing decision and success criteria. **Later** retains completed-
+program extraction, library hygiene, intent-based retrieval, blocks, programming
+tendencies, contextual pairing, and progression relationships.
 
 Ideas may be added to this tree without changing active success criteria. Each idea
 must remain an opportunity or candidate solution until the user explicitly moves

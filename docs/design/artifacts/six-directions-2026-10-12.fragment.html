@@ -1,0 +1,225 @@
+<div id="ga-six-directions">
+  <style>
+    #ga-six-directions { color-scheme: light dark; }
+    #ga-six-directions .product { --paper: light-dark(#ffffff,#242426); --ink: light-dark(#28282b,#ededee); --quiet: light-dark(#68686e,#b2b2b8); --chrome: light-dark(#f5f5f7,#1b1b1d); --line: light-dark(#dedee3,#454549); --soft: light-dark(#f1f1f4,#323235); --gold: light-dark(#765900,#f2d078); --gold-fill: light-dark(#fff5d4,#44391e); --action: light-dark(#303036,#e4e4e9); --action-ink: light-dark(#ffffff,#222226); background:var(--paper); color:var(--ink); border:1px solid var(--line); border-radius:14px; overflow:hidden; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    #ga-six-directions .stage { min-height:850px; }
+    #ga-six-directions .bar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:15px 20px; padding-right:104px; background:var(--chrome); border-bottom:1px solid var(--line); }
+    #ga-six-directions .bar strong {font-weight:500;}
+    #ga-six-directions .bar small { color:var(--quiet); font-size:12px; }
+    #ga-six-directions .workspace { padding:22px; }
+    #ga-six-directions .split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:28px; }
+    #ga-six-directions .wide-chat { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,0.9fr); gap:28px; }
+    #ga-six-directions h2 {font-size:20px; line-height:1.3; font-weight:500; margin:0 0 8px;}
+    #ga-six-directions h3 {font-size:14px; line-height:1.5; font-weight:500; margin:0 0 10px;}
+    #ga-six-directions p {margin:0 0 14px;}
+    #ga-six-directions .subtle {color:var(--quiet); font-size:12px;}
+    #ga-six-directions .eyebrow {color:var(--quiet); font-size:12px; margin-bottom:8px;}
+    #ga-six-directions .notes {background:var(--paper); min-width:0;}
+    #ga-six-directions .note-label {color:var(--gold); display:flex; gap:8px; align-items:center; margin-bottom:18px;}
+    #ga-six-directions .note-content {white-space:pre-wrap; overflow-wrap:anywhere; margin-top:20px;}
+    #ga-six-directions .note-content strong {font-weight:500;}
+    #ga-six-directions .rule {height:1px;background:var(--line);margin:18px 0;}
+    #ga-six-directions .resume {border-left:3px solid var(--gold);padding:0 0 0 13px;margin:0 0 22px;}
+    #ga-six-directions .resume p {margin-bottom:7px;}
+    #ga-six-directions .resume .unfinished {color:var(--quiet);}
+    #ga-six-directions .question {background:var(--soft); border-radius:12px; padding:12px 14px; margin:16px 0 18px 34px;}
+    #ga-six-directions .answer {margin-bottom:18px;}
+    #ga-six-directions .composer {display:flex;gap:8px;align-items:flex-end;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--paper);margin-top:18px;}
+    #ga-six-directions textarea {width:100%;box-sizing:border-box;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px;resize:vertical;min-width:0;}
+    #ga-six-directions .composer textarea {border:0;border-radius:0;padding:4px;min-height:62px;}
+    #ga-six-directions .draft {min-height:335px;line-height:1.7;}
+    #ga-six-directions button {font:inherit; color:var(--ink); background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:6px 10px;}
+    #ga-six-directions button.primary {background:var(--action);color:var(--action-ink);border-color:var(--action);}
+    #ga-six-directions button.quiet {border-color:transparent;background:transparent;color:var(--quiet);padding-left:0;}
+    #ga-six-directions button.mention {border:0;border-bottom:1px dotted var(--gold);border-radius:0;background:var(--gold-fill);padding:0 3px;color:var(--ink);text-align:left;}
+    #ga-six-directions button[disabled] {opacity:0.55;}
+    #ga-six-directions .actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
+    #ga-six-directions .proposal {padding:14px;background:var(--soft);border-radius:10px;margin-top:14px;}
+    #ga-six-directions .proposal textarea {margin-top:8px;min-height:115px;}
+    #ga-six-directions .proposal p {margin-bottom:7px;}
+    #ga-six-directions .notice {color:var(--gold);font-size:12px;min-height:18px;margin-top:10px;}
+    #ga-six-directions .pending {color:var(--quiet);border-left:2px solid var(--line);padding-left:10px;margin-top:12px;}
+    #ga-six-directions .mention-tools {margin-top:10px;padding:12px;background:var(--soft);border-radius:10px;}
+    #ga-six-directions .mention-tools select {font:inherit;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:5px 8px;border-radius:6px;max-width:100%;}
+    #ga-six-directions .mention-tools label {display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+    #ga-six-directions details {margin:14px 0;}
+    #ga-six-directions summary {color:var(--quiet);}
+    #ga-six-directions .margin-sheet {display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:26px;}
+    #ga-six-directions .margin-sheet .draft {min-height:380px;}
+    #ga-six-directions .program-bookmark {padding:15px;background:var(--chrome);border-radius:10px;}
+    #ga-six-directions .program-bookmark .note-content {margin-top:12px;}
+    #ga-six-directions .decision-strip {margin-top:22px;border-top:1px solid var(--line);padding-top:16px;}
+    #ga-six-directions .strip-items {display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:12px;}
+    #ga-six-directions .review-list article {padding:14px 0;border-bottom:1px solid var(--line);}
+    #ga-six-directions .review-list p {margin-bottom:8px;}
+    #ga-six-directions .inline-work {border-left:3px solid var(--gold);padding-left:14px;}
+    #ga-six-directions .footer {padding:12px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--quiet);display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;}
+    #ga-six-directions .conversation-log p {overflow-wrap:anywhere;}
+    #ga-six-directions dialog {font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px;width:min(440px,calc(100% - 70px));}
+    #ga-six-directions dialog::backdrop {background:light-dark(#00000055,#00000099);}
+    #ga-six-directions dialog textarea {min-height:90px;margin-top:12px;}
+    #ga-six-directions [hidden] {display:none !important;}
+    @media(max-width:650px) {#ga-six-directions .split,#ga-six-directions .wide-chat,#ga-six-directions .margin-sheet,#ga-six-directions .strip-items{grid-template-columns:1fr;} #ga-six-directions .stage{min-height:1530px;} #ga-six-directions .workspace{padding:16px;} #ga-six-directions .bar{padding-left:16px;} #ga-six-directions .question{margin-left:16px;} }
+    @media(pointer:coarse) {#ga-six-directions button{min-height:44px;} #ga-six-directions button.mention{padding:8px 5px;} #ga-six-directions textarea{font-size:16px;} }
+  </style>
+  <div class="viz-carousel" aria-label="Program assistance interaction directions">
+    <section data-variant="Scratchpad · working copy" aria-label="Scoped scratchpad working copy">
+      <div class="product stage" data-kind="scratch-copy"><header class="bar"><strong>Jim · Working copy</strong><small>Session 18 / strength block</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · no live Notes connection</span><span>Notes stays the source of truth</span></footer></div>
+    </section>
+    <section data-variant="Scratchpad · margin conversation" aria-label="Scoped scratchpad margin conversation" hidden>
+      <div class="product stage" data-kind="scratch-margin"><header class="bar"><strong>Jim · Work on this block</strong><small>Session 18 / strength block</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · no live Notes connection</span><span>Working text ≠ saved Notes</span></footer></div>
+    </section>
+    <section data-variant="Chat · session bookmark" aria-label="Actionable chat session bookmark" hidden>
+      <div class="product stage" data-kind="chat-bookmark"><header class="bar"><strong>Jim · Session 18</strong><small>Conversation beside Notes</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · no model connection</span><span>Enter sends · Shift Enter adds a line</span></footer></div>
+    </section>
+    <section data-variant="Chat · conversation first" aria-label="Actionable chat conversation first" hidden>
+      <div class="product stage" data-kind="chat-first"><header class="bar"><strong>Jim · Session 18</strong><small>Continue your programming conversation</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · no model connection</span><span>Exercise actions appear only when selected</span></footer></div>
+    </section>
+    <section data-variant="Tray · decision strip" aria-label="Proposal tray decision strip" hidden>
+      <div class="product stage" data-kind="tray-strip"><header class="bar"><strong>Jim · Session 18</strong><small>Conversation + decisions in progress</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · local changes only</span><span>Collecting an idea never changes Notes</span></footer></div>
+    </section>
+    <section data-variant="Tray · return review" aria-label="Proposal tray return review" hidden>
+      <div class="product stage" data-kind="tray-review"><header class="bar"><strong>Jim · Pick up Session 18</strong><small>A small review, not a task board</small></header><main class="workspace"></main><footer class="footer"><span>Interactive sketch · synthetic session · local changes only</span><span>Review one change at a time</span></footer></div>
+    </section>
+  </div>
+  <script>
+  (() => {
+    const root = document.getElementById('ga-six-directions');
+    const clean = 'B2 Power-clean progression\nSet 1: Tall muscle clean\nSet 2: Muscle clean from power position\nSet 3: Power clean from power position\nControlled reps; reset between reps.';
+    const basics = 'A1 Push press — build to a technically heavy 3\n\nA2 Step-to-split — 3/side\nBar on upper back; precise split position.\n\nB1 Front squat to target\nTarget just above parallel; controlled reps.';
+    const initialNote = basics + '\n\nB2 — still choosing clean progression\n\nConditioning — not planned yet';
+    const initialDraft = basics + '\n\n' + clean;
+    const saved = window.openai?.widgetState?.privateContent;
+    let revision=saved?.revision||0;
+    const kinds = ['scratch-copy','scratch-margin','chat-bookmark','chat-first','tray-strip','tray-review'];
+    const state = Object.fromEntries(kinds.map(k=>[k,{note:initialNote,draft:initialDraft,accepted:false,applied:false,comments:[],input:'',...((saved?.schema===1&&saved.states?.[k])||{})}]));
+    const escape = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const choices = { resumed:true, reasons:true };
+    const button = (label,action,cls='')=>`<button type="button" class="cursor-interaction ${cls}" data-action="${action}">${label}</button>`;
+    function persist() {
+      const summary=kinds.filter(k=>state[k].accepted||state[k].comments.length||state[k].applied).map(k=>({variant:k,cleanAccepted:state[k].accepted,appliedInMock:state[k].applied,refinements:state[k].comments.slice(-2).map(c=>c.slice(0,100))}));
+      const bounded=Object.fromEntries(kinds.map(k=>[k,{...state[k],comments:state[k].comments.slice(-2).map(c=>c.slice(0,120)),input:state[k].input.slice(0,120)}]));
+      revision+=1;
+      if(window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{scenario:'synthetic half-planned Session 18',interactions:summary},privateContent:{schema:1,revision,states:bounded}}).catch(()=>{});
+    }
+    function resume() {
+      return `<div class="resume" data-resume${choices.resumed?'':' hidden'}><div class="eyebrow">Where we left off</div><p>Push press → rear-rack split practice is settled. Front squat has its own station—not a clean complex.</p><p class="unfinished" data-open-status>Still open: the clean progression, then conditioning.</p><div data-reasons${choices.reasons?'':' hidden'}><span class="subtle">Keep: two racks · no additional overhead catch after the heavy press · dip-and-drive carries into clean practice.</span></div></div>`;
+    }
+    function notes(k,bookmark=false) {
+      return `<aside class="notes ${bookmark?'program-bookmark':''}" aria-label="Program recorded in Notes"><div class="note-label">Notes <span class="subtle">· recorded program</span></div><h2>Session 18</h2><p class="subtle">Strength work for a small group</p><div class="note-content" data-note>${escape(state[k].note)}</div><div class="rule"></div><details><summary>Context we were using</summary><p>Two racks. One athlete needs precise lunge-position practice. Keep the split drill rear-rack rather than adding another overhead catch.</p></details></aside>`;
+    }
+    function composer(k,placeholder='Continue in your own words…') {
+      return `<div class="composer" data-composer><textarea aria-label="Free-form program refinement" placeholder="${placeholder}" rows="2" maxlength="200">${escape(state[k].input)}</textarea><button type="button" class="primary cursor-interaction" aria-label="Send refinement">Send</button></div><div class="subtle">Try: “Keep the first two clean sets light; fewer options for the finisher.”</div>`;
+    }
+    function history(k) {
+      return `<div class="conversation-log" aria-live="polite">${state[k].comments.map(c=>`<div class="question">${escape(c)}</div><p class="subtle">Saved with this session. This sketch does not generate an assistant reply.</p>`).join('')}</div>`;
+    }
+    function mention(label,key) {
+      return `<button type="button" class="mention cursor-interaction" data-mention="${key}" aria-label="Actions for ${label}">${label}</button>`;
+    }
+    function chat(k) {
+      return `<div class="question">Keep the split drill rear-rack. What should the clean progression look like?</div><div class="answer"><p>Start with the catch and add speed gradually:</p><p>Set 1 · ${mention('Tall muscle clean','tall')}<br>Set 2 · ${mention('Muscle clean from power position','muscle')}<br>Set 3 · ${mention('Power clean from power position','power')}</p><p data-reasons${choices.reasons?'':' hidden'}>This keeps the receiving practice separate from the squat station, and reuses the vertical drive you prepared.</p></div><div data-mention-host></div><div data-proposal-host></div>${history(k)}${composer(k)}`;
+    }
+    function editor(k) {
+      return `<label><span class="eyebrow">Working text · strength block only</span><textarea class="draft" data-draft aria-label="Editable working strength block" maxlength="900">${escape(state[k].draft)}</textarea></label>`;
+    }
+    function draftActions() {
+      return `<div class="actions">${button('Review change','review-draft','primary')}${button('Compare with Notes','compare','quiet')}</div><div data-compare hidden></div><div data-proposal-host></div>`;
+    }
+    function strips(k) {
+      const status=state[k].applied?'In Notes':state[k].accepted?'Chosen · not in Notes':'Proposed · not chosen';
+      return `<div class="decision-strip"><h3>Ideas you haven't finished with</h3><div class="strip-items"><article><p>Clean progression <span class="subtle" data-clean-status>· ${status}</span></p><p class="subtle">Tall muscle → muscle from power → power clean from power</p><div class="actions">${button('Review','review-clean')}${button(state[k].accepted?'Chosen':'Choose this','accept','quiet')}</div></article><article><p>Conditioning <span class="subtle">· still open</span></p><p class="subtle">Not enough decided to propose a change yet.</p>${button('Discuss the finisher','finisher','quiet')}</article></div><div data-proposal-host></div></div>`;
+    }
+    function render(k) {
+      const app=root.querySelector(`[data-kind="${k}"]`);
+      let html='';
+      if(k==='scratch-copy') html=`<div class="split">${notes(k)}<section aria-label="Working copy"><div class="eyebrow">Jim · this block, not the whole note</div>${resume()}${editor(k)}${draftActions()}${history(k)}${composer(k,'Refine this block in plain language…')}</section></div>`;
+      if(k==='scratch-margin') html=`${resume()}<div class="margin-sheet"><section class="inline-work" aria-label="Working block"><h2>Session 18 · strength</h2><p class="subtle">A temporary copy from Notes. Only this block will be reviewed.</p>${editor(k)}${draftActions()}<details><summary>Original in Notes</summary><div class="note-content" data-note>${escape(state[k].note)}</div></details></section><aside aria-label="Margin conversation"><div class="eyebrow">Beside the draft</div><div class="question">Paired stations, not a complex.</div><p>Right. The front squat stays B1; the clean progression goes in B2.</p><p data-reasons${choices.reasons?'':' hidden'}>Rear-rack split practice avoids another overhead catch while keeping the precise footwork challenge.</p>${history(k)}${composer(k,'What would you change here?')}</aside></div>`;
+      if(k==='chat-bookmark') html=`<div class="split">${notes(k)}<section aria-label="Programming conversation">${resume()}${chat(k)}</section></div>`;
+      if(k==='chat-first') html=`<div class="wide-chat"><section aria-label="Programming conversation"><h2>Picking up the clean progression</h2>${resume()}${chat(k)}</section>${notes(k,true)}</div>`;
+      if(k==='tray-strip') html=`${resume()}<div class="split">${notes(k)}<section aria-label="Programming conversation"><div class="question">A lighter catch first. Don't lock conditioning yet.</div><p>The three-set progression is still an idea, not a change to your program.</p><p data-reasons${choices.reasons?'':' hidden'}>We kept rear-rack split practice and separate squat/clean stations. Those decisions are already in Notes.</p>${history(k)}${composer(k)}</section></div>${strips(k)}`;
+      if(k==='tray-review') html=`${resume()}<div class="split">${notes(k)}<section aria-label="Decisions to resume"><h3>One choice left in the strength block</h3><div class="review-list"><article><p>Already settled</p><p class="subtle">Heavy triple push press; rear-rack step-to-split; separate front-squat station. Recorded in Notes.</p></article><article><p>Clean progression <span class="subtle" data-clean-status>· ${state[k].applied?'In Notes':state[k].accepted?'Chosen · not in Notes':'Waiting for your choice'}</span></p><p>Tall muscle clean → muscle clean from power → power clean from power.</p><p data-reasons class="subtle"${choices.reasons?'':' hidden'}>Catch practice before speed; vertical drive carries forward.</p><div class="actions">${button('Review this idea','review-clean','primary')}${button(state[k].accepted?'Chosen':'Choose this','accept','quiet')}</div><div data-proposal-host></div></article><article><p>Conditioning</p><p class="subtle">Still open. No candidate chosen.</p>${button('Talk it through','finisher','quiet')}</article></div>${history(k)}${composer(k,'Keep refining, rather than checking boxes…')}</section></div>`;
+      app.querySelector('.workspace').innerHTML=html;
+      bind(app,k);
+      updateStatus(app,k);
+    }
+    function updateStatus(app,k) {
+      app.querySelectorAll('[data-clean-status]').forEach(el=>el.textContent='· '+(state[k].applied?'In Notes':state[k].accepted?'Chosen · not in Notes':'Proposed · not chosen'));
+      app.querySelectorAll('[data-action="accept"]').forEach(el=>el.textContent=state[k].accepted?'Chosen':'Choose this');
+      const reviewHeading=app.querySelector('section[aria-label="Decisions to resume"] > h3');
+      if(reviewHeading)reviewHeading.textContent=state[k].applied?'Strength recorded · conditioning still open':state[k].accepted?'Clean progression chosen · review before applying':'One choice left in the strength block';
+      app.querySelectorAll('[data-open-status]').forEach(el=>el.textContent=state[k].applied?'The reviewed strength change is in Notes. Conditioning is still open.':state[k].accepted?'Clean progression chosen, not yet in Notes. Conditioning is still open.':'Still open: the clean progression, then conditioning.');
+    }
+    function review(app,k,text,scope) {
+      const host=app.querySelector('[data-proposal-host]');
+      const base=state[k].note;
+      const start=base.indexOf('B2 ');
+      const end=base.indexOf('\n\nConditioning');
+      const slotCurrent=start>=0?base.slice(start,end>=0?end:undefined):'';
+      const target=scope==='block'?'Session 18 / strength block':'Session 18 / B2';
+      host.innerHTML=`<div class="proposal" aria-label="Review before changing Notes"><div class="eyebrow">${target} · replace</div><details><summary>Current text</summary><p class="note-content">${escape(scope==='block'?base.split('\n\nConditioning')[0]:slotCurrent)}</p></details><label>Proposed text<textarea data-reviewed maxlength="900" aria-label="Edit proposed change">${escape(text)}</textarea></label><div class="actions">${button('Apply to Notes · demo','apply-reviewed','primary')}${button('Dismiss','dismiss-review','quiet')}</div><div class="notice" aria-live="polite" data-notice></div></div>`;
+      host.querySelector('[data-action="dismiss-review"]').onclick=()=>host.replaceChildren();
+      host.querySelector('[data-action="apply-reviewed"]').onclick=()=>{
+        if(state[k].note!==base){host.querySelector('[data-notice]').textContent='The Notes target changed. Review it again before applying.';return;}
+        const value=host.querySelector('[data-reviewed]').value.trim();
+        if(!value){host.querySelector('[data-notice]').textContent='Add text or dismiss this proposal.';return;}
+        if(scope==='slot'&&!slotCurrent){host.querySelector('[data-notice]').textContent='B2 is no longer identifiable. Choose the destination again.';return;}
+        state[k].note=scope==='block'?value+'\n\nConditioning — not planned yet':base.replace(slotCurrent,value);
+        if(scope==='block'){state[k].draft=value;const editor=app.querySelector('[data-draft]');if(editor)editor.value=value;}
+        state[k].accepted=true;state[k].applied=true;
+        app.querySelectorAll('[data-note]').forEach(el=>el.textContent=state[k].note);
+        host.querySelector('[data-notice]').textContent='Updated the mock Notes destination. Conditioning remains open.';
+        host.querySelector('[data-action="apply-reviewed"]').disabled=true;
+        updateStatus(app,k);persist();
+      };
+      host.querySelector('[data-reviewed]').focus();
+    }
+    function bind(app,k) {
+      const composerEl=app.querySelector('[data-composer]');
+      const send=()=>{
+        const input=composerEl.querySelector('textarea');const text=input.value.trim();if(!text)return;
+        state[k].comments.push(text);state[k].comments=state[k].comments.slice(-4);state[k].input='';
+        app.querySelector('.conversation-log').innerHTML=state[k].comments.map(c=>`<div class="question">${escape(c)}</div><p class="subtle">Saved with this session. This sketch does not generate an assistant reply.</p>`).join('');input.value='';persist();
+      };
+      composerEl.querySelector('button').onclick=send;
+      composerEl.querySelector('textarea').oninput=e=>{state[k].input=e.target.value;persist();};
+      composerEl.querySelector('textarea').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send();}};
+      const draft=app.querySelector('[data-draft]');
+      if(draft) draft.oninput=()=>{state[k].draft=draft.value;persist();};
+      app.querySelectorAll('[data-action]').forEach(el=>el.onclick=()=>{
+        const action=el.dataset.action;
+        if(action==='review-draft') review(app,k,state[k].draft,'block');
+        if(action==='review-clean') review(app,k,clean,'slot');
+        if(action==='compare') {const compare=app.querySelector('[data-compare]');compare.hidden=!compare.hidden;compare.innerHTML=`<div class="pending"><span class="subtle">Still in Notes</span><p class="note-content">${escape(state[k].note)}</p></div>`;}
+        if(action==='accept') {state[k].accepted=true;updateStatus(app,k);persist();}
+        if(action==='finisher') {const input=composerEl.querySelector('textarea');input.value='For conditioning, I want ';state[k].input=input.value;input.focus();persist();}
+      });
+      app.querySelectorAll('[data-mention]').forEach(el=>el.onclick=()=>{
+        const host=app.querySelector('[data-mention-host]');const label=el.textContent;
+        host.innerHTML=`<div class="mention-tools" aria-label="Exercise occurrence actions"><p>${escape(label)}</p><label>Put in <select aria-label="Target slot"><option>B2 · clean progression</option><option>B1 · front squat station</option></select></label><div class="actions">${button('Review progression','mention-review','primary')}${button('Modify','mention-modify')}${button('Not this option','mention-reject','quiet')}</div><div class="actions">${button('Add to chat…','mention-add','quiet')}${button('Ask in side chat…','mention-side','quiet')}</div><div class="notice" aria-live="polite"></div></div>`;
+        host.querySelector('[data-action="mention-review"]').onclick=()=>{
+          if(host.querySelector('select').selectedIndex===1){host.querySelector('.notice').textContent='B1 already holds the squat. This sketch limits insertion to the open B2 slot.';return;}review(app,k,clean,'slot');
+        };
+        host.querySelector('[data-action="mention-modify"]').onclick=()=>{const input=composerEl.querySelector('textarea');input.value='For '+label+', ';state[k].input=input.value;input.focus();persist();};
+        host.querySelector('[data-action="mention-add"]').onclick=()=>{
+          const input=composerEl.querySelector('textarea');input.value='“'+label+'”\nMy comment: ';state[k].input=input.value;input.focus();persist();
+          host.querySelector('.notice').textContent='Context attached. Add an optional comment before sending; Notes is unchanged.';
+        };
+        host.querySelector('[data-action="mention-side"]').onclick=()=>{
+          const dialog=document.createElement('dialog');dialog.className='side-chat';dialog.setAttribute('aria-label','Side conversation about '+label);
+          dialog.innerHTML=`<h3>Side chat</h3><p class="subtle">About “${escape(label)}” · Session 18 stays where you left it.</p><p>Explore a coaching question without changing the plan.</p><label>Your question<textarea maxlength="200" aria-label="Side chat question" placeholder="What would change if…"></textarea></label><div class="actions">${button('Keep question with session','keep-side','primary')}${button('Back to session','close-side','quiet')}</div><p class="subtle">Local sketch: no generated answer. Keeping a question does not accept the exercise.</p>`;
+          app.append(dialog);dialog.showModal();
+          dialog.querySelector('[data-action="close-side"]').onclick=()=>{dialog.close();dialog.remove();};
+          dialog.addEventListener('cancel',()=>dialog.remove());
+          dialog.querySelector('[data-action="keep-side"]').onclick=()=>{const question=dialog.querySelector('textarea').value.trim();if(!question)return;state[k].comments.push('Side question about '+label+': '+question);state[k].comments=state[k].comments.slice(-4);app.querySelector('.conversation-log').innerHTML=state[k].comments.map(c=>`<div class="question">${escape(c)}</div>`).join('');persist();dialog.close();dialog.remove();};
+        };
+        host.querySelector('[data-action="mention-reject"]').onclick=()=>{state[k].comments.push('Not '+label+' for this session.');state[k].comments=state[k].comments.slice(-4);app.querySelector('.conversation-log').innerHTML=state[k].comments.map(c=>`<div class="question">${escape(c)}</div>`).join('');host.querySelector('.notice').textContent='Session-only rejection retained; no global preference changed.';persist();};
+      });
+    }
+    kinds.forEach(render);
+    function applyPresentation() {root.querySelectorAll('[data-resume]').forEach(el=>el.hidden=!choices.resumed);root.querySelectorAll('[data-reasons]').forEach(el=>el.hidden=!choices.reasons);}
+    if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:applyPresentation});tweak.addToggle(choices,'resumed',{label:'Show return-after-break context'});tweak.addToggle(choices,'reasons',{label:'Keep decision reasons visible'});}
+    window.addEventListener('openai:set_globals',e=>{const incoming=e.detail?.globals?.widgetState?.privateContent;if(incoming?.schema!==1||(incoming.revision||0)<=revision)return;revision=incoming.revision;kinds.forEach(k=>{if(incoming.states?.[k]){state[k]={...state[k],...incoming.states[k]};render(k);}});});
+  })();
+  </script>
+</div>

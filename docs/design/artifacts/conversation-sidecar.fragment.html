@@ -1,0 +1,131 @@
+<div id="gym-context-design" aria-label="Archived conversation sidecar">
+  <section data-variant="Conversation sidecar" aria-label="Conversation sidecar">
+    <div class="gym-window">
+      <header class="gym-chrome">Notes + Gym Assistant <span>Synthetic interaction prototype</span></header>
+      <div class="gym-workspace sidecar">
+        <article class="gym-note" aria-label="Synthetic Notes draft">
+          <h2>Session 14</h2><p class="gym-muted">Draft · Notes remains the editor</p>
+          <h3>Preparation</h3><p>Overhead reach<br>Squat position practice</p>
+          <h3>Strength</h3><p data-strength>A1 Deadlift<br>A2 Row<br>B1 Press</p><p class="gym-note-target" data-note>B2 —</p>
+          <h3>Conditioning</h3><p>Carry · aerobic interval</p>
+        </article>
+        <aside class="gym-assistant" aria-label="Expanded programming conversation">
+          <header><h3>Programming conversation</h3><span class="gym-muted" data-context>Considering Session 14 · Editing B2</span></header>
+          <details><summary>Context · current session + coach profile</summary><p>Current draft and relevant library entries. Profile: purposeful preparation, Olympic-lift direction. No client history included. Web off.</p></details>
+          <label>Discuss <select data-scope><option value="exercise">B2 exercise</option><option value="block">B block</option><option value="session">Session equipment</option></select></label>
+          <div class="gym-history"><p><span class="gym-muted">You</span><br>Something that gives the overhead preparation a purpose.</p><p><span class="gym-muted">Assistant</span><br>Do you mean pressing, or overhead position with a squat?</p></div>
+          <p class="gym-question" data-question>I want B2 to use the overhead range we prepared, without another heavy lift.</p>
+          <p data-answer>A light overhead-and-squat option fits that job. Keep the decision focused on B2.</p>
+          <div class="gym-proposal">
+            <p class="gym-muted" data-target>Replace B2 · one line</p>
+            <div class="gym-diff"><div data-before>− B2 —</div><div data-after>+ B2 Overhead Dowel Squat</div></div>
+            <label class="gym-edit" hidden>Proposed text<textarea data-edit rows="3"></textarea></label>
+            <div class="gym-actions"><button class="gym-primary cursor-interaction" data-apply>Apply ⌘↵</button><button class="cursor-interaction" data-edit-button>Edit</button><button class="cursor-interaction" data-dismiss>Dismiss</button></div>
+          </div>
+          <div class="gym-feedback" hidden><span>Why this one? <small>Optional</small></span><div class="gym-actions"><button class="cursor-interaction" data-reason="Olympic direction">Olympic direction</button><button class="cursor-interaction" data-reason="Positional control">Positional control</button><button class="cursor-interaction" data-skip>Skip Esc</button></div></div>
+          <label>Follow up<input data-followup placeholder="Clarify the job, or ask for another option"></label>
+          <div class="gym-actions"><button class="cursor-interaction" data-send>Send ↵</button><button class="cursor-interaction" data-conflict>Simulate changed target</button></div>
+          <p class="gym-status" aria-live="polite">Preview first. Apply changes only this synthetic draft.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</div>
+<style>
+#gym-context-design {color-scheme:light dark}
+#gym-context-design .gym-window {font:400 14px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;color:light-dark(#242424,#ededed);background:light-dark(#fafafa,#242424);border:1px solid light-dark(#d7d7d7,#555);border-radius:12px;overflow:hidden;min-height:750px}
+#gym-context-design .gym-chrome {padding:14px 18px;background:light-dark(#eeeeee,#303030);display:flex;gap:12px;flex-wrap:wrap;border-bottom:1px solid light-dark(#ddd,#555);padding-right:106px}
+#gym-context-design .gym-chrome span {color:light-dark(#626262,#bdbdbd)}
+#gym-context-design .gym-workspace {display:grid;grid-template-columns:minmax(220px,1fr) minmax(330px,1fr)}
+#gym-context-design .gym-workspace.sidecar {grid-template-columns:minmax(220px,.8fr) minmax(330px,1.2fr)}
+#gym-context-design .gym-note {padding:26px;background:light-dark(#fffdf3,#26251e)}
+#gym-context-design h2 {font-size:22px;font-weight:500;margin:0 0 6px}
+#gym-context-design h3 {font-size:15px;font-weight:500;margin:18px 0 8px}
+#gym-context-design p {margin:10px 0}
+#gym-context-design .gym-muted, #gym-context-design small {color:light-dark(#626262,#bdbdbd);font-size:12px}
+#gym-context-design .gym-assistant {padding:20px;border-left:1px solid light-dark(#ddd,#555);background:light-dark(#fff,#242424);min-width:0}
+#gym-context-design .gym-assistant header h3 {margin-top:0}
+#gym-context-design details {margin:14px 0;font-size:12px}
+#gym-context-design summary {font-weight:500}
+#gym-context-design .gym-question {padding:10px 12px;background:light-dark(#f0f0f0,#333);border-radius:8px}
+#gym-context-design .gym-note-target {padding:9px;border-left:3px solid light-dark(#8b733a,#d8bc71);background:light-dark(#f4ecd8,#3c3627);white-space:pre-wrap;overflow-wrap:anywhere}
+#gym-context-design .gym-proposal {border:1px solid light-dark(#d7d7d7,#555);border-radius:9px;padding:12px;margin:16px 0}
+#gym-context-design .gym-diff {white-space:pre-wrap;overflow-wrap:anywhere;background:light-dark(#f4f4f4,#303030);padding:10px;border-radius:6px}
+#gym-context-design [data-before] {color:light-dark(#795858,#d4aaaa)}
+#gym-context-design [data-after] {color:light-dark(#315b42,#a8d0b7)}
+#gym-context-design .gym-actions {display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+#gym-context-design button {font:inherit;color:inherit;background:light-dark(#f4f4f4,#363636);border:1px solid light-dark(#cfcfcf,#626262);padding:6px 10px;border-radius:6px}
+#gym-context-design button.gym-primary {background:light-dark(#333,#dedede);color:light-dark(#fff,#242424);border-color:light-dark(#333,#dedede)}
+#gym-context-design button:disabled {opacity:.5}
+#gym-context-design label {display:block;margin-top:12px}
+#gym-context-design input, #gym-context-design textarea, #gym-context-design select {font:inherit;color:inherit;background:light-dark(#fff,#292929);border:1px solid light-dark(#bdbdbd,#666);border-radius:6px;padding:8px;max-width:100%;box-sizing:border-box}
+#gym-context-design input, #gym-context-design textarea {width:100%;margin-top:5px}
+#gym-context-design select {margin-left:8px}
+#gym-context-design .gym-status {font-size:12px;min-height:36px}
+#gym-context-design .gym-feedback {padding:10px;border-left:2px solid light-dark(#c8b16e,#ac944d);background:light-dark(#fbf8ee,#302c22)}
+#gym-context-design .gym-history {border-left:2px solid light-dark(#ddd,#555);padding-left:12px;font-size:12px}
+#gym-context-design [hidden] {display:none!important}
+@media(max-width:650px){#gym-context-design .gym-workspace,#gym-context-design .gym-workspace.sidecar{grid-template-columns:1fr}#gym-context-design .gym-note{padding:18px}#gym-context-design .gym-assistant{border-left:0;border-top:1px solid light-dark(#ddd,#555);padding:16px}#gym-context-design .gym-window{min-height:1150px}}
+@media(pointer:coarse){#gym-context-design button,#gym-context-design select {min-height:44px}#gym-context-design input,#gym-context-design textarea {font-size:16px}}
+</style>
+<script>
+(() => {
+  const root = document.getElementById('gym-context-design');
+  const examples = {
+    exercise: {question:'I want B2 to use the overhead range we prepared, without another heavy lift.',answer:'A light overhead-and-squat option fits that job. Keep the decision focused on B2.',target:'Replace B2 · one line',text:'B2 Overhead Dowel Squat'},
+    block: {question:'I want the B block to practice overhead position and foot placement.',answer:'Discuss the block as a skill progression, not just two unrelated exercise names.',target:'Replace B block · contiguous range',text:'B1 Overhead Position Practice\nB2 Split-Position Footwork'},
+    session: {question:'Does adding another implement earn its place in this session?',answer:'We can reason across the session while reviewing only one local change at a time. Other substitutions remain separate proposals.',target:'Replace B2 · one local change',text:'B2 Bodyweight Squat-to-Reach'}
+  };
+  root.querySelectorAll('[data-variant]').forEach(section => {
+    const find = s => section.querySelector(s);
+    const status = find('.gym-status');
+    let before = 'B2 —', draft = examples.exercise.text, stale = false;
+    const settings = {ambiguousRationale:false};
+    const showFeedback = () => {find('.gym-feedback').hidden = !settings.ambiguousRationale;};
+    const save = action => {
+      if (window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{layout:section.dataset.variant,scope:find('[data-scope]').value,lastAction:action},privateContent:null}).catch(()=>{});
+    };
+    const changeScope = () => {
+      const e=examples[find('[data-scope]').value];
+      before = find('[data-scope]').value === 'block' ? 'B1 Press\nB2 —' : 'B2 —';
+      find('[data-strength]').innerHTML=find('[data-scope]').value==='block'?'A1 Deadlift<br>A2 Row':'A1 Deadlift<br>A2 Row<br>B1 Press';
+      find('[data-context]').textContent='Considering Session 14 · Editing '+(find('[data-scope]').value==='block'?'B block':'B2');
+      draft=e.text;stale=false;
+      find('[data-question]').textContent=e.question;find('[data-answer]').textContent=e.answer;
+      find('[data-target]').textContent=e.target;find('[data-before]').textContent='− '+before;
+      find('[data-after]').textContent='+ '+draft;find('[data-note]').textContent=before;
+      find('[data-apply]').disabled=false;find('.gym-proposal').hidden=false;find('.gym-edit').hidden=true;
+      find('.gym-feedback').hidden=true;status.textContent='Synthetic scenario loaded. Inspect the proposed target.';
+    };
+    const apply = () => {
+      if(stale || find('[data-apply]').disabled) return;
+      if(!find('.gym-edit').hidden) draft=find('[data-edit]').value;
+      if(!draft.trim()){status.textContent='Proposed text cannot be empty.';return;}
+      find('[data-note]').textContent=draft;find('[data-after]').textContent='+ '+draft;
+      find('[data-apply]').disabled=true;find('.gym-edit').hidden=true;
+      status.textContent='Applied to the synthetic target. No identity or global preference established.';
+      showFeedback();save('applied');
+    };
+    find('[data-scope]').addEventListener('change',()=>{changeScope();save('changed scope');});
+    find('[data-apply]').addEventListener('click',apply);
+    find('[data-edit-button]').addEventListener('click',()=>{find('.gym-edit').hidden=false;find('[data-edit]').value=draft;find('[data-edit]').focus();});
+    find('[data-dismiss]').addEventListener('click',()=>{find('.gym-proposal').hidden=true;status.textContent='Dismissed. Draft unchanged; no global dislike inferred.';save('dismissed');});
+    find('[data-conflict]').addEventListener('click',()=>{stale=true;find('[data-note]').textContent='B2 Coach’s new draft';find('[data-apply]').disabled=true;status.textContent='Target changed. Apply blocked; refresh and review before replacing it.';});
+    find('[data-skip]').addEventListener('click',()=>{find('.gym-feedback').hidden=true;status.textContent='Skipped. Continue programming.';save('skipped rationale');});
+    section.querySelectorAll('[data-reason]').forEach(button=>button.addEventListener('click',()=>{find('.gym-feedback').hidden=true;status.textContent='Rationale noted for this decision: '+button.dataset.reason+'. Global memory requires separate confirmation.';save('local rationale');}));
+    const send = () => {
+      const value=find('[data-followup]').value.trim();if(!value)return;
+      find('[data-question]').textContent=value;find('[data-answer]').textContent='Follow-up retained. This prototype has no model; it does not generate a new recommendation.';
+      status.textContent=stale?'Current target still conflicts; no edit applied.':'Current synthetic draft is available for the next exchange.';
+      find('[data-followup]').value='';save('followed up');
+    };
+    find('[data-send]').addEventListener('click',send);
+    section.addEventListener('keydown',e=>{
+      if(e.key==='Escape'){find('.gym-feedback').hidden=true;status.textContent='Optional feedback dismissed.';}
+      if(e.key==='Enter' && e.metaKey && e.target.tagName!=='TEXTAREA'){e.preventDefault();apply();}
+      else if(e.key==='Enter' && e.target===find('[data-followup]')){e.preventDefault();send();}
+    });
+    if(globalThis.Tweak){const tweak=new Tweak({container:find('.gym-assistant'),onChange:()=>{showFeedback();}});tweak.addToggle(settings,'ambiguousRationale',{label:'Show optional rationale example'});}
+  });
+})();
+</script>

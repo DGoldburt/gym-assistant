@@ -380,3 +380,34 @@ Must reference canonical exercise IDs rather than exercise-name strings.
 The macOS Service interaction was tested in actual Apple Notes usage on macOS 26.6. The AppKit fallback passed the approved cold, warm, cancellation, integrity, and focus gates; the Automator Quick Action did not satisfy the complete contract.
 
 This supports retaining Notes as the initial workspace while keeping the resolver and domain logic independent. Revisit the decision using ADR 001's falsifiable triggers rather than treating one successful spike as permanent proof.
+
+## Contextual program assistance direction — capability work in progress
+
+The selected product direction is a persistent, session-scoped working scratchpad
+with conversational assistance. The coach edits the scratchpad directly and later
+records the work in Apple Notes. This bounded working copy needs a context boundary
+separate from the synchronous Service used for autocomplete.
+
+The accepted [ADR 004](decisions/004-read-only-notes-context.md) direction captures
+one Notes document identity when the coach enters the program workspace, then reads
+that document's formatted body, plain text, and change evidence through read-only
+Notes Automation. Later selection of another note must not silently redirect the
+workspace. The Service must return before the long-lived scratchpad window opens.
+The adapter reports unavailable or changed context explicitly and has no Notes
+write methods, exercise-identity rules, or model-reasoning responsibilities.
+
+The workspace owns its session association, working text, conversation, local
+revisions, and last confirmed Notes baseline. Notes remains the recorded program
+destination. Manual copy and paste is the selected initial handoff; copy alone is
+not evidence that Notes received the text. A changed Notes session must not silently
+replace the scratchpad or be overwritten by it.
+
+The [synthetic capability report](design/SCRATCHPAD_CAPABILITY_CHECKPOINT.md)
+demonstrates captured-note reads and external-change detection. It also found that
+the reported modification date can remain unchanged across body changes, so
+safety-critical freshness cannot rely on metadata alone. Session-boundary recovery,
+complete rich-text handoff, production permission onboarding, and continuous
+monitoring remain unverified. The [monitoring contract](design/NOTES_MONITORING_CONTRACT.md)
+and [implementation proposal](design/SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md)
+record the remaining design work. No production implementation or active-slice
+success criteria have been approved by this architecture entry.
