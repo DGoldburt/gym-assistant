@@ -18,6 +18,11 @@ public struct LoadedWorkspace {
     public let snapshot: WorkspaceSnapshot
     public let recoveredFromPrevious: Bool
 }
+public struct StoredWorkspaceAnchor: Decodable {
+    public let schemaVersion: Int
+    public let workspaceID: WorkspaceID
+    public let anchor: SessionAnchor
+}
 
 /// Store only local workspace snapshots. It has no Notes or provider dependency.
 /// Serialized by the owning main-actor workspace; no cross-process writer is supported.
@@ -34,6 +39,26 @@ public struct LoadedWorkspace {
     }
     public func previousURL(for id: WorkspaceID) -> URL {
         directory.appendingPathComponent(id.rawValue.uuidString + ".previous.json")
+    }
+    /// Discover all saved owners without unarchiving inactive rich-text editors.
+    /// Damaged/unknown records fail visibly; they must not become vacant regions.
+    public func storedAnchors() throws -> [StoredWorkspaceAnchor] {
+        guard fileManager.fileExists(atPath: directory.path) else { return [] }
+        let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+        var ids: Set<UUID> = []
+        for file in files where file.pathExtension == "json" {
+            let stem = file.deletingPathExtension().lastPathComponent.replacingOccurrences(of: ".previous", with: "")
+            if let id = UUID(uuidString: stem) { ids.insert(id) }
+        }
+        return try ids.sorted { $0.uuidString < $1.uuidString }.map { raw in
+            let id = WorkspaceID(raw)
+            let current = currentURL(for: id)
+            let source = fileManager.fileExists(atPath: current.path) ? current : previousURL(for: id)
+            let value = try JSONDecoder().decode(StoredWorkspaceAnchor.self, from: Data(contentsOf: source))
+            guard value.schemaVersion == WorkspaceSnapshot.currentSchema else { throw WorkspaceError.unsupportedSchema(value.schemaVersion) }
+            guard value.workspaceID == id, !value.anchor.noteID.rawValue.isEmpty else { throw SnapshotStoreError.identityMismatch }
+            return value
+        }
     }
     private func validated(_ data: Data, id: WorkspaceID) throws -> WorkspaceSnapshot {
         let value = try JSONDecoder().decode(WorkspaceSnapshot.self, from: data)

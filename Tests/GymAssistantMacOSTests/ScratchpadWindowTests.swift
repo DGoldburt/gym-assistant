@@ -7,6 +7,42 @@ import GymAssistantWorkspace
     private func descendants(_ view: NSView) -> [NSView] {
         [view] + view.subviews.flatMap(descendants)
     }
+    @Test func boundaryUndoRestoresIndependentTextFormattingAndRange() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-boundary-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let body = "Session 1\nB2 Row\n"
+        let note = NoteSnapshot(id: NoteID("synthetic-boundary"), text: body + "Ideas\n")
+        let rich = NSMutableAttributedString(string: body, attributes: [.font: NSFont.systemFont(ofSize: 15)])
+        rich.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: 20), range: NSRange(location: 0, length: 9))
+        let snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: note.id, recordedHeading: "Session 1", baselineText: body),
+            text: body, richTextArchive: try RichTextArchive.encode(rich))
+        let store = WorkspaceSnapshotStore(directory: root)
+        let controller = try SessionScratchpadWindowController(snapshot: snapshot, store: store, note: note,
+            association: SessionAssociation(sessionID: snapshot.anchor.sessionID, noteID: note.id,
+                observationID: note.observationID, range: SourceRange(location: 0, length: rich.length)),
+            profile: CoachingProfile(version: "empty", entries: []))
+        let content = try #require(controller.window?.contentView)
+        let editor = try #require(descendants(content).first {
+            $0.identifier?.rawValue == "scratchpad-editor"
+        } as? NSTextView)
+        let undo = try #require(editor.undoManager)
+        let source = NSAttributedString(string: note.text)
+        let document = try ProgramDocumentReader.document(snapshot: note, richText: source)
+        undo.beginUndoGrouping()
+        try controller.applyBoundary(SourceRange(location: 0, length: source.length), document: document, source: source)
+        undo.endUndoGrouping()
+        #expect(controller.snapshot.text == note.text)
+        undo.undo()
+        #expect(controller.snapshot.text == body)
+        #expect(editor.attributedString().isEqual(to: rich))
+        #expect(controller.snapshot.boundaryProtection?.sourceRange == SourceRange(location: 0, length: rich.length))
+        #expect(controller.flushAndStop())
+        #expect(try store.load(id: snapshot.workspaceID)?.snapshot.text == body)
+        undo.redo()
+        #expect(controller.snapshot.text == note.text)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
+    }
     @Test func composingFollowupDoesNotFalselyMarkScratchpadChanged() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-window-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

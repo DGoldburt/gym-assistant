@@ -7,6 +7,7 @@ public struct NotesObservationState: Sendable {
     public private(set) var snapshot: NoteSnapshot?
     public private(set) var contentID: UUID?
     public private(set) var failure: NotesReadError?
+    public private(set) var sequence: UInt64 = 0
 
     public init(noteID: NoteID) { self.noteID = noteID }
 
@@ -20,7 +21,8 @@ public struct NotesObservationState: Sendable {
         if snapshot?.text != value.text || snapshot?.html != value.html { contentID = UUID() }
         snapshot = value
         failure = nil
+        sequence += 1
     }
 
-    public mutating func failed(_ error: NotesReadError) { failure = error }
+    public mutating func failed(_ error: NotesReadError) { failure = error; sequence += 1 }
 }

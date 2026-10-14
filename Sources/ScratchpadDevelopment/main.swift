@@ -2,9 +2,10 @@ import AppKit
 import GymAssistantWorkspace
 import GymAssistantMacOS
 
-/// Explicit synthetic development app; never registers a Service or accesses Notes.
+/// Explicit development app; Notes access requires a separate fixture-test command.
 @MainActor final class DevelopmentDelegate: NSObject, NSApplicationDelegate {
     private var controller: SessionScratchpadWindowController?
+    private let notesReader = NotesContextReader()
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
             let noteID = NoteID("synthetic-development-note")
@@ -51,12 +52,21 @@ import GymAssistantMacOS
             copyForNotes.keyEquivalentModifierMask = [.command, .shift]
             copyForNotes.target = controller
             editMenu.addItem(copyForNotes)
+            let boundary = NSMenuItem(title: "Adjust Session Boundary…", action: #selector(SessionScratchpadWindowController.adjustBoundary), keyEquivalent: "b")
+            boundary.keyEquivalentModifierMask = [.command, .shift]; boundary.target = controller
+            editMenu.addItem(boundary)
             edit.submenu = editMenu; menu.addItem(edit); NSApp.mainMenu = menu
             let windowItem = NSMenuItem(); windowItem.title = "Window"
             let windowMenu = NSMenu(title: "Window")
             let reopen = NSMenuItem(title: "Session Scratchpad", action: #selector(showScratchpad), keyEquivalent: "0")
             reopen.target = self
             windowMenu.addItem(reopen); windowItem.submenu = windowMenu; menu.addItem(windowItem)
+            let preferences = NSMenuItem(title: "Programming Preferences…", action: #selector(SessionScratchpadWindowController.showProgrammingPreferences), keyEquivalent: ",")
+            preferences.target = controller; appMenu.addItem(preferences)
+            let access = NSMenuItem(title: "Request Notes Access for Fixture Test…", action: #selector(requestNotesAccess), keyEquivalent: "")
+            access.target = self; appMenu.addItem(access)
+            let verify = NSMenuItem(title: "Verify Selected Notes Test Fixture…", action: #selector(verifyNotesFixture), keyEquivalent: "")
+            verify.target = self; appMenu.addItem(verify)
             controller?.show()
         } catch {
             let alert = NSAlert(); alert.messageText = "Synthetic workspace unavailable"
@@ -68,6 +78,31 @@ import GymAssistantMacOS
         controller?.show(); return false
     }
     @objc private func showScratchpad() { controller?.show() }
+    @objc private func requestNotesAccess() {
+        Task {
+            do { try await notesReader.requestAccess(); showFixtureResult("Notes access is available. Select the synthetic capability-test note, then run Verify Selected Notes Test Fixture.") }
+            catch { showFixtureResult("Notes access unavailable: \(error). No note was changed.") }
+        }
+    }
+    @objc private func verifyNotesFixture() {
+        Task {
+            do {
+                let captured = try await notesReader.captureSelectedNote()
+                guard captured.text.components(separatedBy: .newlines).first?.lowercased() == "gym assistant capability test" else {
+                    showFixtureResult("Select the note named Gym assistant capability test. No other note will be imported or saved by this test."); return
+                }
+                let (document, _) = try ProgramDocumentReader.read(captured)
+                let metadata = try await notesReader.metadata(id: captured.id)
+                let reread = try await notesReader.read(id: captured.id)
+                guard metadata.id == captured.id, reread.id == captured.id else { throw NotesReadError.unavailable }
+                showFixtureResult("Native read and captured-ID reread succeeded. Imported \(document.paragraphs.count) supported paragraphs and \(document.candidates().count) session regions. Metadata read returned the same note identity. No Notes write, stored note body, clipboard change, or API call occurred.")
+            } catch { showFixtureResult("Fixture verification did not pass: \(error). Existing scratchpad and Notes were preserved.") }
+        }
+    }
+    private func showFixtureResult(_ message: String) {
+        let alert = NSAlert(); alert.messageText = "Notes reader fixture test"
+        alert.informativeText = message; alert.runModal()
+    }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if let controller, !controller.flushAndStop() { return .terminateCancel }
         return .terminateNow

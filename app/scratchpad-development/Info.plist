@@ -8,4 +8,5 @@
 <key>CFBundleVersion</key><string>1</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSPrincipalClass</key><string>NSApplication</string>
+<key>NSAppleEventsUsageDescription</key><string>Read the explicitly selected synthetic Notes test fixture to verify the scratchpad reader. This development app never changes Notes.</string>
 </dict></plist>

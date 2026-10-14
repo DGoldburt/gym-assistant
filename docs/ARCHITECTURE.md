@@ -496,8 +496,14 @@ results. Foundation `NotesObservationState` preserves last-known content and a
 content identity for parsed-structure reuse. These components are not yet connected
 to the window/Service or validated against native Notes. The registry must share one
 coordinator per captured NoteID, explicitly validate on resume, and supply aggregate
-visibility. Association/boundary controls, real profile inspection and library
-decoration remain unimplemented; package tests do not establish their native
+visibility. `SessionNoteContext` consumes ordered observations and shares parsed
+structure and set-level association across saved sessions. Foundation session
+structure compares supported body/formatting evidence, never mutable labels alone.
+The semantic Notes importer rejects unsupported HTML instead of rendering web
+resources or silently dropping formatting. Boundary edit protection retains
+deletion/insertion evidence; the synthetic window has a keyboard-accessible read-only
+boundary browser and composite undo. Live Notes window/registry integration, real
+profile inspection and library decoration remain incomplete; package tests do not establish their native
 behavior. No module from concurrent client-history
 work is imported or changed by this implementation.
 

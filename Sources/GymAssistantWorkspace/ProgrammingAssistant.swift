@@ -16,7 +16,7 @@ public struct ProfileEntry: Codable, Equatable, Sendable {
         self.scope = scope; self.exceptions = exceptions
     }
 }
-public struct CoachingProfile: Equatable, Sendable {
+public struct CoachingProfile: Codable, Equatable, Sendable {
     public let version: String
     public let entries: [ProfileEntry]
     public init(version: String, entries: [ProfileEntry]) { self.version = version; self.entries = entries }

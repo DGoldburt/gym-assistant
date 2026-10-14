@@ -19,6 +19,7 @@ public actor NotesRefreshCoordinator {
     private var deferredBody: Task<Void, Never>?
     private var firstChange: ContinuousClock.Instant?
     private var bodyRequested = false
+    private var listeners: [UUID: AsyncStream<NotesObservationState>.Continuation] = [:]
 
     public init(noteID: NoteID, reader: any NotesContextReading) {
         self.reader = reader
@@ -28,6 +29,17 @@ public actor NotesRefreshCoordinator {
     deinit { polling?.cancel(); deferredBody?.cancel() }
 
     public func observation() -> NotesObservationState { state }
+
+    public func observations() -> AsyncStream<NotesObservationState> {
+        let id = UUID()
+        return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+            listeners[id] = continuation
+            continuation.yield(state)
+            continuation.onTermination = { [weak self] _ in Task { await self?.removeListener(id) } }
+        }
+    }
+    private func removeListener(_ id: UUID) { listeners.removeValue(forKey: id) }
+    private func publish() { for listener in listeners.values { listener.yield(state) } }
 
     func waitUntilIdle() async { await worker?.value }
     func waitForScheduledRefresh() async {
@@ -105,6 +117,7 @@ public actor NotesRefreshCoordinator {
                     let snapshot = try await reader.read(id: state.noteID)
                     guard capturedGeneration == generation else { throw NotesReadError.unavailable }
                     try state.accept(snapshot)
+                    publish()
                     for continuation in batch { continuation.resume(returning: snapshot) }
                 }
                 failures = 0
@@ -112,6 +125,7 @@ public actor NotesRefreshCoordinator {
             } catch {
                 let failure = (error as? NotesReadError) ?? .unavailable
                 state.failed(failure)
+                publish()
                 // Ticks queued while the failed read was running must respect
                 // the new backoff too. Explicit consumers remain queued.
                 idleRequested = false

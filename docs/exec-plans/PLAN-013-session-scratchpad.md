@@ -41,6 +41,10 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Final initial-increment verification: five repository stages and 134 tests/17 suites pass. Copy menu is visible and Command-Shift-C works in the native synthetic window; app quit after testing. Preserve the initial increment as a local checkpoint, not completed PLAN 013 or authorization to install/use paid APIs.
 - [ ] Finish production Notes capture/monitor, association/boundary browser/edit tracking, profile inspection and exact exercise decoration before offline slice acceptance. Test actual editor-generated Markdown paste/formatting in the synthetic Notes fixture, not only publication.
 - [x] (2026-10-14) Add read-only native Notes adapter and shared refresh components: serial off-main Automation, explicit consent separated from reads, metadata-only idle checks, body validation for all safety consumers, same-date/formatting changes, deferred change coalescing, error backoff and stale-result rejection. Offline tests use an injected reader; native Notes execution and window/registry integration remain outstanding.
+- [x] (2026-10-14) Implement structured session candidates and set-level stable association, including hierarchy/typos, lettered weeks, Parking Lot, duplicates, renumbering, stale confirmation and occupied ranges. Add bounded semantic HTML import, shared note context with ordered observation delivery, and saved edit-protection state. Older snapshots without source evidence require confirmation rather than inferred identity.
+- [x] (2026-10-14) Connect a read-only boundary browser to the synthetic development window. Native Command-Shift-B, Shift-Down expansion, Command-Return, undo, reopen and blocked shrink observed. Fix a native undo aliasing defect with independent attributed-string snapshots; regression verifies undo/redo text, formatting, range and save. This does not establish live Notes ownership/freshness integration.
+- [x] (2026-10-14) Add per-note context pooling with closed-workspace header discovery, monotonic observation delivery, optional fresh-context chat integration, and read-only preference inspection. Private profile packaging, live boundary/checked-copy/diff wiring, skeleton, decoration and Service entry remain open.
+- [ ] (2026-10-14) Native reader acceptance is waiting on this development app's separate Notes Automation grant. Non-prompting read returned permission without showing consent; explicit fixture-access request was triggered and the user was asked to allow it or report that no dialog appeared. Continue independent verification while awaiting input; no native read pass claimed.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -66,6 +70,16 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Native boundary undo initially retained a live attributed-string reference instead
+of a detached before-image. Undo then paired newer text with the old range/tracker,
+and validation refused the save. Copy the before/redo images explicitly and suppress
+incidental text-storage undo registration during the composite operation. The
+regression and native retry restore text, formatting and range together. The failed
+synthetic process was restarted from its last acknowledged snapshot; no real note
+was edited. Source parsing rejects unsupported formatting rather than silently
+discarding it; support beyond the tested native headings/bold/disc-list fragment
+remains a fidelity gate.
 
 
 Native continuation, 2026-10-14: composer text changes incorrectly displayed a
@@ -247,6 +261,18 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-14 continued implementation: structured association and boundary protection
+have package coverage; the synthetic browser now has a native keyboard/undo/reopen
+test trail, including a found-and-fixed undo failure. A shared note-context pool and
+read-only preferences inspection exist, and optional fresh-context chat wiring is
+available for integration. All five repository verification stages passed after
+these changes. The explicit native reader test correctly refused missing access;
+its separate Automation request is awaiting user input. Live boundary/diff/checked
+copy, Service entry, new-session skeleton, exercise decoration and private profile
+packaging still remain; the offline slice is not accepted or installed. Resume at
+the pending native reader check, then continue those integration items without
+stopping at ordinary milestones. The paid-model defaults remain the explicit gate.
 
 2026-10-14 follow-on: the read-only Notes adapter and refresh coordinator are now
 implemented as components, not yet connected to real workspace windows. Five-stage

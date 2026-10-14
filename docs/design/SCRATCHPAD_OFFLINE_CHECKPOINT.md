@@ -65,6 +65,50 @@ state. No installation or change to the installed Gym Assistant is needed.
 
 ## Still outstanding
 
+Further implementation and native evidence, 2026-10-14:
+
+- Structured session detection retains peer-level typo boundaries for confirmation,
+  all weeks in a lettered session, and trailing Parking Lot context. Set-level
+  association compares complete supported body structure across saved anchors,
+  surfaces duplicate labels, and rejects stale/overlapping confirmations. Repeated
+  identical reads retain a coach-confirmed manual association.
+- Saved boundary protection retains deletion, insertion and formatting evidence.
+  Legacy edited snapshots without correspondence are conservative: expansion is
+  possible, destructive shrink is blocked. These optional development-snapshot
+  fields are not a shipped production migration contract.
+- Native synthetic Command-Shift-B opens the read-only note browser. Shift-Down
+  expands the highlighted edge; Command-Return incorporates only added source text,
+  preserving the edited B2 and unsent composer. Reopen restores the expanded scope.
+  Unsafe shrink is refused. Escape cancels. Source ownership and fresh-read checks
+  are tested as components, not integrated into live boundary editing yet.
+- Initial native undo failed because its before-image aliased live text. Save
+  validation rejected the mismatch. The test process was stopped with its last
+  valid snapshot preserved, then rebuilt. Independent attributed-string copies and
+  controlled undo registration fixed it; native retry restored scope/formatting,
+  retained B2, and saved revision 23. The regression also verifies redo and reload.
+- The shared note-context pool loads closed-workspace anchors without unarchiving
+  their rich text, retains one context/monitor per NoteID, and orders asynchronous
+  observations so a delayed delivery cannot overwrite newer state. Optional chat
+  integration waits for fresh Notes, preserves follow-up typing, and supports Stop
+  during the read. The installed Service is not wired to this path.
+- Programming Preferences is a read-only window with explicit evidence kind,
+  confirmation, source, scope and exceptions. The synthetic app still has an empty
+  profile; private philosophy/seed packaging is outstanding. The private companion
+  was located outside Git; none of its content was added to reusable source.
+- A development-only menu now explicitly requests Notes Automation access and
+  verifies the selected note only when its title is Gym assistant capability test.
+  The initial non-prompting read correctly reported missing permission. An explicit
+  access request was triggered; native adapter success is pending the separate
+  development app's permission grant. No note write, provider call or installation
+  occurred. This supersedes the initial blanket statement that the development
+  executable contains no Notes-access path: ordinary synthetic launch still does
+  not read Notes.
+
+All five repository verification stages passed after this further increment. The
+current native test app is left running awaiting its explicit Automation request;
+the synthetic scratchpad is saved at revision 23. The installed Gym Assistant,
+real Notes content and client-history worktree were not modified.
+
 Follow-on implementation, 2026-10-14: `NotesContextReader` now supplies the native
 read-only adapter, and `NotesRefreshCoordinator` supplies shared refresh execution.
 They are deliberately not wired into the synthetic window yet. The adapter requests

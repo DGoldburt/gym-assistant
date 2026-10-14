@@ -56,9 +56,12 @@ public struct SessionAnchor: Codable, Equatable, Sendable {
     public let noteID: NoteID
     public var recordedHeading: String
     public var baselineText: String
-    public init(sessionID: SessionID = SessionID(), noteID: NoteID, recordedHeading: String, baselineText: String) {
+    public var sourceEvidence: SessionSourceEvidence?
+    public init(sessionID: SessionID = SessionID(), noteID: NoteID, recordedHeading: String, baselineText: String,
+                sourceEvidence: SessionSourceEvidence? = nil) {
         self.sessionID = sessionID; self.noteID = noteID
         self.recordedHeading = recordedHeading; self.baselineText = baselineText
+        self.sourceEvidence = sourceEvidence
     }
 }
 
@@ -96,13 +99,14 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
     public static let currentSchema = 1
     public var schemaVersion: Int
     public let workspaceID: WorkspaceID
-    public let anchor: SessionAnchor
+    public var anchor: SessionAnchor
     public var revision: Int
     public var text: String
     public var richTextArchive: Data
     public var messages: [ConversationMessage]
     public var conversationID: ConversationID
     public var composerText: String
+    public var boundaryProtection: BoundaryEditProtection?
     public init(workspaceID: WorkspaceID = WorkspaceID(), anchor: SessionAnchor, revision: Int = 0,
                 text: String, richTextArchive: Data, messages: [ConversationMessage] = [],
                 conversationID: ConversationID = ConversationID(), composerText: String = "") {
@@ -117,6 +121,9 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
               Set(messages.map(\.id)).count == messages.count,
               messages.allSatisfy({ $0.scratchpadRevision >= 0 && $0.scratchpadRevision <= revision })
         else { throw WorkspaceError.invalidSnapshot }
+        if let boundaryProtection, !boundaryProtection.isValid(currentLength: (text as NSString).length) {
+            throw WorkspaceError.invalidSnapshot
+        }
     }
     public mutating func markInterruptedRequests() {
         for index in messages.indices where messages[index].status == .pending {

@@ -14,10 +14,11 @@ import GymAssistantWorkspace
 @MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate {
     public private(set) var snapshot: WorkspaceSnapshot
     private let store: WorkspaceSnapshotStore
-    private let note: NoteSnapshot
-    private let association: SessionAssociation
+    private var note: NoteSnapshot
+    private var association: SessionAssociation
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
+    private let noteContext: SessionNoteContext?
     private let editor = NSTextView()
     private let transcript = NSTextView()
     private let composer = ChatComposer()
@@ -32,15 +33,27 @@ import GymAssistantWorkspace
     private var diffScroll = NSScrollView()
     private var showingDiff = false
     private var savedRevision: Int?
+    private var boundaryBrowser: SessionBoundaryBrowser?
+    private var preferencesWindow: ProgrammingPreferencesWindow?
+    private var preparingRequest = false
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation, profile: CoachingProfile,
-                assistant: any ProgrammingAssistant = FakeProgrammingAssistant()) throws {
+                assistant: any ProgrammingAssistant = FakeProgrammingAssistant(), noteContext: SessionNoteContext? = nil) throws {
         self.snapshot = snapshot; self.store = store; self.note = note
         self.association = association; self.profile = profile; self.assistant = assistant
+        self.noteContext = noteContext
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
+        if let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
+            guard savedRange.isParagraphAligned(in: note.text),
+                  snapshot.anchor.sourceEvidence?.text == (note.text as NSString).substring(with: savedRange.nsRange) else {
+                throw WorkspaceError.staleAssociation
+            }
+            self.association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
+                                                  observationID: note.observationID, range: savedRange)
+        }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -49,9 +62,16 @@ import GymAssistantWorkspace
         window.delegate = self
         snapshotDidRestore()
         configure(rich: rich)
+        if snapshot.boundaryProtection == nil {
+            self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: self.association.range)
+            // Older saved scratchpads have no edit correspondence. Preserve them;
+            // do not assume visible text equality proves formatting was untouched.
+            if snapshot.revision > 0 { self.snapshot.boundaryProtection?.markUncertain(currentLength: rich.length) }
+        }
         refreshTranscript()
         updateAvailability()
         saveNow()
+        noteContext?.subscribe(workspace: snapshot.workspaceID) { [weak self] in self?.sourceChanged() }
     }
     public required init?(coder: NSCoder) { nil }
     private func snapshotDidRestore() { snapshot.markInterruptedRequests() }
@@ -130,12 +150,36 @@ import GymAssistantWorkspace
         showWindow(nil); window?.makeKeyAndOrderFront(nil)
         window?.makeFirstResponder(editor)
         NSApp.activate(ignoringOtherApps: true)
+        if let noteContext { Task { await noteContext.setVisible(true, workspace: snapshot.workspaceID) } }
+    }
+
+    private func sourceChanged() {
+        guard let noteContext else { return }
+        if let document = noteContext.sourceDocument { note = document.snapshot }
+        if let fresh = try? noteContext.association(for: snapshot.anchor.sessionID) {
+            if fresh.range != association.range {
+                snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: fresh.range)
+                snapshot.boundaryProtection?.markUncertain(currentLength: (snapshot.text as NSString).length)
+            }
+            association = fresh
+            if let document = noteContext.sourceDocument,
+               let latest = try? document.evidence(in: fresh.range), latest.text != snapshot.anchor.baselineText {
+                status.stringValue = "Notes changed — compare before pasting. Scratchpad preserved."
+            }
+        } else {
+            status.stringValue = noteContext.failure ?? "Session association needs review. Use Adjust Session Boundary."
+        }
     }
     public func textDidChange(_ notification: Notification) {
         let changedEditor = notification.object as AnyObject? === editor
         guard changedEditor || notification.object as AnyObject? === composer else { return }
         snapshot.composerText = composer.string
-        if changedEditor { snapshot.text = editor.string; snapshot.revision += 1 }
+        if changedEditor {
+            snapshot.text = editor.string; snapshot.revision += 1
+            if snapshot.boundaryProtection?.isValid(currentLength: (editor.string as NSString).length) == false {
+                snapshot.boundaryProtection?.markUncertain(currentLength: (editor.string as NSString).length)
+            }
+        }
         if changedEditor, gate.active != nil { status.stringValue = "Scratchpad changed · reply uses an earlier revision" }
         refreshTranscript()
         saveTask?.cancel()
@@ -144,6 +188,84 @@ import GymAssistantWorkspace
             guard !Task.isCancelled else { return }
             self?.saveNow()
         }
+    }
+    public func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        guard textView === editor else { return true }
+        do {
+            if let replacementString {
+                try snapshot.boundaryProtection?.edited(range: affectedCharRange, replacementLength: (replacementString as NSString).length)
+            } else { try snapshot.boundaryProtection?.formattingChanged(range: affectedCharRange) }
+        } catch { snapshot.boundaryProtection?.markUncertain() }
+        return true
+    }
+
+    @objc public func adjustBoundary() {
+        guard noteContext == nil else {
+            status.stringValue = "Live Notes boundary review is not connected yet. Existing scratchpad is preserved."; return
+        }
+        do {
+            let rich = NSAttributedString(string: note.text, attributes: [.font: NSFont.systemFont(ofSize: 15)])
+            let document = try ProgramDocumentReader.document(snapshot: note, richText: rich)
+            boundaryBrowser = SessionBoundaryBrowser(document: document, richText: rich, selected: association.range,
+                owners: [], apply: { [weak self] range in
+                    guard let self else { throw WorkspaceError.staleAssociation }
+                    try Task.checkCancellation()
+                    try self.applyBoundary(range, document: document, source: rich)
+                })
+            boundaryBrowser?.show()
+        } catch { status.stringValue = "Boundary unavailable: \(error)" }
+    }
+
+    @objc public func showProgrammingPreferences() {
+        if preferencesWindow == nil { preferencesWindow = ProgrammingPreferencesWindow(profile: profile) }
+        preferencesWindow?.show()
+    }
+
+    func applyBoundary(_ range: SourceRange, document: ProgramDocument, source: NSAttributedString) throws {
+        guard document.snapshot.observationID == note.observationID else { throw WorkspaceError.staleAssociation }
+        guard var protection = snapshot.boundaryProtection else { throw BoundaryChangeError.uncertainCorrespondence }
+        let change = try protection.apply(range, in: note.text)
+        let before = NSAttributedString(attributedString: editor.attributedString())
+        let previousAssociation = association
+        let previousAnchor = snapshot.anchor
+        let previousProtection = snapshot.boundaryProtection
+        let rich = NSMutableAttributedString(attributedString: before)
+        if change.removeSuffix > 0 { rich.deleteCharacters(in: NSRange(location: rich.length - change.removeSuffix, length: change.removeSuffix)) }
+        if change.removePrefix > 0 { rich.deleteCharacters(in: NSRange(location: 0, length: change.removePrefix)) }
+        if let prefix = change.prepend { rich.insert(source.attributedSubstring(from: prefix.nsRange), at: 0) }
+        if let suffix = change.append { rich.append(source.attributedSubstring(from: suffix.nsRange)) }
+        editor.undoManager?.registerUndo(withTarget: self) { target in
+            target.restoreBoundary(rich: before, association: previousAssociation, anchor: previousAnchor, protection: previousProtection)
+        }
+        editor.undoManager?.setActionName("Adjust session boundary")
+        association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
+                                         observationID: association.observationID, range: range)
+        snapshot.anchor.sourceEvidence = try document.evidence(in: range)
+        snapshot.boundaryProtection = protection
+        editor.undoManager?.disableUndoRegistration()
+        editor.textStorage?.setAttributedString(rich)
+        editor.undoManager?.enableUndoRegistration()
+        snapshot.revision += 1
+        saveNow(); refreshTranscript()
+    }
+
+    private func restoreBoundary(rich: NSAttributedString, association previous: SessionAssociation,
+                                 anchor: SessionAnchor, protection: BoundaryEditProtection?) {
+        // Frozen development source only. Live ownership/freshness must be checked
+        // before this operation is offered in the real Notes workspace.
+        guard previous.observationID == note.observationID else {
+            status.stringValue = "Cannot undo boundary: Notes association changed."; return
+        }
+        let redoRich = NSAttributedString(attributedString: editor.attributedString()), redoAssociation = association, redoAnchor = snapshot.anchor
+        let redoProtection = snapshot.boundaryProtection
+        editor.undoManager?.registerUndo(withTarget: self) { target in
+            target.restoreBoundary(rich: redoRich, association: redoAssociation, anchor: redoAnchor, protection: redoProtection)
+        }
+        association = previous; snapshot.anchor = anchor; snapshot.boundaryProtection = protection
+        editor.undoManager?.disableUndoRegistration()
+        editor.textStorage?.setAttributedString(rich)
+        editor.undoManager?.enableUndoRegistration()
+        snapshot.revision += 1; saveNow(); refreshTranscript()
     }
     @discardableResult private func saveNow() -> Bool {
         do {
@@ -161,18 +283,42 @@ import GymAssistantWorkspace
     }
     @objc private func send() { submit() }
     private func submit() {
-        guard gate.active == nil else { status.stringValue = "Reply in progress — Stop or wait; follow-up stays here."; return }
+        guard gate.active == nil, !preparingRequest else { status.stringValue = "Reply in progress — Stop or wait; follow-up stays here."; return }
+        let question = composer.string
+        if let noteContext {
+            preparingRequest = true; updateAvailability()
+            status.stringValue = "Reading current Notes context…"
+            responseTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    _ = try await noteContext.refresh(for: .chat)
+                    try Task.checkCancellation()
+                    guard let document = noteContext.sourceDocument else { throw WorkspaceError.staleAssociation }
+                    self.note = document.snapshot
+                    self.association = try noteContext.association(for: self.snapshot.anchor.sessionID)
+                    self.preparingRequest = false
+                    self.sendPrepared(question: question)
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self.preparingRequest = false; self.updateAvailability()
+                    self.status.stringValue = "Question not sent. Notes or session association needs review; your message is preserved."
+                }
+            }
+        } else { sendPrepared(question: question) }
+    }
+
+    private func sendPrepared(question: String) {
         saveTask?.cancel()
-        guard saveNow() else { return }
+        guard saveNow() else { updateAvailability(); return }
         do {
             let request = try ProgramContextAssembler.assemble(note: note, association: association,
-                workspace: snapshot, profile: profile, question: composer.string, maximumContextBytes: 1_000_000)
+                workspace: snapshot, profile: profile, question: question, maximumContextBytes: 1_000_000)
             try gate.begin(request)
             snapshot.messages.append(ConversationMessage(requestID: request.id, conversationID: request.conversationID,
                 role: .coach, text: request.question, status: .complete, scratchpadRevision: request.revision, observationID: request.observationID))
             snapshot.messages.append(ConversationMessage(requestID: request.id, conversationID: request.conversationID,
                 role: .assistant, text: "", status: .pending, scratchpadRevision: request.revision, observationID: request.observationID))
-            composer.string = ""
+            if composer.string == question { composer.string = "" }
             saveNow(); updateAvailability(); refreshTranscript()
             responseTask = Task { [weak self, assistant] in
                 do {
@@ -194,13 +340,17 @@ import GymAssistantWorkspace
         updateAvailability(); refreshTranscript(); saveNow()
     }
     @objc private func stop() {
+        if preparingRequest {
+            responseTask?.cancel(); preparingRequest = false; updateAvailability()
+            status.stringValue = "Stopped before sending. Your message stays here."; return
+        }
         guard let request = gate.active else { return }
         gate.stop(); responseTask?.cancel(); responseTask = nil
         updateReply(requestID: request.id, text: "Stopped. No automatic resend.", status: .cancelled)
     }
     private func updateAvailability() {
-        sendButton.isEnabled = gate.active == nil
-        stopButton.isEnabled = gate.active != nil
+        sendButton.isEnabled = gate.active == nil && !preparingRequest
+        stopButton.isEnabled = gate.active != nil || preparingRequest
     }
     private func refreshTranscript() {
         transcript.string = snapshot.messages.filter { $0.conversationID == snapshot.conversationID }.map { message in
@@ -218,9 +368,13 @@ import GymAssistantWorkspace
     @objc private func toggleDiff() {
         showingDiff.toggle()
         if showingDiff {
+            if association.observationID != note.observationID || !association.range.isParagraphAligned(in: note.text) {
+                diff.string = "Notes association is unresolved. Scratchpad is preserved; comparison is unavailable."
+            } else {
             diff.string = "Frozen synthetic source vs scratchpad r\(snapshot.revision) — NOT live Notes\n"
                 + "Text-only comparison; formatting agreement not verified.\n\n"
-                + SessionComparison.text(before: snapshot.anchor.baselineText, after: snapshot.text)
+                + SessionComparison.text(before: (note.text as NSString).substring(with: association.range.nsRange), after: snapshot.text)
+            }
             diff.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
         }
         editorScroll.isHidden = showingDiff; diffScroll.isHidden = !showingDiff
@@ -228,6 +382,9 @@ import GymAssistantWorkspace
     }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
         stop(); saveTask?.cancel(); return saveNow()
+    }
+    public func windowWillClose(_ notification: Notification) {
+        if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
     public func flushAndStop() -> Bool { stop(); saveTask?.cancel(); return saveNow() }
 }
