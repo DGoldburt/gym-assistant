@@ -32,6 +32,29 @@
 
 ## Git lifecycle
 
+### Starting feature branches and worktrees
+
+- Before creating a feature branch or worktree, identify whether the work changes
+  the reusable starter, the developed learner application, or both. Inspect the
+  current branch tips, worktree status, and relevant product, architecture,
+  design, and code differences between `main` and `learner/main`. Do not infer
+  the right base from a documentation filename or an earlier workstream.
+- Base application features, their concrete design, and active product-direction
+  updates on refreshed `learner/main`. Base reusable harness and curriculum
+  updates on `main`. Curate product documents into `main` only for an approved
+  new starter version, as described under Reusable work; do not copy an older
+  complete product or architecture file over a newer learner version.
+- Give each active feature its own branch and worktree. Before reusing or copying
+  from a worktree, inspect its uncommitted files and whether another active
+  thread is changing them. Preserve that thread's work in place; reconcile from
+  a stable snapshot or explicit handoff, and review source and destination
+  diffs at the file and hunk level.
+- When an approved starter update and dependent application work span both lines,
+  prepare the reusable part on clean `main` and the application part on refreshed
+  `learner/main`. After the reusable update is reviewed and published,
+  synchronize `main` into `learner/main` before retaining or merging dependent
+  application work. Recheck ancestry and the complete feature diff afterward.
+
 ### Learner work
 
 - Before starting a numbered exercise, synchronize `learner/main` with reusable `main`, then create a fresh `tutorial/exercise-NN` branch from `learner/main`. Do not carry a previous exercise branch forward.
