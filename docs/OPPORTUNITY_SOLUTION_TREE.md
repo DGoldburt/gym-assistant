@@ -48,6 +48,12 @@ unmatched wording accumulates without a quick review path.
 - **Later:** evaluate extractor quality against Task A boundary decisions and review
   Task C outcome clusters—especially deferred observations—without treating an
   identity disposition as automatic extraction ground truth.
+- **Later model-enhanced candidate:** extract candidate exercise wording from pasted
+  workouts, completed programs, or instructional videos. Show each candidate beside
+  its source passage or video location and likely existing-library matches, then
+  stage it in the same resumable identity-review flow. The model may prepare and
+  rank evidence, but may not confirm aliases, create exercises, or merge identities.
+  Video extraction still depends on the separate instructional-segment design below.
 - **Now, implementation awaiting integration:** provide a small Edit Library
   workspace. Approved navigation reaches it from autocomplete alongside Add
   Exercises as peer routes without cross-navigation. Add Exercises starts with creation
@@ -146,9 +152,26 @@ programming, progression state, or training/load history.
   appropriate human judgment.
 - **Future:** associate clients, dates, exercises, sets, reps, loads, and notes with
   stable exercise IDs.
+- **Preferred next product-slice candidate after contextual assistance:** extract
+  possible session dates, exercise wording, prescriptions, and client links from
+  existing notes or photographed notebook pages. Keep source passages or image
+  regions and uncertainty visible for correction before creating history. Once
+  history is reviewed, summarize relevant prior work on request, distinguishing
+  recorded plans from work only presumed or confirmed to have occurred.
 
 Client performance history and load recommendations remain outside the initial
 product scope until explicitly approved.
+
+## Relationship between the extraction candidates
+
+Library and history extraction both turn unstructured source material into
+reviewable, provenance-linked candidates. They may reuse source capture, model
+evaluation, and evidence-display patterns. They have different destinations:
+exercise observations go to identity review; proposed sessions and client links
+need a separate history-correction workflow. Confirming an exercise alias does not
+confirm a session date, client, prescription, or performance, and confirming a
+history record does not silently add an alias. Shared extraction machinery is a
+design hypothesis, not a reason to build a general ingestion platform now.
 
 ## Horizon summary
 
@@ -159,8 +182,17 @@ non-blocking queue, reviews a useful subset, and reaches an explicit useful-prod
 pause gate. Conservative transformations extend autocomplete only if field use
 justifies continuing. **Later** contains reusable completed-program observation
 extraction, library hygiene, intent-based retrieval, blocks, programming
-tendencies, contextual pairing, and progression relationships. **Future** contains
-client-specific history and load-aware assistance.
+tendencies, contextual pairing, and progression relationships. The original
+**Future** horizon contained client-specific history and load-aware assistance.
+
+For upcoming discovery, contextual program assistance is the selected next
+model-powered design direction. The coach's preferred following slice is history
+extraction and review; this advances its discovery priority from the original
+Future horizon. Model-enhanced library extraction is an adjacent candidate without
+a committed order relative to history. Load-aware assistance remains Future. This
+is a horizon preference, not approval of either implementation, client-history
+schema, image processing, or load recommendations. Each needs its own success
+criteria and evidence before entering the active slice.
 
 Ideas may be added to this tree without changing active success criteria. Each idea
 must remain an opportunity or candidate solution until the user explicitly moves
