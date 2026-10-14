@@ -49,6 +49,16 @@ identity relationship to the exercise, but exactly one is marked as the preferre
 alias. The product uses that preferred alias as the exercise's default display name
 in Apple Notes and other user-facing output.
 
+Aliases are interchangeable wording for the same execution, not a grouping of
+progressions. Implement (KB/DB/unweighted), load position (goblet/front-rack), and
+execution variations (deficit, touch-and-go, assisted/unassisted) get separate
+exercise identities. Sets, reps, weight and tempo, including negatives, belong
+outside exercise names; existing full prescription-bearing wording may remain an
+alias after explicit confirmation. Resistant RNT and short-/long-lever Copenhagen
+are separate variations. Existing confirmed relationships are not rewritten.
+Edit, its Merge target sheet, and Import Review expose the same read-only info
+popover (Command-Shift-/). See [ADR 004](decisions/004-alias-identity-guidance.md).
+
 Example:
 
 Stable exercise ID:

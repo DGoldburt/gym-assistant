@@ -78,6 +78,60 @@ private enum RankedCandidateRow {
 }
 
 @MainActor
+private final class AliasPolicyHelp: NSObject, NSPopoverDelegate {
+    private let popover = NSPopover()
+    private weak var previousResponder: NSResponder?
+    private weak var parentWindow: NSWindow?
+    var isShown: Bool { popover.isShown }
+    lazy var button: NSButton = {
+        let button = NSButton(title: "ⓘ", target: self, action: #selector(show))
+        button.bezelStyle = .inline
+        button.toolTip = "Alias or separate exercise? (Command-Shift-/)"
+        button.setAccessibilityLabel("Alias or separate exercise?")
+        button.setAccessibilityHelp(AliasIdentityGuidance.text)
+        button.keyEquivalent = "/"
+        button.keyEquivalentModifierMask = [.command, .shift]
+        return button
+    }()
+
+    override init() {
+        super.init()
+        let controller = NSViewController()
+        controller.view = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 230))
+        let text = NSTextField(wrappingLabelWithString: AliasIdentityGuidance.text)
+        text.isSelectable = true
+        text.frame = NSRect(x: 16, y: 16, width: 388, height: 198)
+        controller.view.addSubview(text)
+        popover.contentViewController = controller
+        popover.behavior = .transient
+        popover.animates = false
+        popover.delegate = self
+    }
+
+    @objc private func show() {
+        if popover.isShown { popover.performClose(nil); return }
+        parentWindow = button.window
+        previousResponder = button.window?.firstResponder
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
+    }
+
+    func handleShortcut(_ event: NSEvent) -> Bool {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            .subtracting([.capsLock, .numericPad, .function])
+        if popover.isShown, event.keyCode == 53 { popover.performClose(nil); return true }
+        guard modifiers == [.command, .shift],
+              ["/", "?"].contains(event.charactersIgnoringModifiers ?? "") else { return false }
+        show()
+        return true
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        parentWindow?.makeFirstResponder(previousResponder ?? button)
+        previousResponder = nil
+    }
+}
+
+@MainActor
 private final class RankedCandidateTableView: NSTableView {
     var onExpand: (() -> Void)?
     var onCollapse: (() -> Void)?
@@ -844,6 +898,7 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     private var returnFocusTo: NSRunningApplication?
     private var shortcutMonitor: Any?
     private var pendingCount = 0
+    private let aliasHelp = AliasPolicyHelp()
     private var skippedCount = 0
     private var lastUndoReceipt: ExerciseIdentityReviewUndoReceipt?
     private var feedbackMessage = ""
@@ -927,9 +982,11 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
         let content = NSView(frame: window.contentRect(forFrameRect: window.frame))
         window.contentView = content
 
-        observationField.frame = NSRect(x: 24, y: 400, width: 592, height: 42)
+        observationField.frame = NSRect(x: 24, y: 400, width: 548, height: 42)
         observationField.font = .systemFont(ofSize: 22, weight: .semibold)
         content.addSubview(observationField)
+        aliasHelp.button.frame = NSRect(x: 580, y: 408, width: 36, height: 28)
+        content.addSubview(aliasHelp.button)
 
         metaField.frame = NSRect(x: 24, y: 376, width: 440, height: 20)
         metaField.textColor = .secondaryLabelColor
@@ -1150,7 +1207,13 @@ private final class LibraryReviewWindowController: NSObject, NSWindowDelegate {
     private func installShortcutMonitor() {
         guard shortcutMonitor == nil else { return }
         shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, self.window.isKeyWindow else { return event }
+            guard let self else { return event }
+            if self.aliasHelp.isShown {
+                return self.aliasHelp.handleShortcut(event) ? nil : event
+            }
+            guard self.window.isKeyWindow else { return event }
+            if self.aliasHelp.handleShortcut(event) { return nil }
+            guard !self.aliasHelp.isShown else { return event }
             if event.keyCode == 53 {
                 self.closeReview()
                 return nil
@@ -1273,6 +1336,7 @@ private func reviewEvidenceText(_ evidence: ExerciseReviewEvidence) -> String {
 
 @MainActor
 private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSSearchFieldDelegate {
+    private let aliasHelp = AliasPolicyHelp()
     private let library: ExerciseLibrary
     private let edits: ExerciseLibraryEditService
     private let imports: LibraryImportService
@@ -1456,10 +1520,12 @@ private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSS
             let current = detail!
             if findingDuplicate {
                 let selected = movingAliasID.flatMap { id in current.names.first { $0.id == id }?.text } ?? current.preferredName.text
-                label(movingAliasID == nil ? "Merge with duplicate of \(selected)" : "Move alias ‘\(selected)’ to exercise", x: 24, y: top, width: width, height: 32)
+                label(movingAliasID == nil ? "Merge with duplicate of \(selected)" : "Move alias ‘\(selected)’ to exercise", x: 24, y: top, width: width - 44, height: 32)
             }
         }
-        if !findingDuplicate { label("↑↓ select · → show aliases", x: 24, y: 448, width: 592, height: 32) }
+        if !findingDuplicate { label("↑↓ select · → show aliases", x: 24, y: 448, width: 548, height: 32) }
+        aliasHelp.button.frame = NSRect(x: width - 12, y: top, width: 36, height: 28)
+        editingWindow.contentView?.addSubview(aliasHelp.button)
         searchField.frame = NSRect(x: 24, y: top - 48, width: width, height: 32)
         searchField.placeholderString = findingDuplicate ? "Search for a possible duplicate" : "Search exercises"
         searchField.stringValue = navigation.editQuery
@@ -1733,8 +1799,14 @@ private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSS
     private func installShortcutMonitor() {
         guard shortcutMonitor == nil else { return }
         shortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, self.editingWindow.isKeyWindow, self.editingWindow.attachedSheet == nil,
+            guard let self else { return event }
+            if self.aliasHelp.isShown {
+                return self.aliasHelp.handleShortcut(event) ? nil : event
+            }
+            guard self.editingWindow.isKeyWindow, self.editingWindow.attachedSheet == nil,
                   self.navigation.route != .reviewCandidates else { return event }
+            if self.aliasHelp.handleShortcut(event) { return nil }
+            guard !self.aliasHelp.isShown else { return event }
             if event.keyCode == 53 { self.back(); return nil }
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting([.capsLock, .numericPad, .function])
             if modifiers == [.command], event.charactersIgnoringModifiers == "a",

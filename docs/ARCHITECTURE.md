@@ -153,7 +153,7 @@ an authoritative-score leak if a review candidate reaches the reserved score.
 
 Candidate relationship policy annotates or constrains a generated comparison; it
 does not manufacture similarity. A compatible prescription difference, such as
-`Touch-Down with RNT` versus `Touch-Down`, may remain linkable while preserving the
+`Touch-Down with 5 sec negative` versus `Touch-Down`, may remain linkable while preserving the
 observed wording as a durable selectable name. A protected identity conflict, such
 as `Lateral Lunge` versus `Reverse Lunge`, is excluded from ordinary suggestions or
 shown explicitly as non-linkable evidence in an identity-review interface. The
@@ -168,8 +168,9 @@ Representative layer contracts and fixtures are:
 - scored candidate generation: `Paloff Press` suggests `Pallof Press` from lexical
   evidence; `Box Jumps` suggests `Box Jump` from morphological evidence;
   `Australian Row` suggests `Aussie Pull-up` from an explicit equivalence rule
-- candidate relationship policy: `Touch-Down with RNT` and `Touch-Down` carry a
-  compatible prescription annotation; `Lateral Lunge` and `Reverse Lunge` carry a
+- candidate relationship policy: `Touch-Down with 5 sec negative` and `Touch-Down` carry a
+  compatible prescription annotation; resistant RNT/base, short-/long-lever Copenhagen,
+  and `Lateral Lunge` versus `Reverse Lunge` carry a
   protected, non-linkable conflict
 
 The morphology examples and any new explicit equivalence rules describe the
@@ -280,12 +281,19 @@ focused cleanup; it must not be used as an import or library-edit decision.
 
 Resolver fixture category and human-review disposition are independent.
 `MUST_NOT_MATCH` continues to prohibit automatic identity. The review policy may
-still expose a prescription-bearing comparison, such as short- versus long-lever
-Copenhagen, as linkable with confirmation because both durable names remain
-selectable. Fixture-established identity conflicts, such as lateral versus
+still expose tempo/negative wording as linkable with confirmation, preserving
+the full name. Execution progressions such as short-/long-lever Copenhagen and
+resistant RNT/base names are non-linkable under ADR 004. Existing confirmed
+aliases remain authoritative; this revision performs no cleanup or migration.
+Fixture-established identity conflicts, such as lateral versus
 reverse lunge, are visible but non-linkable. There is no separate Exercise Family
 entity; the stable Exercise and its durable names are the current grouping
 envelope.
+
+`AliasIdentityGuidance.text` is the shared policy copy; AppKit `AliasPolicyHelp`
+shows it in transient info popovers in Edit, Merge target selection and Import
+Review. The labeled control has a tooltip and Command-Shift-/ access. It changes
+no query, selection or durable state; UI acceptance is recorded in PLAN-011.
 
 The identity review is independent of the source adapter. Its first adapter stages
 a personal-library source. Import and completed-program adapters supply durable

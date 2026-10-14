@@ -339,9 +339,14 @@ public final class ExerciseIdentityReviewService {
             }
 
             guard let candidate else { continue }
-            if let existing = bestByExercise[name.exerciseID],
-               !candidateRanksBefore(candidate, existing) {
-                continue
+            if let existing = bestByExercise[name.exerciseID] {
+                // An execution conflict applies to the identity, not just its
+                // matched name. A generic alias cannot make that identity safe.
+                if existing.linkAllowed != candidate.linkAllowed {
+                    if !existing.linkAllowed { continue }
+                } else if !candidateRanksBefore(candidate, existing) {
+                    continue
+                }
             }
             bestByExercise[name.exerciseID] = candidate
         }
@@ -583,14 +588,30 @@ enum ReviewRelationshipPolicy {
         if pair == Set(["lateral lunge", "reverse lunge"]) {
             return .identityConflict("plane of motion changes the exercise identity")
         }
-        let combined = pair.joined(separator: " ")
-        if combined.contains("copenhagen plank") &&
-            (combined.contains("short lever") || combined.contains("long lever")) {
-            return .prescription("lever length changes the prescription")
+        let left = " " + expandAbbreviations(observation) + " "
+        let right = " " + expandAbbreviations(candidate) + " "
+        let dimensions = [
+            ["kettlebell", "dumbbell", "barbell", "unweighted"],
+            ["goblet", "front rack"],
+            ["short lever", "long lever"]
+        ]
+        let sameBase = executionBase(left) == executionBase(right)
+        if sameBase && dimensions.contains(where: { dimension in
+            let a = dimension.filter { left.contains(" " + $0 + " ") }
+            let b = dimension.filter { right.contains(" " + $0 + " ") }
+            return !a.isEmpty && !b.isEmpty && a != b
+        }) {
+            return .identityConflict("implement, load position, or progression changes the execution")
         }
-        if combined.contains("touch down") &&
-            (combined.contains("rnt") || combined.contains("sec negative")) {
-            return .prescription("RNT or eccentric duration is preserved in the confirmed name")
+        if sameBase && ["rnt", "deficit", "touch and go", "assisted", "unassisted", "banded"].contains(where: {
+            left.contains(" " + $0 + " ") != right.contains(" " + $0 + " ")
+        }) {
+            return .identityConflict("resistance, assistance, or execution variation requires a separate exercise")
+        }
+        let combined = pair.joined(separator: " ")
+        if sameBase && combined.contains("touch down") &&
+            combined.contains("sec negative") {
+            return .prescription("eccentric tempo is preserved in the confirmed name")
         }
         if let reason = ProtectedModifierPolicy.conflictReason(
             query: observation,
@@ -599,6 +620,17 @@ enum ReviewRelationshipPolicy {
             return .identityConflict(reason)
         }
         return nil
+    }
+
+    /// Compare only the recognized variation vocabulary on the same base wording;
+    /// do not populate the review queue with every unrelated exercise owning a modifier.
+    private static func executionBase(_ text: String) -> String {
+        text.replacingOccurrences(
+            of: #"\b(?:kettlebell|dumbbell|barbell|unweighted|goblet|front rack|short lever|long lever|rnt|deficit|touch and go|unassisted|assisted|banded)\b"#,
+            with: " ", options: .regularExpression
+        ).replacingOccurrences(of: #"\b\d+\s+(?:sec|seconds?)\s+negative\b"#,
+                               with: " ", options: .regularExpression)
+            .split(separator: " ").filter { $0 != "with" && $0 != "and" }.joined(separator: " ")
     }
 
     static func transformation(observation: String, candidate: String) -> String? {
