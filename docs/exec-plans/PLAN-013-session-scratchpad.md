@@ -47,6 +47,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Coach grants this development app's separate Notes Automation permission. Its explicit synthetic fixture test succeeds: captured-note read, import of 83 supported paragraphs/two session regions, metadata identity and captured-ID reread. No Notes write, body persistence, clipboard change or provider call. This proves the bounded native reader path, not full workspace integration or arbitrary formatting support.
 - [x] (2026-10-14) Wire optional live-context checked copy and comparison: one-time publication concurrent with verification, app-only timeout/late warnings, superseded-operation rejection, fresh comparison reads, and preserved scratchpad on unresolved association. Three copy concurrency regressions and a controller integration regression pass; full five-stage verification passes with 163 tests/23 suites. The default synthetic app still has no live context; native full-path timing and live workspace entry remain outstanding.
 - [ ] (2026-10-14) Native editor-generated Markdown preserves heading tiers at a paragraph boundary but adds blank lines between body paragraphs. Test pastes and the inserted paragraph were undone in the synthetic capability note. Compact-spacing control was blocked before execution because it would overwrite the general clipboard; request explicit approval before repeating that control. No formatting acceptance or clipboard workaround.
+- [x] (2026-10-14) Coach explicitly approves synthetic clipboard/Notes spacing controls. Native single-newline control retains separate paragraphs but adds trailing spaces; two-space hard breaks retain separate body paragraphs without added spaces or blank rows. Correct exporter heading/body boundaries and preserve intentional blank rows; explain and update the old extra-blank-line test expectation, add two regressions. All five verification stages pass. Undo all native controls and verify fixture HTML exactly matches pre-control HTML.
+- [ ] Decide whether the first handoff may add one blank separator after a bullet list before ordinary body text. Native no-separator control wrongly makes that body another bullet; separator control retains correct structure but adds the visible blank. Existing separator behavior remains; no acceptance relaxation inferred. Also support the observed empty system-font heading wrappers on reimport before claiming a native handoff/read round trip.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -72,6 +74,15 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Approved spacing controls, 2026-10-14: native Notes HTML confirms two-space Markdown
+hard breaks become separate `div` paragraphs without the trailing spaces inserted
+by soft newlines. Heading/body adjacency needs no blanket blank separator. A body
+line immediately after a list without a separator becomes an extra `li`; adding a
+blank separator prevents that, but creates a visible empty paragraph. Ask the coach
+about that remaining fidelity tradeoff. Notes also exports empty `.AppleSystemUIFont`
+wrappers following pasted headings, which the bounded importer currently rejects;
+this requires explicit tested handling, not silent dropping of arbitrary styles.
 
 Actual editor-generated Markdown pastes expose paragraph spacing changes that unit
 serialization expectations did not catch. A mid-paragraph insertion also joins the
@@ -1306,3 +1317,10 @@ publication/verification and fresh diff wiring for optional live contexts. Full
 verification passes 163 tests and five stages. Native handoff still fails spacing
 fidelity; compact-spacing control awaits approval to overwrite the clipboard.
 No Service installation, target-branch merge, provider call or client-history change.
+
+Revision note, 2026-10-14, approved spacing controls: native evidence supports compact
+heading/body serialization and two-space body hard breaks. Correct the exporter and
+add regression coverage without relaxing unsupported formats. All five verification
+stages pass. The synthetic note's exported HTML is exactly restored after undo;
+the clipboard retains synthetic control text. List-to-body blank separator acceptance
+and native exported heading-wrapper reimport remain open; do not claim full fidelity.

@@ -109,7 +109,19 @@ private enum Injected: Error { case failure }
         let rich = NSMutableAttributedString(attributedString: richFixture("Session 1\nB2 Dowel squat\n"))
         rich.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: 15), range: (rich.string as NSString).range(of: "B2"))
         let output = try ScratchpadRichTextExporter.markdown(rich)
-        #expect(output == "## Session 1\n\n**B2** Dowel squat\n")
+        #expect(output == "## Session 1\n**B2** Dowel squat\n")
+    }
+    @Test func bodyParagraphsUseHardBreaksWithoutInflatingIntentionalBlankLines() throws {
+        let rich = NSAttributedString(string: "A1 Row\nB1 Press\n\nIntentional gap\n\n\nTwo blank lines\n")
+        #expect(try ScratchpadRichTextExporter.markdown(rich)
+            == "A1 Row  \nB1 Press\n\nIntentional gap\n\n\nTwo blank lines\n")
+    }
+    @Test func listEndingRetainsSeparatorSoBodyDoesNotBecomeAnotherBullet() throws {
+        let value = "\t•\tWarmup\nA1 Row\nB1 Press\n"
+        let rich = NSMutableAttributedString(string: value)
+        let list = NSMutableParagraphStyle(); list.textLists = [NSTextList(markerFormat: .disc, options: 0)]
+        rich.addAttribute(.paragraphStyle, value: list, range: (value as NSString).range(of: "\t•\tWarmup\n"))
+        #expect(try ScratchpadRichTextExporter.markdown(rich) == "* Warmup\n\nA1 Row  \nB1 Press\n")
     }
     @Test func discListIsContiguousAndLiteralMarkersEscaped() throws {
         let value = "\t•\tA1 RDL\n\t•\tBalance preparation\n# literal [cue] *stars*\n"

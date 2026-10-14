@@ -3,6 +3,7 @@ import GymAssistantWorkspace
 
 /// Supported first-slice semantic paragraphs. Unknown list/heading styles fail visibly.
 @MainActor public enum ScratchpadRichTextExporter {
+    private enum RowKind { case body, heading, list, blank }
     private static func escaped(_ value: String) -> String {
         value.reduce(into: "") { output, char in
             if "\\*_`[]<>#".contains(char) { output.append("\\") }
@@ -11,7 +12,7 @@ import GymAssistantWorkspace
     }
     public static func markdown(_ rich: NSAttributedString) throws -> String {
         let source = rich.string as NSString
-        var rows: [(String, Bool)] = []
+        var rows: [(text: String, kind: RowKind)] = []
         var offset = 0
         while offset < source.length {
             let range = source.paragraphRange(for: NSRange(location: offset, length: 0))
@@ -62,13 +63,28 @@ import GymAssistantWorkspace
                 if let match = marker.firstMatch(in: body, range: NSRange(location: 0, length: (body as NSString).length)),
                    let range = Range(match.range(at: 1), in: body) { body.insert("\\", at: range.lowerBound) }
             }
-            rows.append((prefix + body, list != nil))
+            let kind: RowKind = level > 0 ? .heading : list != nil ? .list : body.isEmpty ? .blank : .body
+            rows.append((prefix + body, kind))
             offset = NSMaxRange(range)
         }
         var output = ""
         for index in rows.indices {
-            if index > 0 { output += rows[index].1 && rows[index - 1].1 ? "\n" : "\n\n" }
-            output += rows[index].0
+            if index > 0 {
+                switch (rows[index - 1].kind, rows[index].kind) {
+                case (.body, .body):
+                    // Native Notes imports Markdown hard breaks as distinct
+                    // paragraphs without soft-break trailing spaces.
+                    output += "  \n"
+                case (.list, .body), (.list, .heading):
+                    // Without a separator, Notes can swallow body text into the
+                    // preceding list. This visible spacing limitation remains
+                    // an acceptance decision, not an exact-fidelity claim.
+                    output += "\n\n"
+                default:
+                    output += "\n"
+                }
+            }
+            output += rows[index].text
         }
         return output + "\n"
     }

@@ -1,5 +1,29 @@
 # Initial offline scratchpad implementation checkpoint
 
+Approved spacing-control follow-up, 2026-10-14: the coach explicitly permitted
+clipboard replacement and synthetic fixture paste/undo. Three controls compared
+single newlines, two-space hard breaks, backslash breaks and list termination.
+Native exported HTML confirms single newlines become separate paragraphs with an
+extra trailing space; two-space breaks become separate paragraphs without that
+space. Blank separators between every body line are unnecessary. Heading and
+Subheading tiers and bold text remain native. The exporter now uses single newlines
+at heading/body boundaries, two-space breaks between adjacent body paragraphs,
+and preserves intentional blank lines. Two added regressions and the corrected
+heading-spacing expectation pass; all five repository verification stages pass.
+
+Unresolved acceptance: without a blank separator after a list, the following body
+line becomes an extra bullet. With a separator, it is correctly a body paragraph
+but has a visible blank line before it. Existing separator behavior is retained,
+not newly accepted as exact spacing fidelity. Ask whether that is acceptable for
+the first handoff. Reimport also needs tested handling of Notes' empty system-font
+wrappers after pasted headings; the current strict importer rejects those attributes.
+These controls are not full end-to-end acceptance of the rebuilt exporter.
+
+All test pastes and paragraph insertions were undone; a guarded read of only
+Gym assistant capability test confirmed its exported HTML exactly equals the saved
+pre-control HTML. No client notes were touched. Clipboard still holds synthetic
+spacing-control Markdown; no attempt was made to restore or overwrite later copies.
+
 Latest continuation, 2026-10-14: the coach approved the development app's Notes
 Automation dialog. Its explicit native fixture command succeeded: 83 imported
 paragraphs, two session regions, metadata identity and captured-ID reread. It did
