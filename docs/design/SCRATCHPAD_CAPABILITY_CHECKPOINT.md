@@ -2,6 +2,11 @@
 
 ## Resumed handoff checkpoint, 2026-10-14
 
+Latest coach confirmation: Notes Paste as Markdown keyboard shortcut is manually
+verified. This supersedes the earlier unverified-shortcut statements below for the
+coach's current setup, not other macOS versions or the future app's copy command.
+No agent configuration change or new automated keyboard test was performed.
+
 ### Saved-state session reopening
 
 AssociationProbe adds a fixture-only Codable envelope with stable identity, baseline,
@@ -169,7 +174,7 @@ uncommitted; no production implementation or tutorial advancement is approved.
 
 Date: 2026-10-12. Status: **native whole-note reading and captured-target change detection passed; formatting and session-anchor limits recorded**.
 This is evidence from a disposable prototype, not production implementation or
-approval to advance the tutorial. See [the bounded ExecPlan](../exec-plans/PLAN-011-scratchpad-capability-checkpoint.md).
+approval to advance the tutorial. See [the bounded ExecPlan](../exec-plans/PLAN-012-scratchpad-capability-checkpoint.md).
 
 ## Decisions recorded
 
@@ -273,7 +278,7 @@ native app demonstrates that Notes Automation can obtain complete fixture conten
 and reread a captured note independently of current selection. Recommend a separate
 read-only Notes context adapter, retaining the existing Service for invocation and
 autocomplete and rich clipboard/manual paste for handoff. The user accepted this
-direction in [ADR 004](../decisions/004-read-only-notes-context.md) on 2026-10-12;
+direction in [ADR 005](../decisions/005-read-only-notes-context.md) on 2026-10-12;
 the production adapter is not implemented. Production
 permission onboarding, session association and conflict behavior still need explicit
 contracts. No import fallback or repeated-context-pasting workflow is substituted.
@@ -544,7 +549,7 @@ rapid-edit freshness and delayed-copy timing remain open.
 ## Continued capability execution, 2026-10-13
 
 The coach asked to continue autonomously until input is genuinely required. Work
-remained within PLAN 011: synthetic probes, the named fixture, and read-only Notes
+remained within PLAN 012: synthetic probes, the named fixture, and read-only Notes
 API operations. No production code, API calls, Service installation, Git commit,
 tutorial progress or new OS permissions.
 
@@ -784,8 +789,8 @@ inventory confirms the probe stopped. Production feature tests were not run beca
 none were implemented. The reusable package was subsequently committed on the
 learner-based contextual integration branch; capability gates remain open.
 
-The read-only context-adapter direction is accepted in ADR 004. Review
-[the proposed implementation plan](SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md) and
+The read-only context-adapter direction is accepted in ADR 005. Review
+[the proposed implementation plan](../exec-plans/PLAN-013-session-scratchpad.md) and
 agree its criteria before dependent production work. Distinguish stable note
 identity from identifying a session inside its editable body; repeated Session 1
 labels cannot serve as a durable key. User-visible close/relaunch/crash recovery,
@@ -796,7 +801,7 @@ reuse another note silently. No paid API or model-quality test ran in this check
 The design package was committed as `72b1020` and reconciled with the then-current
 `learner/main` as `e443f37` on `codex/contextual-learner-integration`. No production code, installed
 application, mock-ups, tutorial progress or real Notes program was changed.
-ADR 004 records the subsequently accepted direction, not production behavior.
+ADR 005 records the subsequently accepted direction, not production behavior.
 The synthetic Notes test note was populated and modified as
 described above. Temporary outputs contain only synthetic fixtures.
 

@@ -53,10 +53,10 @@ program destination, with the scratchpad as a bounded working copy.
   between wording with a confirmed library match and wording without one. Keep
   the existing coaching profile discoverable and read-only.
 - **Next candidate, accepted adapter direction:** capture one Notes document
-  identity for read-only context under [ADR 004](decisions/004-read-only-notes-context.md),
+  identity for read-only context under [ADR 005](decisions/005-read-only-notes-context.md),
   flag external changes, and use a reviewed manual handoff back to Notes. Session
   association, rich-text fidelity, and recovery remain open in the
-  [implementation proposal](design/SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md).
+  [implementation proposal](exec-plans/PLAN-013-session-scratchpad.md).
 - **Later:** use approved program structure, programming history, client context,
   and an explicit coaching profile as additional evidence. Preference learning,
   unsolicited suggestions, and broader cycle reasoning remain separate candidates.

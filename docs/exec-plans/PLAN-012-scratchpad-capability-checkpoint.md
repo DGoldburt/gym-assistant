@@ -1,4 +1,4 @@
-# PLAN 011 — Test session-scratchpad capabilities without changing real programs
+# PLAN 012 — Test session-scratchpad capabilities without changing real programs
 
 This living ExecPlan follows `PLANS.md`. It authorizes a bounded prototype, not production implementation or tutorial advancement.
 
@@ -19,6 +19,11 @@ reopen passes in separate processes. All late warnings are app-only, with no lat
 clipboard writes. Production rich-boundary tracking, workspace UI recovery,
 configured keyboard invocation, platform support and full app timing remain open.
 Overall production implementation is not approved by this checkpoint.
+
+Latest coach evidence, 2026-10-14: Notes Paste as Markdown keyboard shortcut is
+manually verified in the coach's current setup. Earlier unverified-shortcut entries
+below are historical. Future app-copy keyboard integration and other platform
+versions still require their own tests; no OS setting was changed by the agent.
 
 Historical status, 2026-10-13 (superseded below): checked icon/whole-copy command, separate from immediate
 Notes-unverified Command-C, is accepted. Timing is approved as 400ms target/750ms
@@ -49,6 +54,7 @@ older OST/architecture wholesale.
 
 ## Progress
 
+- [x] (2026-10-14) Record coach's manual verification of the Notes Paste as Markdown shortcut; host-specific keyboard handoff evidence now includes the configured shortcut.
 - [x] (2026-10-14) Reconcile active implementation/monitoring wording; add coach-facing Notes shortcut guide. Bounded saved-state association reopen checks pass in a fresh process against captured native plaintext (31/31 write, 38/38 read, each includes the existing 30 checks). No production workspace UI or rich association parser is implied.
 - [x] (2026-10-14) Disc-marker control retained native regular ul/headings/bold/literals and selected replacement; 8/8 captured assertions for this variant. Baseline restored exactly.
 - [x] (2026-10-14) Native parallel benchmark: four warm samples 168–180ms, large copy payload/small Notes body. Slow injected read leaves clipboard unchanged; initial 759ms notice fails limit, 700ms dispatch gives 728–742ms in three repeats.
@@ -276,7 +282,7 @@ their pending/uncommitted statements describe those moments, not current status.
 
 Coach acceptance, 2026-10-14: manual menu paste is confirmed and Notes-only shortcut
 instructions supplied, satisfying this bounded handoff review. No Mac shortcut was
-installed or exercised by the agent. Other PLAN 011 boundary/association work and
+installed or exercised by the agent. Other PLAN 012 boundary/association work and
 production acceptance remain open; do not call the entire capability plan complete.
 
 Latest continuation establishes disc-marker fidelity and bounded native parallel
@@ -564,8 +570,9 @@ Revision note, 2026-10-12: initial bounded plan recorded access rejection, then 
 
 Revision note, 2026-10-12: originally assigned PLAN 009 in the main-based source
 worktree to avoid collision with learner PLAN 004 (keyboard autocomplete). It was
-renumbered PLAN 011 after the library-edit merge used PLAN 009 and PLAN 010. The user
-accepted the read-only adapter recommendation now recorded in ADR 004. The native
+renumbered PLAN 011 after the library-edit merge used PLAN 009 and PLAN 010, then
+PLAN 012 on 2026-10-14 when merged alias guidance used PLAN 011. The user
+accepted the read-only adapter recommendation now recorded in ADR 005. The native
 access gate passed; this plan remains in progress because
 session anchoring is unproven. The separate implementation proposal does not turn
 that outstanding test into a pass or authorize production work.
@@ -629,3 +636,7 @@ after sandbox access retry; all scoped probe suites passed. The approved local
 checkpoint commit includes docs and isolated probes only. Production UI recovery,
 rich boundary tracking, configured keyboard invocation and API integration remain
 outside this checkpoint; the plan is not marked complete.
+
+Revision note, 2026-10-14, coach keyboard evidence: record manual verification of
+the configured Notes shortcut without claiming automated keyboard coverage or
+production app integration. Preserve earlier unverified reports as dated history.

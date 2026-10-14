@@ -4,7 +4,7 @@ Status: proposed implementation contract, 2026-10-12. Records the coach's approv
 automatic-refresh/diff interaction and the requirement to survive session-heading
 renumbering. It does not approve production implementation or declare the remaining
 native capabilities tested. Complements the self-contained
-[implementation proposal](SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md).
+[implementation proposal](../exec-plans/PLAN-013-session-scratchpad.md).
 
 ## What monitoring owns
 
@@ -247,7 +247,12 @@ small source-range markings at the top/bottom of the scratchpad pane, with right
 and discoverable keyboard/menu entry to a compact read-only note browser. Allow up/down
 or drag endpoint movement without a mouse-only dependency or permanent extra pane.
 Offsets belong to the observed source note, not scratchpad lines or soft-wrapped
-screen rows; exact display and keys remain proposed. Apply the same note/observation
+screen rows. Coach-facing endpoints use nearby headings and short source excerpts,
+not numeric offsets as primary navigation. The coach selected a read-only note
+browser with direct keyboard/mouse movement of a highlighted start/end boundary,
+not a paragraph picker. Highlight movement previews scope without committing it;
+cancel preserves the previous range/content. Exact keys must be discoverable and
+natively tested. Apply the same note/observation
 freshness and one-to-one range checks. Moving a boundary preserves workspace identity.
 Approved scope-change behavior: preview expansion's added Notes content against a
 fresh observation, then insert only that edge content while preserving the existing

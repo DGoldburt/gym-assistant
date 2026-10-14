@@ -25,6 +25,19 @@ proposals. No Apply, Accept, Reject, target-slot menus, proposal tray, or separa
 proposal editor in the first iteration. Ordinary selection and copy remain useful.
 Questions and free-form corrections require no mode or category selection.
 
+Pending replies, 2026-10-14: the coach prefers queue/cancel/steer but authorizes a
+simpler first pass. Use that fallback: typing stays available, Enter and Send are
+unavailable while a request is active, and Stop remains available. Preserve unsent
+follow-ups; never queue or send them automatically. After completion, failure or
+Stop, an explicit send checks fresh context and the latest scratchpad. Queue and
+in-flight steering remain a later direction, not this slice's implementation.
+
+Boundary adjustment, 2026-10-14: use a read-only note browser with direct movement
+of a highlighted start/end through source text by keyboard or mouse. Show headings
+and excerpts, preview additions, explain protected shrink and identify adjacent
+workspace owners. Preserve the existing no-overlap/edit-protection rules. This is
+the selected browser interaction, not the alternative paragraph picker.
+
 The assistant must read the changed scratchpad before answering follow-ups so the
 user does not repeatedly paste the scratchpad draft. This eliminates the central
 context-sharing friction without requiring a structured program builder.
@@ -193,7 +206,12 @@ available. Unavailable reading shows explicitly last-known context and its check
 time, never a false current/synchronized state. The toggle is part of this candidate
 slice, not a request to create another mock-up or to implement production UI now.
 
-Approved: rich **Copy scratchpad** as the initial handoff, with deliberate manual
+Current handoff, reflecting the subsequent Markdown selection: **Copy Markdown
+for Notes**, followed by Notes' **Paste as Markdown**, must preserve native bullets,
+bold and heading tiers. This supersedes the original requirement to accomplish
+those semantics through an ordinary rich paste alone. Keep the freely editable
+formatted scratchpad; Markdown is a handoff representation, not its editor/storage
+format. Use deliberate manual
 paste into the correct Notes location. Use a copy icon floating in the upper-right
 of the scratchpad pane, not a separate labeled action button or handoff panel.
 Retain ordinary selection/Command-C, including editor Command-A then Command-C.
@@ -212,12 +230,12 @@ Only matching correctly associated text and supported formatting can establish
 agreement. Otherwise retain an honest not-verified state, with differences visible
 through the toggle. Manual selection-copy/paste can be recognized without requiring
 an app-specific copy receipt. No automatic scratchpad replacement or Notes writes.
-Copy must be **rich text** and preserve the Notes-like bullets, bold, and heading
-formatting. This implies an editable formatted scratchpad, not only a plain textarea
-with a styled preview. Notes paste fidelity for these formatting features must be
-tested; selecting a serialization format alone does not prove semantic headings or
-list behavior survives. Plain text may accompany rich text for compatibility but
-must not be presented as satisfying the approved rich-text handoff. Do not rely on the original invocation cursor hours
+The explicit command's menu/tooltip/accessibility label identifies Markdown for
+Notes and the destination paste command. Ordinary Command-C stays standard rich
+selection copy, immediate and Notes-unverified; it does not promise identical Notes
+heading fidelity. Both paths need their separately stated format tests. A plain
+unformatted fallback is not a successful formatted handoff. Selecting a serializer
+alone does not prove fidelity. Do not rely on the original invocation cursor hours
 later or silently paste into the currently focused application.
 
 Notes monitoring must be efficient for large notes. The implementation proposal uses
@@ -232,7 +250,7 @@ refresh automatically on resume. No full body processing, tokenization, or model
 calls on unchanged monitoring ticks; polling is local Notes access, not an API
 conversation. Metadata reliability and large-note costs need synthetic verification;
 do not claim the native checkpoint proved this optimization. Cadence/backoff details
-remain proposed in [the implementation plan](SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md).
+remain proposed in [the implementation plan](../exec-plans/PLAN-013-session-scratchpad.md).
 
 [The Notes monitoring contract](NOTES_MONITORING_CONTRACT.md) specifies invocation
 triggers and the impact of body edits, heading renames/bulk renumbering, insertions,
@@ -384,7 +402,7 @@ the original note after Notes selection changed; the non-fixture guard also pass
 This clears the native read/change-detection gate for the fixture, not production
 permission onboarding, session anchors, full copy fidelity or scratchpad recovery.
 The user accepted a read-only Notes Automation context adapter alongside the existing
-Service in [ADR 004](../decisions/004-read-only-notes-context.md).
+Service in [ADR 005](../decisions/005-read-only-notes-context.md).
 See [the capability report](SCRATCHPAD_CAPABILITY_CHECKPOINT.md).
 
 **Provider and data boundary:** settled: OpenAI API; all note and profile information
@@ -427,7 +445,7 @@ autocomplete shortcut. Remaining gates above are not decisions already settled h
 Additional approvals: OpenAI API with note/profile transmission, bounded capability
 checkpoint, and no historical conversation import. Checkpoint evidence is tracked
 in [the capability report](SCRATCHPAD_CAPABILITY_CHECKPOINT.md) and
-[its bounded plan](../exec-plans/PLAN-011-scratchpad-capability-checkpoint.md).
+[its bounded plan](../exec-plans/PLAN-012-scratchpad-capability-checkpoint.md).
 
 Review clarifications, 2026-10-12: copy icon with ordinary selection copy and a
 discoverable shortcut; diff view toggle instead of Check Notes; automatic efficient
@@ -437,5 +455,5 @@ and scope constraints, not the remaining plan/sequence or performance claims.
 
 The adapter direction is now an accepted architecture decision. No mock-up,
 production code, tutorial progress, active-slice success criteria, or client-history
-feature was changed. [The implementation proposal](SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md)
+feature was changed. [The implementation proposal](../exec-plans/PLAN-013-session-scratchpad.md)
 separates approved product boundaries from remaining implementation choices.

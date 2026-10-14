@@ -1,4 +1,4 @@
-# ADR 004 — Read Notes context separately from the writing Service
+# ADR 005 — Read Notes context separately from the writing Service
 
 Status: accepted direction, 2026-10-12. The user approved the recommendation after
 the synthetic capability checkpoint. This is not production implementation approval.

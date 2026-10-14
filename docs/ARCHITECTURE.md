@@ -476,7 +476,7 @@ with conversational assistance. The coach edits the scratchpad directly and late
 records the work in Apple Notes. This bounded working copy needs a context boundary
 separate from the synchronous Service used for autocomplete.
 
-The accepted [ADR 004](decisions/004-read-only-notes-context.md) direction captures
+The accepted [ADR 005](decisions/005-read-only-notes-context.md) direction captures
 one Notes document identity when the coach enters the program workspace, then reads
 that document's formatted body, plain text, and change evidence through read-only
 Notes Automation. Later selection of another note must not silently redirect the
@@ -496,6 +496,6 @@ the reported modification date can remain unchanged across body changes, so
 safety-critical freshness cannot rely on metadata alone. Session-boundary recovery,
 complete rich-text handoff, production permission onboarding, and continuous
 monitoring remain unverified. The [monitoring contract](design/NOTES_MONITORING_CONTRACT.md)
-and [implementation proposal](design/SESSION_SCRATCHPAD_IMPLEMENTATION_PLAN.md)
+and [implementation proposal](exec-plans/PLAN-013-session-scratchpad.md)
 record the remaining design work. No production implementation or active-slice
 success criteria have been approved by this architecture entry.

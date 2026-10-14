@@ -1,5 +1,11 @@
 # Archived contextual-assistance designs
 
+Preservation check, 2026-10-14: both standalone artifacts and both source fragments
+in this checkout match the older contextual-design worktree byte-for-byte. They
+are already committed design evidence here; no personal interaction state was copied.
+The app rejected archival of the older worktree because another chat owns it.
+Keep that checkout until archival can run from its owning chat/app controls.
+
 ## Six interaction directions — snapshot saved 2026-10-12
 
 Preserves all six prior mock-ups before revising to the selected session-scratchpad

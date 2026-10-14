@@ -1,9 +1,10 @@
-# Implement a persistent session scratchpad with margin conversation
+# PLAN 013 — Implement a persistent session scratchpad with margin conversation
 
-This proposed ExecPlan follows repository-root `PLANS.md`. Keep Progress, Surprises
-& Discoveries, Decision Log, and Outcomes & Retrospective current. It is held in
-`docs/design/` until approved; then assign the next unused PLAN identifier and move
-it into `docs/exec-plans/`. Preparing this document is not feature authorization.
+This approved ExecPlan follows repository-root `PLANS.md`. Keep Progress, Surprises
+& Discoveries, Decision Log, and Outcomes & Retrospective current. The coach accepted
+the bounded scope and authorized local preparation followed by offline implementation
+on 2026-10-14. Live API defaults/calls, installation and integration into learner/main
+remain separate gates. No client-history work is part of this implementation.
 
 Reconciliation note, 2026-10-13: this proposal was drafted in a worktree based on
 reusable `main` and then transferred to a branch based on `learner/main`, where the
@@ -26,19 +27,22 @@ has no actionable chat proposals or automatic Notes writes.
 ## Plan Status
 
 
-Proposed, updated 2026-10-12. The user approved the product boundaries and the separate
-read-only Notes adapter, not this plan's implementation defaults or acceptance
-criteria. Approve the native-workspace contracts and explicitly sequence this work
-before starting production code. Model choice and spending limits remain a separate
-required checkpoint before live API calls; they do not block isolated native tests.
+In progress, 2026-10-14. The user accepted the recommended scope and authorized
+preparation and implementation, beginning with the offline workspace/fake assistant.
+Model, spending and credential/retention defaults remain a required checkpoint before
+live calls; no paid API request, push or merge into learner/main is authorized here.
 
 ## Progress
 
+- [x] (2026-10-14) Coach authorizes local prep and implementation. Move accepted plan to PLAN 013; reserve ADR 005 and PLAN 012 for Notes direction/capability evidence because current learner/main uses ADR 004/PLAN 011 for alias guidance. Mockup artifacts in this checkout match the old source byte-for-byte. App archival is blocked by other-chat ownership; preserve that checkout.
+- [ ] Reconcile learner/main alias-policy commits and verify the refreshed branch before implementation.
+- [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
+- [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
 - [x] (2026-10-14) Reconcile ordinary-copy acceptance with prior approval; native typed Markdown replacement/literal/bold/list tests pass after two serializer regressions were fixed (8/8 local, 8/8 captured-native). Keyboard-only invocation, original spacing/list styles and real copy/check timing remain unproved.
 
 - [x] (2026-10-13 02:33Z) Inspect the capability evidence, reusable checkout, and learner Service/library interfaces; distinguish implemented behavior from design.
-- [x] (2026-10-12 local date) Record accepted read-only adapter direction in ADR 004 and prepare this proposal.
+- [x] (2026-10-12 local date) Record accepted read-only adapter direction in ADR 005 and prepare this proposal.
 - [x] (2026-10-13 04:14Z) Incorporate review feedback: define commands explicitly, replace Check Notes with automatic monitoring and a diff toggle, and prefer heading correction to elaborate duplicate-label recovery.
 - [x] (2026-10-12 local date) Add monitoring lifecycle/edit impacts and preserve workspace identities through verified bulk heading renumbering; correction alone is not proof of association.
 - [x] (2026-10-12 local date) Make chat, diff, and whole-scratchpad copy share one freshness policy; add copy-time external-edit warnings and a timestamp/cache validation gate.
@@ -49,7 +53,7 @@ required checkpoint before live API calls; they do not block isolated native tes
 - [x] (2026-10-13) Continue capability experiments: hierarchy 19/19, shared freshness candidate 15/15, native date collisions and large-note timings measured; public hierarchy export and delayed-copy race require handoff choices.
 - [x] (2026-10-13 local date) Clarify approved ownership boundaries: workspace-owned reading contracts and state policy; macOS-owned read execution/scheduling and presentation. Documentation only.
 - [x] (2026-10-13) Transfer the design package and synthetic probes to a learner-based integration branch; reconcile the OST and architecture against the developed product without changing the source worktree.
-- [ ] Approve the proposed association, handoff, recovery, entry, and acceptance contracts; choose execution sequence without advancing the tutorial implicitly.
+- [x] (2026-10-14) Coach accepts scope/contracts and authorizes offline implementation after local preparation; tutorial progress is unchanged.
 - [ ] Verify session association and full rich-text paste fidelity with synthetic native tests; finish the outstanding capability-plan session-anchor item only on evidence.
 - [ ] Implement persistent native workspace and production Notes permission/read adapter; pass offline/close/relaunch/recovery tests with a fake assistant.
 - [ ] Select API model and explicit spending bounds, approve credential/retention defaults, and validate the request/response contract before live calls.
@@ -58,6 +62,15 @@ required checkpoint before live API calls; they do not block isolated native tes
 
 ## Surprises & Discoveries
 
+
+2026-10-14 independent CLI review: snapshot recovery and assistant request contracts
+were too vague to drive failure tests, despite passing bounded probes. Resolve the
+behavioral invariants below rather than adopting a migration framework or detailed
+UI architecture. The coach subsequently chose direct boundary movement in a read-only
+browser and authorized a simple send-blocking fallback instead of queue/steer for
+this slice. The coach manually verified the
+Notes Paste as Markdown keyboard shortcut; this is host-specific user evidence,
+not an automated production keyboard test.
 
 2026-10-13 coach clarification: session titles normally use a higher native heading
 level than Warmup. The literal Session grammar is therefore an experiment, not the
@@ -96,6 +109,25 @@ into reusable main or implement against nonexistent starter interfaces.
 ## Decision Log
 
 
+Review resolution, 2026-10-14, authorized by the coach: make save/recovery and
+assistant request invariants explicit without choosing algorithms or new product
+scope. Preserve existing preference constraints instead of inventing a numerical
+priority ladder. Label the explicit handoff Copy Markdown for Notes while retaining
+its floating icon and ordinary Command-C semantics. Rationale: these clarify already
+approved behavior; they do not require a migration engine, preference editor, tool
+access or another panel. The subsequent coach decisions below resolve pending
+reply handling and boundary interaction.
+
+Coach decisions, 2026-10-14: boundary adjustment uses a read-only note browser with
+direct movement of a highlighted start/end, not a paragraph picker. For chat the
+desired direction is queue, cancel and steer; the coach authorizes blocking Enter
+on another request if that is too much first-slice work. Select that fallback because
+no assistant request layer exists yet and queue/steer would add pending-message and
+request-replacement behavior beyond the single-request boundary. Keep composing and
+Stop available; block both Enter and Send while generation is active, preserving
+the unsent text. This is the approved simpler slice, not rejection of the richer
+direction or permission to silently queue a paid request.
+
 Accepted ownership clarification, 2026-10-13, coach approval in the side conversation:
 define the consumer-facing NotesContextReading protocol and its snapshot/error types
 in Foundation-only GymAssistantWorkspace; GymAssistantMacOS implements it. Keep
@@ -128,7 +160,7 @@ freshness and ownership. Hypothesis: adjustment usually precedes editing. Ration
 respect natural note structure, preserve ideas and
 avoid silent swallowing, identity guesses or mandatory spelling repairs.
 
-Accepted: ADR 004 adds read-only Notes Automation alongside the existing Service.
+Accepted: ADR 005 adds read-only Notes Automation alongside the existing Service.
 The Service returns before long-lived work; subsequent reads use the captured note
 identity. Rationale: the fixture demonstrated the narrower native read route.
 Date/author: 2026-10-12, user approval recorded by Codex.
@@ -193,6 +225,12 @@ Rationale: modification time is not a reliable body revision. Date/author:
 
 ## Outcomes & Retrospective
 
+
+2026-10-14 review resolution: documentation now states the minimum testable recovery
+and assistant boundaries and carries the existing evidence-category/conflict rules
+into the profile contract. The independently reviewed proposal remains proposed.
+No implementation, API call or runtime verification follows from these edits.
+The coach's subsequent answers settle both interactions as recorded in Progress.
 
 Planning only. The native read gate passed; session association, complete export
 fidelity, production consent, real persistence, and model-backed behavior remain
@@ -291,7 +329,18 @@ but reject overlap. Undo the content and association change together only after
 freshness and ownership revalidation. The usual-before-editing assumption requires
 field validation; it is not justification to lose edits when it proves false.
 Moving bounds alone never accepts external text or authorizes Notes writes.
-Exact keys and offset display remain proposed.
+Coach-facing endpoints must use nearby headings and short source excerpts; numeric
+offsets remain internal/diagnostic coordinates, not the primary way to choose scope.
+Identify an adjacent owner by its session/workspace label, and explain blocked shrink
+with the protected content excerpt (including a deleted-content marker when needed).
+Selected interaction: a read-only note browser highlights the current session range
+and the start/end being adjusted. Move that endpoint directly through source text,
+by keyboard or mouse; do not substitute a paragraph-picker workflow. Moving the
+highlight previews scope only, not a committed change. Show the added edge content,
+protected-shrink explanation and neighboring owner in this browser; apply the existing
+freshness and overlap rules before committing. Exact key bindings are implementation
+details to make discoverable and test natively. Cancel without change and preserve
+the editor's content and focus on return.
 
 An existing workspace for that note/session is resumed. A new conversation shares
 its scratchpad. Local SessionID and WorkspaceID, not headings, key the registry.
@@ -372,13 +421,14 @@ implemented by `ExerciseAutocompletePanel.openLibraryReview` in
 `Sources/GymAssistantNotesService/main.swift`. It remains unchanged. Both appear in
 the chooser with their local keyboard equivalents; neither adds a global shortcut.
 
-Copy scratchpad is an icon floating in the upper-right of the scratchpad pane,
+Copy Markdown for Notes is an icon floating in the upper-right of the scratchpad pane,
 not a labeled primary button or a separate handoff panel. It copies the entire
 scratchpad with plain-text Markdown for Notes' Paste as Markdown command. A rich
 representation for other paste destinations is subject to separate fidelity testing;
 the timing probe's raw RTF control is not that implementation. Proposed
 local Command-Shift-C invokes that whole-scratchpad command regardless of selection;
-show it in the Edit menu, tooltip, and accessible command name. Keep standard
+show this explicit name in the Edit menu, tooltip, and accessible command name;
+include the instruction to use Notes' Paste as Markdown. Keep standard
 Command-C selection semantics. With editor focus, Command-A then Command-C copies
 the full scratchpad immediately through the rich export path, without a synchronous
 Notes check; the explicit icon/whole-copy command is checked. Partial selection
@@ -459,7 +509,7 @@ Command-C behavior.
 
 
 The complete lifecycle and edit-impact contract is recorded in
-[Notes monitoring and session association](NOTES_MONITORING_CONTRACT.md); the
+[Notes monitoring and session association](../design/NOTES_MONITORING_CONTRACT.md); the
 implementation-critical rules are repeated here so this plan remains self-contained.
 Use one monitor per captured NoteID shared by its open workspaces, not an independent
 poller for each session. Preserve stored anchors for inactive workspaces so their
@@ -557,6 +607,18 @@ say no confirmed match. Mention detection and identity lookup are separate. Neit
 model-provided IDs nor inferred similarity are authoritative. No popup actions,
 alias writes, history retrieval, or new-library additions from chat in this slice.
 
+Profile evidence keeps authored philosophy, confirmed tendencies, unconfirmed
+inferences, client/session constraints, and scientific claims distinct. Preserve
+source wording, stated scope and exceptions; do not invent missing scope or turn
+an inference into a commitment. Scientific claims retain their evidence status
+instead of being presented as established facts. Current explicit constraints
+outrank tendencies; tendencies are not hard exercise filters. Surface a material
+conflict rather than silently resolving it. If the sources do not establish how
+to resolve conflicting commitments, retain the uncertainty and seek clarification
+when relevant to the coach's question. Do not add a global priority score or new
+preference-learning flow. Inspection and model context must preserve the same
+distinctions; conversation cannot upgrade confirmation or change the profile.
+
 ## Plan of Work
 
 
@@ -565,7 +627,7 @@ alias writes, history retrieval, or new-library additions from chat in this slic
 
 Extend the isolated `spikes/session-scratchpad/` fixture tests, not production
 behavior yet. Use the proposed boundary and confirmation contract in
-[the monitoring contract](NOTES_MONITORING_CONTRACT.md#proposed-executable-association-contract).
+[the monitoring contract](../design/NOTES_MONITORING_CONTRACT.md#proposed-executable-association-contract).
 Test unique numbered headings, a lettered Session A with Weeks 1–3,
 and repeated week labels under separate unique session parents. The whole lettered
 session remains one scratchpad. Duplicate peer session labels must expose a heading
@@ -582,15 +644,16 @@ titles, and trailing peer-level Parking Lot inclusion. Test keyboard boundary
 adjustment, skeleton exclusion and preservation of edits on scope changes before
 claiming these corrected rules work. The existing 39 passes remain evidence for
 the narrower prototype, not the new rules. Record evidence before
-completing PLAN 011's outstanding session-association item.
+completing PLAN 012's outstanding session-association item.
 
-Use the native attributed-text editor to export and manually paste Heading,
-Subheading, bold exercise labels, and bullets into the synthetic Notes fixture.
-Inspect Notes' formatting menu and press Return to verify a real continuing list.
-Test editable text after paste, not just appearance. RTF alone is not acceptable;
-try explicit HTML heading/list styling or another native rich representation and
-retain failed expectations. Stop for review if full fidelity cannot be achieved
-without weakening the approved rich-text requirement. Record supported host/version.
+The bounded typed Markdown fixtures already preserve native Heading, Subheading,
+bold and continuing lists through Notes Paste as Markdown on the tested host; the
+coach has verified its keyboard shortcut. Do not repeat superseded public-HTML
+experiments as a prerequisite. Implement the editor-to-Markdown adapter and test
+its actual formatting/spacing/literal conversion and native paste before claiming
+production fidelity. Boundary browser, protected edit tracking and full recovery
+are native implementation acceptance tests, not additional passing probe claims.
+Retain failed expectations and stop for review if fidelity needs a scope change.
 
 ### Milestone 2 — Build the offline persistent workspace
 
@@ -634,6 +697,37 @@ context from note/session/scratchpad revision/profile version/conversation. Trea
 note and profile content as context, not instructions authorizing tools or mutations.
 The assistant returns text only. Capture failures and cancellation without modifying
 the editor or losing the submitted question. Do not log keys or note bodies.
+
+Both providers consume the same immutable application request, including its coach
+question and ordered conversation messages, captured workspace/session/note
+observation identities, scratchpad revision and profile version/evidence. Separate
+the coach's current instruction from quoted note/profile/history context; neither
+provider receives tool or mutation capabilities. A response or failure carries its
+request identity so it can be attached to the originating conversation and context,
+never mistaken for the current scratchpad after edits or reassociation. Completed
+replies based on older context remain visibly marked; cancellation must not allow
+a late completion to replace the active reply or revive a stopped request.
+
+Use typed context/unavailability, size-limit, cancellation, transport and provider
+failure outcomes, preserving the submitted question and, if partial replies are
+displayed, their clearly marked incomplete text. This does not require streaming.
+Validate context before network submission and check configured provider
+input/output limits without silent truncation. No automatic retry or another paid
+request follows an uncertain outcome. First-slice pending-follow-up behavior uses
+the coach-authorized fallback: composer typing remains available, but Enter and Send
+cannot submit another request until the active request completes, fails or is stopped.
+Explain the unavailable send state compactly and keep Stop discoverable. Stop cancels
+the active request locally, preserving its submitted question and unsent follow-up;
+it does not promise reversal of a request or charge already received by the provider.
+Sending after Stop uses a fresh context check and the latest scratchpad, not the
+cancelled request's cached inputs. Do not queue or auto-send text when generation ends.
+
+Decision example: after submitting What should B2 be?, the coach types Keep it
+unloaded before the reply finishes. Keep that follow-up in the composer; pressing
+Enter while generation runs sends nothing and loses no text. The coach can Stop and
+then send it, or wait and send after completion. Queue, cancel and steer like the
+coach's preferred chat experience remains a future direction; do not implement a
+queue or in-flight steering in this slice.
 
 Retain the complete note locally and make context-size failure visible; initially
 stop oversized requests rather than silently truncating the note or substituting a
@@ -727,6 +821,11 @@ the last acknowledged saved snapshot or its valid backup, with a visible recover
 warning. Offline, permission failure, and API failure retain editing and rich Copy.
 An unsaved crash interval is disclosed rather than called lossless recovery.
 
+Inject failure during candidate write, validation, promotion and reopening; include
+disk/write failure, corrupt current with valid prior, valid current with corrupt
+prior, semantically invalid archives and unsupported schema. Assert preservation
+of acknowledged content, explicit recovery revision and no empty replacement.
+
 Fake-provider tests assert that a follow-up uses the latest revision and surrounding
 whole-note context, not the older recorded session. Mid-generation editing produces
 Scratchpad changed and leaves the editor usable. Visible external Notes edits are
@@ -783,6 +882,25 @@ provenance; chat cannot change the profile or library. Synthetic integration tes
 record which inputs were sent, verify no hidden truncation, and exercise API failure
 without new automatic charges. Live trials separately establish coach usefulness.
 
+Fake-provider contract tests compare the complete application request with what
+the adapter receives, including roles, evidence status and version identities.
+Stale/unresolved association and oversized context must fail before submission.
+Test edit/reassociation during generation, cancellation followed by late completion,
+transport/provider failure and uncertain response delivery: no result is mislabeled
+current, no submitted question is lost and no automatic retry occurs. Profile
+fixtures include a machine-aversion tendency plus an explicit request for today's
+leg press, an unconfirmed inference and an unevaluated transfer claim. Assert that
+constraints override tendencies without rewriting the profile, and that uncertainty
+and claim status survive assembly/display rather than being silently upgraded.
+
+During a delayed fake response, type a follow-up and attempt both Enter and Send:
+no second request occurs, no text disappears and the scratchpad stays editable.
+Completion/failure does not auto-send it. Stop then explicit Send creates a new
+request with fresh context; a late completion cannot revive the stopped reply.
+For boundary UI, test direct highlighted start/end movement by keyboard and mouse,
+preview/cancel, protected shrink and adjacent-owner display rather than accepting
+the synthetic policy model alone as native interaction evidence.
+
 ## Idempotence and Recovery
 
 
@@ -794,6 +912,24 @@ Local snapshots live outside Git under the app's Application Support directory;
 keys live in Keychain if that proposal is approved. No automatic deletion or cloud
 workspace sync is part of this slice. Back up before any later schema migration.
 
+For each save, stage and validate a complete candidate before replacing acknowledged
+state. Validation includes the supported schema, workspace/note/session identities,
+revision and conversation consistency, and secure decoding of the formatted content;
+successful JSON decoding alone is not enough. Preserve the previous validated copy
+through promotion until the new saved file has been reopened and validated. Report
+a save as acknowledged only after that validation; failed saves preserve the last
+acknowledged state and expose the failure. Choose the file-level mechanics during
+implementation and prove them with fault injection rather than mandating a storage
+framework here.
+
+On recovery, validate current and prior copies independently, identify the recovered
+revision, and preserve damaged or unsupported files instead of overwriting them.
+If neither copy is usable, keep a visible unavailable/recovery state; do not create
+an empty replacement. An unsupported newer schema is refused non-destructively.
+The first storage version needs no migration engine: later migration requires its
+own tested, backup-preserving change. A migration must never replace its readable
+input or recoverable backup with an unvalidated result.
+
 Repeated synthetic runs may replace only their named temporary fixtures. Keep failed
 capability results; do not weaken tests to match lost formatting. Revoke/read failure
 does not switch to broad Accessibility or private Notes database access. Keep the
@@ -804,7 +940,7 @@ and may incur another charge. Do not infer a successful response after timeout.
 ## Artifacts and Notes
 
 
-See [the independent CLI review assessment](SESSION_SCRATCHPAD_REVIEW.md) for the
+See [the earlier independent CLI review assessment](../design/SESSION_SCRATCHPAD_REVIEW.md) for the
 fresh-process context boundary, findings, dispositions, and remaining capability
 versus offline-implementation gates. Review is not implementation authorization.
 
@@ -852,6 +988,17 @@ Also define
 `ProgramContextAssembler.assemble(note:workspace:profile:conversation:)` returning
 an immutable request or an explicit context problem. A profile record includes its
 source reference and confirmation status, not just an instruction string.
+
+Define a Foundation-only `ProgrammingAssistant` boundary and explicit
+`ProgrammingRequest`, `ProgrammingResponse` and failure types in this module.
+Use the immutable request identities, context versions and ordered messages described
+in Milestone 3; the context assembler returns that request or a typed problem.
+The fake and OpenAI adapters implement the same boundary. Provider payload encoding
+and model-specific limit accounting stay in the adapter; native objects and API
+response dictionaries do not become workspace state. Exact method spelling is an
+implementation detail; correlation, cancellation and typed failure semantics are not.
+Profile entries retain evidence category, provenance, confirmation and source-stated
+scope/exceptions without adding a new numerical precedence scheme.
 
 In `Sources/GymAssistantWorkspace/NotesContextReading.swift`, define the read-only
 NotesContextReading protocol with capture-selected-note and read-captured-ID
@@ -993,3 +1140,25 @@ read and sequential-copy wording superseded by equal-date evidence and approved
 parallel checked copy. Explicit copy uses the selected Notes Markdown handoff;
 ordinary rich Command-C stays immediate and unverified. Record observed evidence
 without claiming production fidelity, scheduling or implementation approval.
+
+Revision note, 2026-10-14, independent-review resolution: clarify recovery validation,
+non-destructive unsupported-schema handling, typed provider-neutral requests/results,
+and existing preference evidence/conflict rules. Name the explicit Markdown handoff
+without changing normal copy semantics. Record coach-verified Notes shortcut and
+leave pending-message and boundary interaction decisions open. Documentation only;
+no migration framework, production code, preference-learning scope or API defaults
+were adopted.
+
+Revision note, 2026-10-14, coach interaction choices: select direct highlighted
+boundary movement in the read-only note browser. Record queue/cancel/steer as the
+desired future direction and use the explicitly authorized send-blocking fallback
+for the first slice, with editable unsent text and Stop. Add corresponding acceptance
+scenarios; no production implementation or new passing-test evidence.
+
+Revision note, 2026-10-14, implementation approval/preparation: accepted as PLAN 013;
+Notes direction becomes ADR 005 and capability evidence PLAN 012 to avoid collisions
+with merged alias guidance. Preserve the identical frozen mockups. Other-chat app
+ownership prevents archiving the legacy checkout from this chat; do not remove it
+manually. Client-history checkout is untouched. Begin local offline implementation
+only after learner-baseline reconciliation; live API and target-branch merge remain
+gated. Native UI fidelity/recovery tests remain required during implementation.
