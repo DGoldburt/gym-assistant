@@ -4,6 +4,32 @@ import Testing
 
 @Suite("Exercise identity review")
 struct ExerciseIdentityReviewTests {
+    @Test("Identity conflicts override linkable aliases regardless of preferred name")
+    func identityConflictOverridesGenericAlias() throws {
+        for preferred in ["Long-Lever Copenhagen Plank", "Copenhagen Plank"] {
+            let fixture = try ReviewFixture()
+            let exercise = try fixture.library.createExercise(preferredName: preferred)
+            let alias = preferred == "Copenhagen Plank" ? "Long-Lever Copenhagen Plank" : "Copenhagen Plank"
+            _ = try fixture.library.addName(alias, to: exercise.exercise.id)
+            try fixture.stage("Short-Lever Copenhagen Plank", id: "short-lever")
+            let before = try fixture.library.allNames()
+            let candidates = try fixture.candidates("short-lever")
+            let candidate = try #require(candidates.first { $0.exerciseID == exercise.exercise.id })
+            #expect(candidates.filter { $0.exerciseID == exercise.exercise.id }.count == 1)
+            #expect(!candidate.linkAllowed)
+            #expect(candidate.matchedName == "Long-Lever Copenhagen Plank")
+            #expect(throws: ExerciseIdentityReviewError.candidateNotLinkable(exercise.exercise.id)) {
+                try fixture.service.link(observationID: .init(rawValue: "short-lever"), to: exercise.exercise.id)
+            }
+            #expect(try fixture.library.allNames() == before)
+            guard case .review(let status, _) = try fixture.service.prepare(observationID: .init(rawValue: "short-lever")) else {
+                Issue.record("Rejected Link must leave the observation pending")
+                continue
+            }
+            #expect(status == .pending)
+        }
+    }
+
     @Test func executionVariationsAreSymmetricConflictsAndTempoRemainsConfirmable() throws {
         let fixture = try ReviewFixture()
         let evaluator = ExerciseReviewCandidateEvaluator()

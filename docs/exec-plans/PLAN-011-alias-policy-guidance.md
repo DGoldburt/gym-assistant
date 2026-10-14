@@ -25,11 +25,17 @@ Prepare a learner/main-only PR; stop before merge or production installation.
 - [x] (2026-10-14) Record approved policy and RNT clarification; explain why contradictory test expectations will change.
 - [x] (2026-10-14) Implement shared guidance/popovers and bounded execution-conflict rules; retain prior confirmed aliases and add symmetry/no-write/tempo regressions.
 - [x] (2026-10-14) Run full verification: 107 tests, 37 resolver cases, 11 identity-review cases and all five stages pass; inspect scoped diff.
-- [ ] Publish learner-only PR; no merge or installation yet.
+- [x] Publish learner-only draft PR #17; no merge or installation yet.
+- [x] Repair independent review finding: an explicit conflict wins across every confirmed name of the same exercise ID; regression covers either preferred name and rejected Link without writes.
+- [x] Verify repair: 108 tests in 13 suites and all five deterministic stages pass. Build, sign, seed, and launch a distinct isolated trial Service; foreground manual acceptance remains unperformed.
 - [ ] Obtain isolated manual UI acceptance and one bounded independent review before merge approval.
 
 ## Surprises & Discoveries
 
+
+PR #17 review identified that per-name ranking could let a generic alias override
+an execution conflict on the same identity. Per-exercise aggregation now retains
+the conflict; global ranking between different identities remains unchanged.
 
 ReviewRelationshipPolicy explicitly classified Copenhagen lever length and RNT as
 prescription differences before the generic protected-modifier rule. That is the

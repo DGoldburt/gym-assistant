@@ -339,9 +339,14 @@ public final class ExerciseIdentityReviewService {
             }
 
             guard let candidate else { continue }
-            if let existing = bestByExercise[name.exerciseID],
-               !candidateRanksBefore(candidate, existing) {
-                continue
+            if let existing = bestByExercise[name.exerciseID] {
+                // An execution conflict applies to the identity, not just its
+                // matched name. A generic alias cannot make that identity safe.
+                if existing.linkAllowed != candidate.linkAllowed {
+                    if !existing.linkAllowed { continue }
+                } else if !candidateRanksBefore(candidate, existing) {
+                    continue
+                }
             }
             bestByExercise[name.exerciseID] = candidate
         }
