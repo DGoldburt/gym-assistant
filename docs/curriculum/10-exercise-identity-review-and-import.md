@@ -10,7 +10,7 @@ frequency evidence, program context, and client history.
 The import is the first observation source for a reusable exercise-identity review
 workflow. Like a later completed-program review, it stores source-backed
 observations in a resumable queue without blocking program writing. The same
-identity boundary should also support manual library audits without turning this
+identity boundary should also support later manual library editing without turning this
 exercise into those complete products.
 
 ## Codex skill
@@ -81,11 +81,11 @@ Use several high-recall candidate signals rather than relying on the current fuz
 ranker alone: exact normalized collisions, conservative search-only abbreviation
 or phrase transformations, bidirectional lexical similarity, and reviewable
 exercise-family grouping. A protected modifier should be displayed as conflict
-evidence during this audit instead of silently hiding the pair. No score may write
+evidence during this review instead of silently hiding the pair. No score may write
 an identity relationship.
 
 Keep candidate generation and review decisions independent of the import parser so
-completed-program and manual-audit adapters can reuse them later. Cover known alias
+completed-program workflows and later library editing can reuse them. Cover known alias
 pairs, similar-but-distinct exercises, abbreviations, word-order changes,
 modifier conflicts, deferral, repeated decisions, and zero-silent-merge behavior
 with fixtures and tests.
@@ -98,7 +98,7 @@ state. Confirm that known aliases are surfaced for review, meaningful variants c
 remain separate, and no candidate score or AI output establishes identity.
 
 Teach back: Which parts of this workflow can serve imports, completed-program
-hygiene, and library audits, and which operations remain specific to one adapter?
+hygiene, and library editing, and which operations remain specific to one adapter?
 
 ## Task C — Import the personal library and test the useful product slice
 

@@ -5,9 +5,12 @@ exercise-identity persistence boundary, deterministic normalization and
 normalized-name lookup, scored candidate generation, explicit suggestion
 confirmation, read-only autocomplete
 search, empty-cursor Notes autocomplete interaction, and the reusable exercise-
-identity review core are implemented. Personal-library import, search-query
-transformations, blocks, tendencies, and client history remain later slices or
-design hypotheses.
+identity review core are implemented. Library Edit, alias splitting, directed
+merges with old-ID redirects, and CSV import are implemented in the local feature
+worktree, with automated verification and an isolated synthetic-data foreground
+keyboard/Notes trial. Visual layout review and release remain outstanding.
+Search-query transformations, blocks, tendencies, and
+client history remain later slices or design hypotheses.
 
 Observation ingestion is separated from identity review by
 [ADR 002](decisions/002-non-blocking-observation-ingestion.md). The complete source
@@ -30,7 +33,7 @@ Conceptual structure:
                                   +--> Exercise-observation extractor (later)    +--> Resolver evidence
                                                                                  +--> Exercise Library writes
 
-    Manual library-audit adapter (later) --> Exercise Identity Review of existing IDs
+    Manual library-edit workflow --> Exercise Library management of existing IDs
 
     Saved Blocks / Programming Tendencies / Client History (later)
         reference stable Exercise Library identities
@@ -67,10 +70,17 @@ remain open concerns.
 Responsibilities:
 - stable opaque exercise identity
 - durable exercise names owned by one exercise identity
-- exactly one durable name per exercise with the preferred/default display role
+- exactly one owned preferred/default name per active exercise
+- nameless merged exercise records retaining old IDs and redirecting to active identities
 - globally unambiguous exact normalized-name ownership
 
-The initial Swift package persists this boundary in SQLite. A deferred composite foreign key prevents an exercise from committing without an existing preferred name owned by that exercise. Human-facing output uses the preferred name, optionally with a short UUID prefix for diagnostic disambiguation; bare or name-derived IDs are not the ordinary interface.
+SQLite schema version 4 uses lifecycle CHECK constraints, a deferred composite
+foreign key for active preferred-name ownership, redirect foreign keys, and guards
+against names owned by merged records. Existing v1–3 databases are rebuilt in one
+transaction only after a read-only preflight and verified SQLite backup, stored
+beside the original with a unique pre-v4 filename and owner-only permissions.
+Known v4 opens perform no migration DDL. Human-facing autocomplete shows the
+winning name, not technical IDs or the internal preferred designation.
 
 The library's current normalizer is deliberately minimal and supports only the
 normalized-name lookup persistence contract. Fuzzy similarity may rank review
@@ -236,11 +246,10 @@ before becoming part of the shared generator.
 
 Empty-query and unmatched-query insertion behavior belongs to the application/UI
 workflow, not this domain search component. Autocomplete is fully read-only: Return
-inserts the selected durable name, and no autocomplete action changes the internal
-preferred-name pointer. Only an identity-review workflow can persist a durable
-exercise-name relationship. The preferred-name constraint remains an internal
-fallback that prevents a nameless exercise; changing it is deferred until a
-library-maintenance workflow demonstrates a user need.
+inserts the selected durable name, and no autocomplete search or insertion changes
+the internal preferred-name pointer. Explicit creation, identity review, and
+confirmed Library Edit operations own durable identity writes. Splitting a
+preferred name repairs the original default deterministically without a chooser.
 
 ### Exercise identity review
 
@@ -249,7 +258,7 @@ Responsibilities:
 - use normalized-name lookup before opening review
 - gather scored candidates with visible supporting evidence for unresolved wording
 - expose meaningful modifier conflicts instead of hiding uncertainty
-- support explicit link, create, keep-separate, and defer decisions
+- support explicit link, create, and defer decisions
 - apply approved identity writes through the exercise library's persistence boundary
 - preserve enough decision provenance and deferred state for later audit
 
@@ -264,9 +273,10 @@ Link adds the preserved observation as an `importedConfirmed` name through an
 ownership-checked transaction. Create accepts no editable name and makes the
 observation itself the sole initial preferred name, preventing semantic drift
 during review. Defer persists the unresolved observation and evidence snapshot
-without changing the exercise library. A separate audit-facing Keep Separate
-operation records that two existing exercise IDs remain distinct; it is not an
-import decision and does not merge or create identities.
+without changing the exercise library. The current learner implementation still
+contains a legacy `Keep Separate` operation for two existing exercise IDs. It is
+not part of the library-edit direction and is scheduled for removal in a later,
+focused cleanup; it must not be used as an import or library-edit decision.
 
 Resolver fixture category and human-review disposition are independent.
 `MUST_NOT_MATCH` continues to prohibit automatic identity. The review policy may
@@ -285,13 +295,83 @@ autocomplete and do not block program writing. The reviewer may dismiss and resu
 the queue; each explicit identity decision is independently transactional and
 idempotent.
 
-Exercise 10 exposes this queue through a separate Gym Assistant review window. The
-existing autocomplete panel contains a visible, keyboard-operable Review Library
-action, so the learner can enter review without Terminal or another global
-shortcut. Opening review releases the Notes Service request; the review window can
-then stay open independently. Closing it preserves queue position and returns focus
-to Notes. Administrative ingestion, backup, dry-run, and diagnostics remain in the
-local command-line runner.
+Library Edit exposes Edit Library and Add Exercises as peer routes from
+autocomplete, without cross-navigation. Edit uses the ranked search chooser for
+exercise and alias selection rather than a dropdown.
+Expanded exercise groups are independent. Promotion requires an alias child row.
+Merge on a child uses `previewMoveName(nameID:from:to:)`, preserving both active
+identities and all other names, with deterministic source-default repair if needed.
+Its transaction and exact-preview receipt use the same safeguards as whole merge;
+the receipt's typed `moveName` action distinguishes single-name transfer from the
+schema-v4 `merge` action family. No redirect is created for an alias move.
+Exercise merge search prefills selected wording and retains other already-visible
+identities until query editing; a successful edit invalidates those transient
+results. Merge target selection is a smaller attached sheet owned by Edit Library,
+with its own search/chooser controls, not a peer window or replacement screen.
+Escape/Cancel dismisses it without disturbing the parent's query, selection, or
+expanded groups. Confirmation attaches to the sheet; success dismisses it and
+refreshes the parent. Maintenance messages clear on new navigation, input, or selection.
+The combine entry point automatically retains the exercise being edited; choosing
+a duplicate opens one confirmation with both name groups attached to the Merge sheet.
+There is no comparison screen or user-facing source/survivor choice. The retained
+ID and default name are unchanged; the duplicate's old ID redirects to it.
+Add Exercises contains creation from scratch and Import as a suboption. Review candidates is an Import
+child and uses the single To review / Skipped observation queue. Import's badge
+counts unresolved pending observations across sources, excluding Skipped and
+already-confirmed exact names. Refresh it from durable state on view entry and
+after ingestion or identity/review changes. Both routes
+use the same Service-return and standalone-window handoff as the current review
+window; no parent-child relationship between Edit Library and Add Exercises is
+required. Import and Review preserve the Add session's draft input in memory.
+Review source evidence is disclosed on demand; Undo is the guarded last-decision
+transaction reversal, not parent navigation.
+Autocomplete query/selection may be retained for orientation, but this handoff
+ends the original insertion request. Inline editing, longer Service deadlines,
+and window-shim focus experiments belong to deferred PLAN-008.
+
+The complete library-edit design was approved on 2026-10-06 in
+[ADR 003](decisions/003-library-edit.md) and
+[PLAN-009](exec-plans/PLAN-009-library-edit.md). The storage model moves
+names to a merge survivor and retains the former exercise ID as a redirect.
+`ExerciseLibraryEditService` prepares read-only typed previews and applies the exact
+confirmed preview under BEGIN IMMEDIATE, rechecking a fingerprint of ownership,
+defaults, observations, redirects, and prior affected edits. Each edit and its
+versioned append-only receipt commit together. Old-ID reads follow chains with
+cycle/missing-target detection; writes reject merged selections. Observation Back
+records the name it actually created and checks current state before destructive
+undo, preserving pre-existing aliases and later edits. Source lines stay in their
+original observation store, not edit receipt payloads.
+
+`LibraryImportService` validates CSV counts before ingestion, checks the source
+hash again at apply, and reuses the original ingestion reference for duplicate
+content, including CLI imports or renamed files. `LibraryMaintenanceNavigation`
+keeps only transient routes, drafts, and selection; AppKit uses one standalone
+parent window with the existing ranked chooser, an attached Merge target sheet,
+and an embedded queue controller. The
+code and synthetic tests are implemented, and an isolated keyboard/Notes trial
+passed on the development machine. This is not a general focus guarantee or
+visual layout sign-off; see PLAN-009 for evidence and limitations. The later legacy Keep Separate
+cleanup is recorded in [PLAN-010](exec-plans/PLAN-010-legacy-keep-separate-cleanup.md).
+
+#### Future asynchronous import adapters — do not implement in PLAN-009
+
+Video, image, and feed adapters may accept a source and process it independently
+of the window, preserving processing state and occurrence provenance. Results
+append source-backed candidates to the same review queue as processing completes;
+they never create exercise/name ownership automatically. The Import view will
+show processing status separately from its pending-review count and refresh while
+open. Durable job/retry/duplicate-handling details belong to later scoped plans.
+
+Video extraction proposes exercise wording and associated start/end timestamps.
+Segments remain candidate source evidence until confirmation, then attach to the
+durable ExerciseName.id. One alias may have multiple segments; merge/split keep
+those associations with the preserved name ID. A separate instructional-video
+model ADR and migration precede video import. Image transcription preserves source
+and reviewable extraction uncertainty. Scheduled WOD pulls preserve source URL,
+workout date, and observed wording as occurrence evidence, using verified access
+and idempotent ingestion; workout occurrence is distinct from instructional media.
+These directions add no job system, media fields, or scheduling to the current CSV
+feature. See docs/OPPORTUNITY_SOLUTION_TREE.md for opportunities and sequencing.
 
 Autocomplete and observation review share one AppKit ranked-candidate chooser for
 identity-deduplicated rows, winning-name presentation, name disclosure, selection,
@@ -306,19 +386,27 @@ queue state, and explicit Link/Create/Skip transactions. Autocomplete begins wit
 no selected candidate so Return preserves and inserts the query; Down Arrow
 deliberately selects the top result. Review may preselect its top candidate because
 Link remains a separate explicit action. The chooser reserves Left and Right Arrow
-for alias disclosure; review-specific Back and Skip use Command-Z and Command-S.
+for alias disclosure; review-specific Undo and Skip use Command-Z and Command-S.
 An autocomplete request also self-cancels after 105 seconds, before the synchronous
 Service's 120-second deadline, so an abandoned chooser returns Notes cleanly instead
 of producing a Service timeout.
 
-Gym Assistant remains an accessory application and does not enter the Dock or
-Command-Tab switcher. A rejected Task C experiment temporarily promoted it to a
+Gym Assistant starts as an accessory application; the synchronous autocomplete
+panel does not change that activation mode. The standalone Library Edit/Add/Import
+window promotes it to regular activation while open, so it is Dock/app-switch
+eligible. Its bundled `GymAssistant.icns` is generated from the existing branding
+PNGs and loaded as the application icon. Dock reopen raises or deminiaturizes the
+existing library window without resetting drafts. Window close restores the prior
+activation policy. Edit Library is enabled without a selection and opens search.
+This maintenance-only change differs from the rejected Task C experiment, which
+temporarily promoted it during an outstanding Service to a
 regular application, but that caused a distracting launch bounce and still could
 not restore Notes after the learner consulted another app. The synchronous Service
 request prevents Notes from accepting ordinary programmatic activation while
-autocomplete is open. Leaving a chooser open across application switching therefore
-requires either a different asynchronous insertion adapter or explicit
-Accessibility control; window ordering alone cannot provide it.
+autocomplete is open. Prior window-ordering attempts did not establish reliable
+keyboard recovery. PLAN-008 retains a deferred smaller presentation experiment
+(ordinary window or hidden-window shim) before considering asynchronous insertion
+and Accessibility. No focus fix has been validated or promoted.
 Autocomplete remains owned by the synchronous Notes Service invocation that opened
 it. Live testing shows Notes queues another invocation until the first returns and
 does not redirect the pending output after a cross-note attempt. Supporting several
@@ -332,10 +420,10 @@ completed-program adapter may use a reusable observation extractor before stagin
 that extractor identifies exercise-like wording in mixed program text, preserves
 verbatim evidence and location, and makes no durable name or exercise-identity decision.
 
-Manual library-audit adapters may reuse candidate evidence while presenting two
-existing exercise IDs and audit-specific Merge or Keep Separate operations. Merging
-IDs that already own durable names or downstream references remains a separate future
-operation; it is not equivalent to linking a staged observed name.
+Library-edit workflows present existing exercise IDs and confirmed aliases for
+explicit Merge, alias-move, or alias-promotion operations. Merging IDs that already
+own durable names preserves old-ID redirects and remains distinct from linking a
+staged observed name; neither operation silently establishes identity.
 
 ### Observation ingestion and provenance
 

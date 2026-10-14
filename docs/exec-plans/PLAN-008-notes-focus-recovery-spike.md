@@ -1,4 +1,4 @@
-# Prove context-safe asynchronous insertion into Apple Notes
+# Test recoverable autocomplete windows and context-safe Notes insertion
 
 This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`,
 `Decision Log`, and `Outcomes & Retrospective` must be kept current as work proceeds.
@@ -6,7 +6,16 @@ Maintain this document in accordance with `PLANS.md` at the repository root.
 
 ## Purpose / Big Picture
 
-After this spike, the learner will know whether Gym Assistant can stop holding an Apple
+First test whether a small presentation change can make the existing synchronous
+autocomplete recoverable by keyboard after switching applications. The learner
+reports that the standalone Review Library window is recoverable; this is a useful
+comparison, but it differs in both window type and Service lifecycle. A hidden
+ordinary window (a temporary window shim) alongside autocomplete is a hypothesis
+to test, not a proven fix. If synchronous presentation succeeds, retain the existing
+macOS insertion mechanism and stop before the Accessibility work.
+
+If presentation alone fails and the learner approves proceeding, this spike will
+determine whether Gym Assistant can stop holding an Apple
 Notes Service call open while its chooser is visible. The candidate interaction returns
 the Service call immediately, lets the learner switch to another application for several
 minutes, and shows the relevant Gym Assistant panel again when the original disposable
@@ -39,7 +48,11 @@ explicitly reactivates it.
   permission gate, comparison trials, and rejection criteria.
 - [x] (2026-10-02) Choose to retain the synchronous Service, defer this spike, and keep
   gathering focus-friction evidence through the weekly evaluator.
-- [ ] Obtain explicit approval to begin the spike and prompt for Accessibility access.
+- [x] (2026-10-06) Retain window-shim, inline editing, and extended-timeout ideas as deferred experiments; library editing uses the existing Review Library handoff.
+- [ ] Obtain explicit approval to run the presentation experiment with disposable notes.
+- [ ] Compare a regular autocomplete window and a hidden ordinary-window shim with the current panel and standalone Review Library control.
+- [ ] Decide whether presentation alone satisfies keyboard recovery and safe insertion; stop here if it does.
+- [ ] If needed, obtain separate approval for the asynchronous spike and Accessibility access.
 - [ ] Build a metadata-only Notes Accessibility capability probe using disposable notes.
 - [ ] Build the parallel asynchronous invocation and pending-context prototype.
 - [ ] Run permission, normal insertion, stale-context, cancellation, multiple-invocation,
@@ -47,6 +60,20 @@ explicitly reactivates it.
 - [ ] Decide whether to promote, revise, or reject the asynchronous adapter direction.
 
 ## Surprises & Discoveries
+
+- Observation: The 2026-10-08 disposable-note test retained a middle-of-line caret
+  across Edit→close→fresh Notes Service, and confirmed insertion between the
+  existing markers. Cursor insertion is not lost; the completed Service cannot
+  receive another response merely by reopening a selector. The user requested
+  investigating Command-L as a selector-return shortcut. Automatic Notes-side
+  re-invocation or a retained insertion-context adapter remains unimplemented,
+  distinct from the tested manual fresh-Service path. No new permission or
+  production lifecycle change was approved or performed.
+
+- Observation: Review Library outlives the Service and has no autocomplete deadline.
+  Evidence: `openLibraryReview()` stops the modal loop; `runModal()` invalidates
+  its timer; `autocompleteExercise` schedules the review window after returning.
+  Its reported keyboard recovery therefore cannot yet be attributed to window type.
 
 - Observation: The current autocomplete Service is synchronous even when the learner is
   doing work that naturally leaves Gym Assistant.
@@ -72,6 +99,12 @@ explicitly reactivates it.
   than trusting only the Notes process identifier or window title.
 
 ## Decision Log
+
+- Decision: Keep synchronous window presentation experiments in this deferred plan;
+  library editing adopts the existing Review Library Service-return lifecycle.
+  Rationale: The feature needs a consistent parent window for editing and adding,
+  while focus recovery and mid-search editing require separate measured experiments.
+  Date/Author: 2026-10-06 / Learner.
 
 - Decision: Keep the current synchronous Notes Service and defer the asynchronous
   Accessibility spike.
@@ -138,7 +171,9 @@ explicitly reactivates it.
 
 ## Outcomes & Retrospective
 
-Planning is complete and deliberately deferred; the spike has not started. The current
+The plan now includes a presentation experiment before the asynchronous insertion
+proposal. Both remain deferred; no window shim or timeout change has been tested.
+The current
 synchronous architecture remains in use and no Accessibility permission has been sought.
 The unresolved focus evidence remains in the private ledger, deferred cases remain on a
 weekly watchlist, and later occurrences can strengthen or weaken the case for reopening
@@ -184,6 +219,38 @@ mode, and a one-way hash of a bounded amount of surrounding text. Raw surroundin
 and note titles must never be logged or persisted.
 
 ## Plan of Work
+
+### Milestone 0: Test synchronous window recovery without changing insertion
+
+After reactivation, use a separately built experimental app and disposable notes.
+In `Sources/GymAssistantNotesService/main.swift`, vary one presentation condition
+at a time: the current modal panel, a regular window serving the same chooser,
+and the current panel accompanied by a hidden ordinary window created during the
+Service invocation. Keep the Service outstanding and return insertion through its
+existing pasteboard path. Compare with the standalone Review Library window,
+explicitly recording that its Service has already returned. Do not assume a hidden
+window will create a recoverable app/window entry; measure it.
+
+Test keyboard switching away and back, retained query and selection, insertion at
+the original caret, cancellation, repeated invocation, and cleanup of every helper
+window. Use a synthetic no-write editor to test opening another window during the
+same invocation and returning to refreshed autocomplete without another shortcut.
+This editor exercises presentation only and changes no exercise identity.
+
+If testing a longer interaction, change both `NSTimeout` in
+`app/notes-service/Info.plist` and the local watchdog in the experimental build;
+candidate values are 300000 milliseconds and 285 seconds. The deadline is measured
+from invocation and never reset by editing. Verify ordinary quick insertion and
+expiry without unresponsive-Service alerts. Longer waiting does not itself prove
+focus recovery. Retain the production 120-second/105-second settings meanwhile.
+
+Run `swift test` for regressions, then five keyboard detours per presentation
+condition using invented text. Record outcomes in
+`spikes/notes-focus-recovery/EVIDENCE.md`. A candidate passes only if all five detours
+recover through the learner's ordinary keyboard switcher, preserve query/selection,
+and permit correct insertion or cancellation without Dock menus or Show All Windows.
+One wrong-location insertion rejects it. If a candidate passes, present its evidence
+and stop before Milestone 1; promotion remains a separate foreground decision.
 
 ### Milestone 1: Isolate the adapter contract and build a no-write capability probe
 
@@ -259,6 +326,10 @@ fix or a different writing-interface boundary in a later decision.
 
 ## Concrete Steps
 
+When reactivated, begin with Milestone 0 and a separate experimental app bundle.
+No Accessibility access is needed for its window and synchronous-pasteboard trials.
+Proceed to the following asynchronous steps only after their separate approval.
+
 Work from the repository root on the branch selected by the future tutorial task. Before
 editing, run:
 
@@ -287,6 +358,13 @@ Re-run the current synchronous path five times after the experiment. Expect no w
 wrong-range, cancellation, focus, or text-loss failures in the control.
 
 ## Validation and Acceptance
+
+The presentation gate requires the Milestone 0 keyboard-recovery trials and zero
+incorrect insertion or cancellation writes. Record whether the hidden-window shim
+actually helps and whether any benefit depends on a visible regular window. An
+extended timeout must pass an expiry trial and must not leave helper windows or
+an active insertion action after cancellation. The following gates apply only if
+the asynchronous direction is subsequently activated.
 
 The permission gate passes when installation and launch do not prompt; Enable explains
 the access first; denial leaves the current Service usable; one approval enables the
@@ -319,6 +397,11 @@ new identity writes, false merges, protected leaks, or ordering failures. The sy
 control must still pass five real Notes trials.
 
 ## Idempotence and Recovery
+
+Presentation variants run in a separate experimental bundle. Close and release any
+helper window on insertion, cancellation, error, or expiry. Keep the installed
+production app available as the control and do not change its registered timeout
+while testing experimental settings.
 
 Automated tests use fakes and disposable databases. Capability and UI trials use only
 disposable notes and may be repeated after clearing pending contexts. Re-running the same
@@ -384,6 +467,11 @@ Define equivalents of these adapter-local types, refining names only if tests ju
         func replaceSelection(in target: ValidatedNotesTarget, with text: String) -> NotesInsertionResult
     }
 
+Milestone 0 uses AppKit and the existing synchronous Service only. Its helper-window
+owner must create and release the experimental window without adding persistence
+or an Accessibility dependency. The following interfaces belong only to the later
+asynchronous milestones.
+
 `PendingInvocationCoordinator` owns the three-request bound, duplicate-context behavior,
 expiry, cancellation, and state transitions. `AccessibilityNotesContextAdapter` owns all
 AX calls and content hashing. The existing autocomplete and identity workflows supply
@@ -396,3 +484,9 @@ change, or prototype implementation was performed.
 Revision note — 2026-10-02: The learner chose to retain the synchronous architecture and
 defer this plan. Added the deferred disposition, exception-based monitoring decision,
 and restart conditions; no spike implementation or permission change was performed.
+
+Revision note — 2026-10-06: Added a deferred synchronous presentation milestone for
+the learner's hidden-window shim, regular-window comparison, inline return to
+autocomplete, and coordinated Service/watchdog extension. This tests the smaller
+focus hypothesis before Accessibility work. Library editing uses the established
+standalone Review Library handoff and keeps these experiments outside its scope.

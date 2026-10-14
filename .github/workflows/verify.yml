@@ -1,0 +1,33 @@
+name: Product verification
+
+on:
+  pull_request:
+    branches: [learner/main]
+  push:
+    branches: [learner/main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: macOS scripts/verify
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - name: Check out candidate revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Record revision and toolchain
+        run: |
+          git rev-parse HEAD
+          sw_vers
+          xcodebuild -version
+          swift --version
+      - name: Run deterministic verification (no installation or UI testing)
+        run: ./scripts/verify
