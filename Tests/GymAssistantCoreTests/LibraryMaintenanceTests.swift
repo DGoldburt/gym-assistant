@@ -4,6 +4,14 @@ import Testing
 
 @Suite("Library maintenance navigation and CSV import")
 struct LibraryMaintenanceTests {
+    @Test func guidanceKeepsExecutionAndPrescriptionExamplesDistinct() {
+        #expect(AliasIdentityGuidance.text.contains("KB/DB/unweighted"))
+        #expect(AliasIdentityGuidance.text.contains("goblet/front-rack"))
+        #expect(AliasIdentityGuidance.text.contains("assisted/unassisted"))
+        #expect(AliasIdentityGuidance.text.contains("tempo—including negatives"))
+        #expect(AliasIdentityGuidance.text.contains("full wording as an alias after confirmation"))
+    }
+
     @Test func restorationPreservesExactNameAndRowKindAcrossRankingChanges() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("restore-row-\(UUID())")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

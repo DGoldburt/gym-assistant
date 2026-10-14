@@ -10,13 +10,31 @@
       "id": "short-versus-long-lever-copenhagen",
       "observation": "Short-Lever Copenhagen Plank",
       "candidate": "Long-Lever Copenhagen Plank",
+      "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "touch-down-rnt-resistance-variation",
+      "observation": "Touch-Down with RNT",
+      "candidate": "Touch-Down",
+      "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "touch-down-negative-tempo-prescription",
+      "observation": "Touch-Down with 5 sec negative",
+      "candidate": "Touch-Down",
       "expectedDisposition": "linkableWithConfirmation"
     },
     {
-      "id": "touch-down-rnt-prescription",
-      "observation": "Touch-Down with RNT",
-      "candidate": "Touch-Down",
-      "expectedDisposition": "linkableWithConfirmation"
+      "id": "kb-db-implement-variation",
+      "observation": "KB Reverse Lunge",
+      "candidate": "DB Reverse Lunge",
+      "expectedDisposition": "identityConflict"
+    },
+    {
+      "id": "goblet-front-rack-variation",
+      "observation": "Goblet Reverse Lunge",
+      "candidate": "Front Rack Reverse Lunge",
+      "expectedDisposition": "identityConflict"
     },
     {
       "id": "paloff-spelling-review",

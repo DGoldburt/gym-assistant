@@ -1,6 +1,10 @@
 import Foundation
 import SQLite3
 
+public enum AliasIdentityGuidance {
+    public static let text = "Aliases are different wording for the same exercise. Keep implement changes (KB/DB/unweighted), load-position changes (goblet/front-rack), and execution variations (deficit, touch-and-go, assisted/unassisted) as separate exercises. Sets, reps, weight, and tempo—including negatives—are prescriptions, not exercise names. If prescription details appear in a name, you may retain the full wording as an alias after confirmation—for example, ‘Touch-down squat 5 sec negative’ → ‘Touch-down squat’."
+}
+
 /// Ephemeral chooser presentation, independent of name ownership or identity.
 public struct ExerciseChooserExpansion: Sendable {
     public private(set) var expandedIDs: Set<ExerciseID> = []
