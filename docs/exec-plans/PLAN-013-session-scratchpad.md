@@ -48,7 +48,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Wire optional live-context checked copy and comparison: one-time publication concurrent with verification, app-only timeout/late warnings, superseded-operation rejection, fresh comparison reads, and preserved scratchpad on unresolved association. Three copy concurrency regressions and a controller integration regression pass; full five-stage verification passes with 163 tests/23 suites. The default synthetic app still has no live context; native full-path timing and live workspace entry remain outstanding.
 - [ ] (2026-10-14) Native editor-generated Markdown preserves heading tiers at a paragraph boundary but adds blank lines between body paragraphs. Test pastes and the inserted paragraph were undone in the synthetic capability note. Compact-spacing control was blocked before execution because it would overwrite the general clipboard; request explicit approval before repeating that control. No formatting acceptance or clipboard workaround.
 - [x] (2026-10-14) Coach explicitly approves synthetic clipboard/Notes spacing controls. Native single-newline control retains separate paragraphs but adds trailing spaces; two-space hard breaks retain separate body paragraphs without added spaces or blank rows. Correct exporter heading/body boundaries and preserve intentional blank rows; explain and update the old extra-blank-line test expectation, add two regressions. All five verification stages pass. Undo all native controls and verify fixture HTML exactly matches pre-control HTML.
-- [ ] Decide whether the first handoff may add one blank separator after a bullet list before ordinary body text. Native no-separator control wrongly makes that body another bullet; separator control retains correct structure but adds the visible blank. Existing separator behavior remains; no acceptance relaxation inferred. Also support the observed empty system-font heading wrappers on reimport before claiming a native handoff/read round trip.
+- [x] (2026-10-14) Coach accepts one blank separator after a bullet list before ordinary body text for the first handoff. This is a narrow spacing exception, not approval of other formatting changes. Native no-separator control made the body another bullet.
+- [x] (2026-10-14) Add bounded reimport of the two observed empty system-font heading suffixes after Markdown paste. Only exact empty h2/h3 runs adjoining the same closed heading are normalized; nonempty text, other styles and standalone wrappers still fail. Captured-shape regression and all three importer tests pass. A rebuilt native round trip is still required.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -172,6 +173,11 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+Accepted 2026-10-14: the first Markdown handoff may add one blank separator between
+a bulleted list and subsequent ordinary body text. Native controls show that omitting
+it can turn the body into a bullet. Preserve native heading tiers, bold, list identity
+and compact ordinary paragraphs; this does not authorize broader formatting loss.
 
 
 Review resolution, 2026-10-14, authorized by the coach: make save/recovery and
@@ -976,6 +982,9 @@ state, and opening a diff never triggers an API/model call.
 The explicit copy icon/whole-scratchpad shortcut supplies the approved Notes handoff
 representation; native Paste as Markdown must preserve Heading, Subheading, bold and
 continuing bullets for supported content. Verify conversion rather than assuming
+exact spacing: the coach accepted one added blank separator after a bulleted list
+before ordinary body text on 2026-10-14, but no broader spacing/formatting exception.
+Verify native tiers rather than assuming
 ordinary rich Command-V retains native tiers. The whole-copy shortcut is discoverable
 in the menu without mouse movement. Ordinary editor Command-A/Command-C remains
 immediate rich-selection copy and Notes-unverified, with no synchronous Notes check;
@@ -1324,3 +1333,9 @@ add regression coverage without relaxing unsupported formats. All five verificat
 stages pass. The synthetic note's exported HTML is exactly restored after undo;
 the clipboard retains synthetic control text. List-to-body blank separator acceptance
 and native exported heading-wrapper reimport remain open; do not claim full fidelity.
+
+Revision note, 2026-10-14, spacing acceptance: record the coach's narrow approval of
+the list-to-body blank separator in the active contract. Implement and test exact
+normalization of observed empty native heading export suffixes so they do not cause
+false extra paragraphs or blanket rejection. Arbitrary styled/text-bearing wrappers
+remain unsupported; native rebuilt round-trip acceptance is still outstanding.

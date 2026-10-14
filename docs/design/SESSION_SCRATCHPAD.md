@@ -209,7 +209,11 @@ slice, not a request to create another mock-up or to implement production UI now
 Current handoff, reflecting the subsequent Markdown selection: **Copy Markdown
 for Notes**, followed by Notes' **Paste as Markdown**, must preserve native bullets,
 bold and heading tiers. This supersedes the original requirement to accomplish
-those semantics through an ordinary rich paste alone. Keep the freely editable
+those semantics through an ordinary rich paste alone. Accepted 2026-10-14: the first
+handoff may add one blank separator after a bulleted list before ordinary body text,
+so Notes does not turn that body text into another bullet. This narrow exception
+does not permit extra blank lines between ordinary paragraphs, lost headings/bold,
+or silently discarded unsupported formatting. Keep the freely editable
 formatted scratchpad; Markdown is a handoff representation, not its editor/storage
 format. Use deliberate manual
 paste into the correct Notes location. Use a copy icon floating in the upper-right

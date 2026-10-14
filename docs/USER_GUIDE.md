@@ -9,6 +9,10 @@ Use Notes' **Paste as Markdown** command to turn copied Markdown into native hea
 lists and bold text. Ordinary Command-V may paste the Markdown symbols literally.
 Your Notes version must offer **Edit → Paste as Markdown**.
 
+Paste at a paragraph boundary so the first heading does not join existing text.
+The planned scratchpad handoff may add one blank line after a bulleted list before
+ordinary text; this keeps Notes from turning that text into another bullet.
+
 Gym Assistant's session scratchpad and chat handoff are still in development. These
 Notes instructions work independently with Markdown copied from another source;
 they do not imply the scratchpad feature is already available in the app.

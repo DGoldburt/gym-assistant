@@ -60,8 +60,19 @@ public enum ProgramDocumentReadError: Error { case unsupportedHTML, inconsistent
         guard !html.localizedCaseInsensitiveContains("<!doctype"), !html.contains("<!ENTITY") else {
             throw ProgramDocumentReadError.unsupportedHTML
         }
-        let normalized = html.replacingOccurrences(of: "<br>", with: "<br/>")
+        var normalized = html.replacingOccurrences(of: "<br>", with: "<br/>")
             .replacingOccurrences(of: "&nbsp;", with: "&#160;")
+        // Native Paste as Markdown exports these empty end-of-heading runs.
+        // Match only the captured wrappers, immediately after the same heading
+        // and before its enclosing div ends. Never strip arbitrary styled text.
+        let emptyHeadingRuns = [
+            ("h2", "<font face=\".AppleSystemUIFont\"><span style=\"font-size: 13px\"><h2><br/></h2></span></font>"),
+            ("h3", "<font face=\".AppleSystemUIFont\"><h3><br/></h3></font>")
+        ]
+        for (tag, run) in emptyHeadingRuns {
+            let ending = "</\(tag)></b>"
+            normalized = normalized.replacingOccurrences(of: ending + run + "</div>", with: ending + "</div>")
+        }
         let xml = XMLParser(data: Data(("<root>" + normalized + "</root>").utf8))
         xml.shouldResolveExternalEntities = false
         xml.delegate = self

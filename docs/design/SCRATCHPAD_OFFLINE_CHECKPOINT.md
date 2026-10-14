@@ -1,5 +1,15 @@
 # Initial offline scratchpad implementation checkpoint
 
+Acceptance update, 2026-10-14: the coach accepts the first handoff adding one blank
+separator after a bulleted list before ordinary body text. Other spacing/formatting
+changes are not implicitly approved. The importer now normalizes only the two exact
+empty system-font heading suffixes observed in the native controls, after the matching
+closed heading and before its div ends. A captured-shape regression verifies nine
+paragraphs and retained heading/list structure, and rejects nonempty or differently
+styled variants. All three importer tests and all five repository verification
+stages pass. Rebuilt native round-trip acceptance
+remains outstanding; the earlier test evidence below is historical.
+
 Approved spacing-control follow-up, 2026-10-14: the coach explicitly permitted
 clipboard replacement and synthetic fixture paste/undo. Three controls compared
 single newlines, two-space hard breaks, backslash breaks and list termination.
