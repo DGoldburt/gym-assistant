@@ -35,7 +35,11 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 ## Progress
 
 - [x] (2026-10-14) Coach authorizes local prep and implementation. Move accepted plan to PLAN 013; reserve ADR 005 and PLAN 012 for Notes direction/capability evidence because current learner/main uses ADR 004/PLAN 011 for alias guidance. Mockup artifacts in this checkout match the old source byte-for-byte. App archival is blocked by other-chat ownership; preserve that checkout.
-- [ ] Reconcile learner/main alias-policy commits and verify the refreshed branch before implementation.
+- [x] (2026-10-14) Commit approved preparation as 0a023a2 and reconcile local learner/main (221544f) into this feature branch as 5e7f4bb. One merge base equals current learner/main; baseline five-stage verification passes. No push or merge into learner/main.
+- [x] (2026-10-14) Start offline implementation: Foundation workspace/request types and reader contract; secure-archive snapshot store with validation/recovery/fault injection; supported Markdown exporter; native synthetic editor/chat/comparison executable. Native launch attempt is blocked by locked Mac; no UI pass claimed. Work is uncommitted pending native validation.
+- [x] (2026-10-14) Mac unlocked: native synthetic edit/ask, pending Enter blocking and disabled Send, Stop, scratchpad-changed reply, Markdown publication, comparison toggle, close/reopen and quit/relaunch observed. Composer typing falsely showed Scratchpad changed; fix and controller regression pass, corrected native behavior observed. This is not native Notes paste or full offline-slice acceptance.
+- [x] (2026-10-14) Final initial-increment verification: five repository stages and 134 tests/17 suites pass. Copy menu is visible and Command-Shift-C works in the native synthetic window; app quit after testing. Preserve the initial increment as a local checkpoint, not completed PLAN 013 or authorization to install/use paid APIs.
+- [ ] Finish production Notes capture/monitor, association/boundary browser/edit tracking, profile inspection and exact exercise decoration before offline slice acceptance. Test actual editor-generated Markdown paste/formatting in the synthetic Notes fixture, not only publication.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -62,6 +66,24 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Surprises & Discoveries
 
+
+Native continuation, 2026-10-14: composer text changes incorrectly displayed a
+Scratchpad changed status while a reply was pending, although revision stayed fixed.
+Require an editor change for that warning. A new native-controller test distinguishes
+composer typing, scratchpad editing and Stop; corrected native test reproduces the
+expected distinction. AX element indices change when transcript scrolling appears;
+derive them from the latest state, not earlier fixed indices. Shell-sandbox clipboard
+verification failed; permitted read-only retry confirmed only the expected synthetic
+heading without printing the clipboard. Neither attempt is a Notes paste test.
+
+2026-10-14 implementation start: existing branch now includes current alias guidance
+without conflicts; one intended merge base remains. Mockups are byte-identical in
+this checkout, but the app refuses to attach/archive the older checkout because it
+belongs to another chat. Leave it intact; client-history was not modified.
+The new standalone development app intentionally has no Notes permission, Service
+registration or API access. Computer-use launch is blocked by the locked Mac;
+unit tests/builds are not native acceptance. Initial compilation found CGFloat
+ambiguity and throwing Swift Testing macro syntax; fix code/syntax, not expectations.
 
 2026-10-14 independent CLI review: snapshot recovery and assistant request contracts
 were too vague to drive failure tests, despite passing bounded probes. Resolve the
@@ -225,6 +247,34 @@ Rationale: modification time is not a reliable body revision. Date/author:
 
 ## Outcomes & Retrospective
 
+
+Native continuation supersedes the earlier locked-Mac handoff below: synthetic
+window editing, delayed fake request/Stop, truthful scratchpad freshness, local
+save/reopen, copy publication and in-place text comparison now have direct native
+evidence. No real Notes or API access occurred. See
+[offline checkpoint evidence](../design/SCRATCHPAD_OFFLINE_CHECKPOINT.md). This initial
+implementation remains separate from the installed Service and is not the completed
+offline product slice; production capture/monitor/boundary/profile/library work remains.
+
+Implementation start, 2026-10-14: approved prep is committed and current learner/main
+reconciled. Workspace and macOS implementation has begun in separate targets with
+an explicit synthetic development executable. Formatted store validation, failure
+injection, immutable context substitution, request identity/cancellation and Markdown
+serialization have package tests. No production Notes capture/monitor, association
+resolver, protected boundary browser, live profile or library decoration is connected
+yet. Those are remaining work, not accepted omissions. Native app launch could not
+be tested because the Mac is locked; unlock is the next required user action.
+No installation, paid API call, push, learner/main merge or client-history edit.
+
+Verification at this handoff: scripts/verify passes all five deterministic stages;
+133 package tests in 16 suites pass, including the new workspace/macOS tests.
+Development bundle builds, signs and passes plist/signature validation. Diff
+whitespace and added-code credential/private-link scans have no findings; that is
+not proof of correctness or privacy completeness. Tests cover fault injection and
+store reconstruction, not actual OS crash/power-loss or native close/relaunch.
+The native launch tool reports locked Mac; do not claim the window was tested or
+the development app is running. The temporary native bundle built before the final
+integrity regression changes must be rebuilt before resuming native testing.
 
 2026-10-14 review resolution: documentation now states the minimum testable recovery
 and assistant boundaries and carries the existing evidence-category/conflict rules
@@ -751,6 +801,20 @@ unchanged. Stop at a review checkpoint before changing slice sequencing or shipp
 ## Concrete Steps
 
 
+Current local implementation entry (synthetic content only):
+
+    scripts/verify
+    bash app/scratchpad-development/build.sh
+
+The build prints a temporary Gym Assistant Scratchpad Development.app path. Open it
+through native computer-use tools or manually once the Mac is unlocked, not by
+bypassing a locked screen. The synthetic workspace lives separately under Application
+Support/GymAssistantScratchpadDevelopment; it does not use the installed app's
+library or real Notes. Whole-copy changes the normal clipboard only when explicitly
+invoked; it always says Notes not verified in this development path. Preserve that
+distinction until production monitoring is connected. The current comparison is a
+text-only changed hunk against frozen synthetic source, not a live formatting diff.
+
 Commands below run at repository root of the approved implementation checkout,
 which must contain the learner Service interfaces named above. First inspect status,
 current branch, and plan identifier usage. Do not assume this reusable design
@@ -1162,3 +1226,24 @@ ownership prevents archiving the legacy checkout from this chat; do not remove i
 manually. Client-history checkout is untouched. Begin local offline implementation
 only after learner-baseline reconciliation; live API and target-branch merge remain
 gated. Native UI fidelity/recovery tests remain required during implementation.
+
+Revision note, 2026-10-14, offline implementation start: add real workspace/macOS
+targets, a synthetic native development entry and regression tests without changing
+the installed Service. Preserve unsent composer text, stop late responses, and refuse
+close/quit after a failed save. Unknown copy formats fail rather than being silently
+flattened. Locked Mac prevents native validation; leave this implementation work
+uncommitted and record remaining real Notes/boundary/profile/library integration.
+
+Revision note, 2026-10-14, unlocked native validation: test the initial synthetic
+native path, fix the false freshness warning and add the regression without weakening
+expectations. Add accessible editor/composer labels, visible composer boundary,
+Window-menu reopening and discoverable Markdown-copy menu command. Preserve existing
+Notes and no-paid-API boundaries. Record the bounded evidence separately; remaining
+offline-slice integration is not marked complete.
+
+Initial offline increment checkpoint: full verification passes five stages,
+134 tests/17 suites. Native Edit-menu discovery and Command-Shift-C publication
+were checked in the final temporary bundle. The app was quit with saved synthetic
+state retained. Local checkpointing preserves the tested increment; production
+Notes/boundary/profile/library work remains the next task. No target-branch merge,
+push, paid API request or unrelated worktree change follows from this checkpoint.

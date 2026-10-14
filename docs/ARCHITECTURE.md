@@ -479,6 +479,19 @@ This supports retaining Notes as the initial workspace while keeping the resolve
 
 ## Contextual program assistance direction — capability work in progress
 
+Offline implementation has begun under PLAN 013 in the feature worktree; it is not
+installed or connected to real Notes. `GymAssistantWorkspace` owns typed snapshots,
+context assembly, evidence-tagged profile inputs and a one-request gate without
+AppKit, a library-write dependency or provider transport. `GymAssistantMacOS` owns
+secure attributed-string persistence, supported Markdown export and the native
+synthetic development window. `ScratchpadDevelopment` composes these with a fake
+assistant and a frozen synthetic note; it registers no Service and calls no API.
+It uses a separate local synthetic store. The existing autocomplete/library Service
+is unchanged. Production Notes reading/monitoring, association/boundary controls,
+real profile inspection and library decoration remain unimplemented; package tests
+do not establish their native behavior. No module from concurrent client-history
+work is imported or changed by this implementation.
+
 The selected product direction is a persistent, session-scoped working scratchpad
 with conversational assistance. The coach edits the scratchpad directly and later
 records the work in Apple Notes. This bounded working copy needs a context boundary

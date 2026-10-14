@@ -7,6 +7,9 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "GymAssistantCore", targets: ["GymAssistantCore"]),
+        .library(name: "GymAssistantWorkspace", targets: ["GymAssistantWorkspace"]),
+        .library(name: "GymAssistantMacOS", targets: ["GymAssistantMacOS"]),
+        .executable(name: "ScratchpadDevelopment", targets: ["ScratchpadDevelopment"]),
         .executable(name: "ResolverFixtureRunner", targets: ["ResolverFixtureRunner"]),
         .executable(name: "IdentityReviewFixtureRunner", targets: ["IdentityReviewFixtureRunner"]),
         .executable(name: "PersonalLibraryImport", targets: ["PersonalLibraryImport"]),
@@ -16,6 +19,11 @@ let package = Package(
     ],
     targets: [
         .target(name: "GymAssistantCore", linkerSettings: [.linkedLibrary("sqlite3")]),
+        .target(name: "GymAssistantWorkspace"),
+        .target(name: "GymAssistantMacOS", dependencies: ["GymAssistantWorkspace"], linkerSettings: [.linkedFramework("AppKit")]),
+        .executableTarget(name: "ScratchpadDevelopment", dependencies: ["GymAssistantWorkspace", "GymAssistantMacOS"]),
+        .testTarget(name: "GymAssistantWorkspaceTests", dependencies: ["GymAssistantWorkspace"]),
+        .testTarget(name: "GymAssistantMacOSTests", dependencies: ["GymAssistantWorkspace", "GymAssistantMacOS"]),
         .executableTarget(name: "ResolverFixtureRunner", dependencies: ["GymAssistantCore"]),
         .executableTarget(name: "IdentityReviewFixtureRunner", dependencies: ["GymAssistantCore"]),
         .executableTarget(name: "PersonalLibraryImport", dependencies: ["GymAssistantCore"]),
