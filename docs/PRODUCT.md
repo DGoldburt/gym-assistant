@@ -86,10 +86,35 @@ Ingestion does not block program writing or require every identity question to b
 answered: the user may open, dismiss, and later resume review while pending and
 deferred observations remain outside autocomplete identity.
 
-Routine library improvement must not require Terminal. The keyboard-accessible
-Gym Assistant UI provides a visible Review Library action that opens the resumable
-queue. Administrative source ingestion, backups, and diagnostics may remain local
-command-line operations.
+Routine library improvement must not require Terminal. Library-edit navigation
+provides visible, keyboard-accessible Edit Library and Add Exercises routes from
+autocomplete. Autocomplete first serves exercise search and insertion. Edit Library
+opens exercise search even without a selection, carrying the selected stable
+identity when one exists; Add Exercises
+starts with creation from scratch, with Import as a suboption. Import contains
+Review candidates for the existing observation queue. Its button badge counts
+pending To review candidates across sources, excluding Skipped and exact confirmed
+names. Add and Edit have no cross-navigation; each is reached from autocomplete.
+Edit keeps exercise search visible, with arrow-key exercise/alias selection rather
+than a dropdown and a large detail box.
+Merge with duplicate keeps the exercise being edited automatically and asks for
+one confirmation showing both name groups; no direction choice or comparison
+screen is needed. All names remain usable after combination. Review keeps source details collapsed
+until requested. Undo reverses the last review decision; it is distinct from
+returning to Import. All source observations share the same To review and Skipped
+views. Both routes use the current review-window lifecycle: return the Notes
+Service, then open a standalone window. While open, Gym Assistant is Dock/app-switch
+eligible with its branded icon; closing restores the previous activation mode.
+Autocomplete's Service lifecycle and timeout remain unchanged. Administrative backups and
+diagnostics may remain local command-line operations.
+
+This navigation is implemented in the local feature worktree and passed an isolated
+synthetic-data keyboard/Notes trial. Visual review and release remain outstanding.
+Current source ingestion scope is the
+existing CSV format. Asynchronous video/image processing and scheduled
+feed ingestion are future directions feeding the same queue; instructional video
+segments will belong to confirmed aliases after human review. They require a
+separate model/processing design before implementation.
 
 Given staged exercise wording and its source evidence, the workflow may let the
 user:
@@ -99,9 +124,15 @@ user:
   preferred name;
 - defer an uncertain decision without losing the observation.
 
-A manual library audit may additionally affirm that two already-existing exercise
-identities should remain separate. That is not an import or completed-program
-observation decision.
+A manual library-edit workflow may directly correct already-persisted identities:
+it may deliberately merge true duplicates or split an incorrectly linked confirmed
+alias into a distinct exercise. In Edit, Merge on a parent row combines its whole
+exercise; Merge on an alias child moves only that alias to an existing exercise.
+Promotion is available only on a selected alias child, with no parent/default
+wording in its confirmation. Multiple groups can remain expanded. Merge target
+selection is subordinate to Edit Library in an attached sheet; cancellation leaves
+the primary editor intact. Those are not import or completed-program
+observation decisions.
 
 Deterministic transformations, candidate match scores (using fuzzy matching), and
 AI-extracted source material may help surface possibilities, but none may establish
@@ -115,8 +146,8 @@ many completed programs, although the import and completed-program adapters reta
 their own source records and provenance. A reusable exercise-observation extractor
 should later identify plausible exercise wording inside mixed completed-program
 text while preserving verbatim evidence and making no identity decision. Manual
-library audits may send possible duplicates to the same identity-evidence boundary
-while retaining their separate Merge and Keep Separate operations.
+library editing may use the same candidate evidence to explain a proposed merge or
+alias split, but each persisted-identity change requires an explicit reviewed action.
 
 ## Non-goals for initial MVP
 
