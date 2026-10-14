@@ -4,6 +4,43 @@ import Testing
 
 @Suite("Exercise identity review")
 struct ExerciseIdentityReviewTests {
+    @Test func executionVariationsAreSymmetricConflictsAndTempoRemainsConfirmable() throws {
+        let fixture = try ReviewFixture()
+        let evaluator = ExerciseReviewCandidateEvaluator()
+        let before = try fixture.library.allNames()
+        for (a, b) in [
+            ("Short-Lever Copenhagen Plank", "Long-Lever Copenhagen Plank"),
+            ("Touch-Down with RNT", "Touch-Down"),
+            ("Touch-Down with RNT and 5 sec negative", "Touch-Down"),
+            ("KB Reverse Lunge", "DB Reverse Lunge"),
+            ("DB Reverse Lunge", "Unweighted Reverse Lunge"),
+            ("Goblet Reverse Lunge", "Front-Rack Reverse Lunge"),
+            ("Assisted Pull-up", "Unassisted Pull-up"),
+            ("Deficit Deadlift", "Deadlift"),
+            ("Touch-and-go Deadlift", "Deadlift")
+        ] {
+            #expect(evaluator.explicitRelationship(observation: a, candidate: b)?.linkAllowed == false)
+            #expect(evaluator.explicitRelationship(observation: b, candidate: a)?.linkAllowed == false)
+        }
+        let tempo = try #require(evaluator.explicitRelationship(observation: "Touch-Down with 5 sec negative", candidate: "Touch-Down"))
+        #expect(tempo.linkAllowed)
+        #expect(tempo.evidence == .prescriptionDifference("eccentric tempo is preserved in the confirmed name"))
+        #expect(evaluator.explicitRelationship(observation: "Touch-Down", candidate: "Touch-Down with 5 sec negative") == tempo)
+        #expect(evaluator.explicitRelationship(observation: "DB Reverse Lunge", candidate: "Dumbbell Reverse Lunge") == nil)
+        #expect(evaluator.explicitRelationship(observation: "Touch-Down with RNT", candidate: "Dumbbell Floor Press") == nil)
+        #expect(try fixture.library.allNames() == before)
+    }
+
+    @Test func priorConfirmedRNTNameRemainsAuthoritativeWithoutRewriting() throws {
+        let fixture = try ReviewFixture()
+        let base = try fixture.library.createExercise(preferredName: "Touch-Down")
+        _ = try fixture.library.addName("Touch-Down with RNT", to: base.exercise.id)
+        try fixture.stage("Touch-Down with RNT", id: "legacy-rnt")
+        let before = try fixture.library.allNames()
+        #expect(try fixture.service.prepare(observationID: .init(rawValue: "legacy-rnt")) == .alreadyResolved(.init(exerciseID: base.exercise.id, preferredName: "Touch-Down")))
+        #expect(try fixture.library.allNames() == before)
+    }
+
     @Test("Confirmed normalized names reuse identity without writing")
     func exactConfirmedNameIsAutomaticAndReadOnly() throws {
         let fixture = try ReviewFixture()
@@ -34,9 +71,9 @@ struct ExerciseIdentityReviewTests {
         #expect(db.first?.evidence == [.conservativeTransformation("approved abbreviation expansion")])
 
         let copenhagen = try fixture.candidates("copenhagen")
-        #expect(copenhagen.first(where: { $0.preferredName == "Long-Lever Copenhagen Plank" })?.linkAllowed == true)
+        #expect(copenhagen.first(where: { $0.preferredName == "Long-Lever Copenhagen Plank" })?.linkAllowed == false)
         #expect(copenhagen.first(where: { $0.preferredName == "Long-Lever Copenhagen Plank" })?.evidence == [
-            .prescriptionDifference("lever length changes the prescription")
+            .identityConflict("implement, load position, or progression changes the execution")
         ])
 
         let lunge = try fixture.candidates("lunge")
@@ -295,7 +332,7 @@ struct ExerciseIdentityReviewTests {
             ReviewFixtureDocument.self,
             from: Data(contentsOf: reviewFixtureURL())
         )
-        #expect(document.cases.count == 8)
+        #expect(document.cases.count == 11)
 
         for item in document.cases {
             let fixture = try ReviewFixture()
