@@ -40,6 +40,7 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Mac unlocked: native synthetic edit/ask, pending Enter blocking and disabled Send, Stop, scratchpad-changed reply, Markdown publication, comparison toggle, close/reopen and quit/relaunch observed. Composer typing falsely showed Scratchpad changed; fix and controller regression pass, corrected native behavior observed. This is not native Notes paste or full offline-slice acceptance.
 - [x] (2026-10-14) Final initial-increment verification: five repository stages and 134 tests/17 suites pass. Copy menu is visible and Command-Shift-C works in the native synthetic window; app quit after testing. Preserve the initial increment as a local checkpoint, not completed PLAN 013 or authorization to install/use paid APIs.
 - [ ] Finish production Notes capture/monitor, association/boundary browser/edit tracking, profile inspection and exact exercise decoration before offline slice acceptance. Test actual editor-generated Markdown paste/formatting in the synthetic Notes fixture, not only publication.
+- [x] (2026-10-14) Add read-only native Notes adapter and shared refresh components: serial off-main Automation, explicit consent separated from reads, metadata-only idle checks, body validation for all safety consumers, same-date/formatting changes, deferred change coalescing, error backoff and stale-result rejection. Offline tests use an injected reader; native Notes execution and window/registry integration remain outstanding.
 - [x] (2026-10-14) Resolve independent-review safety/interface gaps at specification level: validated snapshot promotion/recovery, provider-neutral request correlation and explicit failures, preference evidence distinctions, and Notes-copy labeling. Record coach verification of the Notes shortcut. No production code or passing-test claim added.
 - [x] (2026-10-14) Coach chooses direct highlighted boundary movement in a read-only note browser. Use the coach-authorized pending-reply fallback: keep typing available, block Enter/Send until completion or Stop; queue/cancel/steer remains a later interaction.
 - [x] (2026-10-14) Native disc-marker control preserves regular ul; parallel prototype completes four warm samples in 168–180ms. Initial timeout notice at 759ms fails; candidate 700ms dispatch yields 728–742ms in three delayed repeats, with unchanged clipboard. Small Notes body/large synthetic copy only; keyboard configuration and production acceptance remain gated.
@@ -246,6 +247,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-14 follow-on: the read-only Notes adapter and refresh coordinator are now
+implemented as components, not yet connected to real workspace windows. Five-stage
+verification passed, followed by nine passing focused tests after a queued-tick
+backoff correction. Native permission/read execution, per-note registry ownership,
+visibility/reactivation delivery and copy-time latency still need acceptance.
+Resume implementation with that integration and session association; do not treat
+these injected-reader passes as a native monitoring or complete-slice checkpoint.
 
 
 Native continuation supersedes the earlier locked-Mac handoff below: synthetic

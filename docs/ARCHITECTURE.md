@@ -487,9 +487,18 @@ secure attributed-string persistence, supported Markdown export and the native
 synthetic development window. `ScratchpadDevelopment` composes these with a fake
 assistant and a frozen synthetic note; it registers no Service and calls no API.
 It uses a separate local synthetic store. The existing autocomplete/library Service
-is unchanged. Production Notes reading/monitoring, association/boundary controls,
-real profile inspection and library decoration remain unimplemented; package tests
-do not establish their native behavior. No module from concurrent client-history
+is unchanged. A read-only `NotesContextReader` now implements the reader contract
+on a shared serial worker queue, with non-prompting permission checks and an explicit
+separate access request. `NotesRefreshCoordinator` serializes each note's reads,
+batches consumers received before capture, polls visible notes every five seconds,
+coalesces changed metadata, backs off failures and discards suspended-generation
+results. Foundation `NotesObservationState` preserves last-known content and a
+content identity for parsed-structure reuse. These components are not yet connected
+to the window/Service or validated against native Notes. The registry must share one
+coordinator per captured NoteID, explicitly validate on resume, and supply aggregate
+visibility. Association/boundary controls, real profile inspection and library
+decoration remain unimplemented; package tests do not establish their native
+behavior. No module from concurrent client-history
 work is imported or changed by this implementation.
 
 The selected product direction is a persistent, session-scoped working scratchpad

@@ -65,6 +65,28 @@ state. No installation or change to the installed Gym Assistant is needed.
 
 ## Still outstanding
 
+Follow-on implementation, 2026-10-14: `NotesContextReader` now supplies the native
+read-only adapter, and `NotesRefreshCoordinator` supplies shared refresh execution.
+They are deliberately not wired into the synthetic window yet. The adapter requests
+no consent during reads, uses one serial worker queue across instances, and limits
+Apple events with a two-second script timeout. This is not a measured wall-clock
+deadline or a guarantee that a native call can be forcibly cancelled. Permission
+onboarding and real Notes execution remain untested for this adapter.
+
+Injected tests verify metadata-only unchanged ticks, no hidden reads, delayed body
+coalescing, same-date edits, formatting-only invalidation, unchanged-content cache
+identity reuse, later-consumer freshness, suspension, wrong-note refusal, retained
+last-known data and backoff. A tick queued during a failing read initially could
+bypass the newly established backoff; clear that queued idle work and preserve
+explicit consumer retries. The regression exercises that ordering. No test reads
+real Notes, calls a model, changes the clipboard or modifies a scratchpad baseline.
+Window lifecycle/registry ownership, status delivery and checked-copy timing still
+need integration and native acceptance.
+
+Verification for this follow-on: all five repository stages passed with the first
+eight refresh tests; after the queued-tick correction, all nine refresh tests passed
+in 0.512 seconds. The native adapter compiled, but no real Notes request was made.
+
 Production Notes capture/permission onboarding/metadata monitoring, actual session
 association and protected boundary browser, real profile inspection, exact library
 decoration, headings-only new-session flow and actual Notes handoff/diff. Recovery
