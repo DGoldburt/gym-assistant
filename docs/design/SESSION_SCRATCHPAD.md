@@ -256,10 +256,10 @@ correction. The coach accepted an explicit checked-copy icon/shortcut separate f
 ordinary instant Command-C on 2026-10-13; ordinary copy is Notes-unverified at export.
 The native-style fallback is not adopted. Accepted timing is a 400ms target/750ms
 verification wait, with parallel rich preparation/publication and continued late
-verification. Accepted late conflicts replace the entire clipboard with warning text
-only while the exact copy operation still owns it. Any later copy, even identical
-text, prevents replacement; warn in the app instead. Native ownership/race tests
-remain pending; see the monitoring contract.
+verification. Superseding decision, 2026-10-14: late conflicts warn in Gym Assistant
+and leave the clipboard untouched, even if the copied program appears to retain
+ownership. The earlier conditional warning replacement is no longer planned; see
+the monitoring contract. A late warning cannot retract a paste already made.
 Private-format research or checked delay on all whole-copy paths are alternatives,
 not authorization to write Notes or add a private dependency. See the latest
 [capability evidence](SCRATCHPAD_CAPABILITY_CHECKPOINT.md).
@@ -279,6 +279,9 @@ ownership clarification have now been selectively transferred into this learner-
 `codex/contextual-learner-integration` worktree. The main-based worktree remains a
 preserved source; neither its older architecture/OST nor this design package has
 been merged or approved for production.
+
+The contextual design was subsequently committed on the learner-based integration
+branch. This is not production implementation approval.
 
 **Coach preferences are discoverable, read-only, and available to assistance in the
 first slice.** Use the authored philosophy, the user-approved seed, and existing

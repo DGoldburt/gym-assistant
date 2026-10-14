@@ -429,16 +429,15 @@ Copied if export/publication is still pending. Indicate Scratchpad changed for e
 during preparation. Measure publication/read/export/total durations and outcomes
 without content; exercise slow/hung readers and large exports. Observed body timings
 are not full-copy guarantees. No check prevents edits between copy and manual paste.
-Accepted late-conflict behavior: replace clipboard entirely with warning text only
-while the exact scratchpad-copy operation still owns it. Any subsequent copy,
-including identical text, invalidates ownership; leave it alone and warn in the app.
-Use a per-operation identity and publication changeCount, not text comparison alone;
-recheck immediately before writing without awaiting between check and write. Always
-update the app conflict state. Native recopy/stale-result tests remain required;
-the public pasteboard API has no exposed conditional compare-and-write primitive,
-so cross-process guard/write race safety must be evaluated, not asserted. If ownership
-is uncertain, app warning only. Scope conflicts to the associated session and captured
-baseline/revision; do not mistake the coach's own paste for an external conflict.
+Superseding decision, 2026-10-14: for every late conflict, update Gym Assistant's
+warning and diff state only. After publishing the checked copy, do not clear,
+replace, or otherwise write the clipboard—not even when the app's copy token and
+pasteboard `changeCount` still match. The 2026-10-13 conditional clipboard warning
+was superseded because no public atomic compare-and-write across apps was found.
+Test no intervening copy, identical recopy, unrelated copy, a later scratchpad
+copy, and stale results; none may change the clipboard. Scope conflicts to the
+associated session and captured baseline/revision; do not mistake the coach's own
+paste for an external conflict. A late warning cannot retract a completed paste.
 
 ### Efficient automatic Notes monitoring
 
@@ -754,6 +753,10 @@ Externally edit the confirmed Notes session immediately before each whole-copy
 path: the icon, whole-copy shortcut, and Command-A/Command-C must all warn and offer
 the existing diff. A confirmed match must not produce a false overwrite warning.
 Read failure/timeout warns without losing the scratchpad or falsely verifying paste.
+Inject a late conflict after a checked copy, with and without intervening copies:
+Gym Assistant shows the conflict and diff, while the clipboard remains unchanged
+by the late result. An older scratchpad revision's result must not replace current
+warning state. No clipboard warning replacement is implemented.
 Partial-text/chat copy never invokes Notes. Test copy-preparation timing and rapid
 copy/application-switch/paste so the coach can assess old-clipboard risk. Validate
 equal-time edit detection and record the chosen shared freshness safeguard before
@@ -962,3 +965,10 @@ bold on this macOS 27 host. The coach chose to pursue that handoff direction; fa
 serialization, keyboard and platform behavior, timing, and production acceptance
 remain open. This note supersedes the unresolved clipboard statement above without
 erasing its historical decision context.
+
+Revision note, 2026-10-14, fallback approval: the isolated pasteboard experiment
+found no supported conditional compare-and-write across apps. The coach chose an
+app-only late-conflict warning, leaving clipboard contents untouched after copy.
+This supersedes the conditional clipboard-replacement proposal and adds acceptance
+cases for unchanged clipboard and stale-result routing. No production code or
+tutorial progress changed by this design revision.

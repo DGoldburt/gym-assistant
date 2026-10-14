@@ -109,30 +109,25 @@ copy. Instrument total time, publication time, read time, export time and outcom
 without content. Test normal, slow/hung readers and large exports. Existing body-read
 samples are not full-copy timings or an OS scheduling guarantee.
 
-Accepted late-conflict behavior, 2026-10-13: replace the entire clipboard with a
-plain warning only if it still belongs to that exact scratchpad-copy operation.
-Any subsequent copy, even identical text, permanently invalidates replacement for
-the older operation; then leave the clipboard unchanged and show the warning in
-the app. Always show the app conflict state as well. Candidate ownership evidence
-is a per-copy identifier plus the pasteboard changeCount captured after successful
-publication; text equality alone is never sufficient. Recheck generation and active
-copy identity immediately before replacement, with no suspension between guard and
-write. A changed generation must not regain ownership if content later matches.
-No continuous clipboard-content surveillance is needed: check operation ownership
-when the late result arrives. Native identical-recopy, later-different-copy, multiple
-scratchpad copies and stale-result tests are required. The standard pasteboard API
-does not offer an exposed conditional compare-and-write operation; cross-process
-changes between guard and write remain a capability risk, not a proven guarantee.
-If ownership cannot be established safely, use the app warning only; never guess.
-Late results must remain tied to the captured revision/association and distinguish
-an external session change from the coach's own paste; changes outside the session
+Superseding decision, 2026-10-14: after a checked copy is published, late
+verification never clears, replaces, or otherwise writes the clipboard. A late
+conflict updates Gym Assistant's visible warning and diff state for the captured
+session/revision, regardless of whether a subsequent copy occurred. The clipboard
+is left exactly as it is. The 2026-10-13 conditional clipboard-warning replacement
+proposal was superseded because the public pasteboard API has no exposed atomic
+compare-and-write across apps. The isolated operation-identity/changeCount test
+remains capability evidence, not a production warning-write requirement. Test late
+results after no intervening copy, an identical recopy, an unrelated copy, and a
+new scratchpad copy; none may mutate the clipboard. Late results must remain tied
+to the captured revision/association and distinguish an external session change
+from the coach's own paste; changes outside the session
 do not count as a session conflict. Continuing verification does not make a paste
 that already occurred retroactively checked.
 
 Even a successful check cannot prevent a Notes edit between copying and manual
 paste. This is the last app-controlled opportunity to warn, not conflict-free
 write-back. The safety path covers the icon and explicit whole-copy shortcut, not
-ordinary Command-C. Only operation-scoped clipboard ownership checks are required.
+ordinary Command-C. Late-warning handling needs no clipboard ownership check.
 
 ## What an edit can change
 

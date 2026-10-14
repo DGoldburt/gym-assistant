@@ -31,16 +31,19 @@ Markdown handoff. Synthetic serializer checks pass 6/6, and the native Notes
 Markdown command again preserved heading tiers on the current host. Keyboard-only
 invocation and supported-platform behavior remain unverified. Isolated clipboard
 ownership checks pass 13/13, but a cross-process guard/write race prevents claiming
-the accepted exact-copy warning replacement is safe. Overall implementation is
-not approved. Preserve the older source worktree until separately reviewed; do
-not merge its older OST/architecture wholesale.
+the then-accepted exact-copy warning replacement is safe. The coach has now
+superseded that proposal with an app-only warning for every late conflict; no
+post-copy clipboard write is planned. Overall implementation is not approved.
+Preserve the older source worktree until separately reviewed; do not merge its
+older OST/architecture wholesale.
 
 ## Progress
 
 - [x] (2026-10-13) Record coach approval of explicit checked copy versus immediate Notes-unverified ordinary copy.
 - [x] (2026-10-13) Accept 400ms target/750ms verification wait and concurrent publication; exact div/h1/h2/h3 control produced bold Body, not native headings. Fixture HTML restored exactly, probe quit.
 - [x] (2026-10-13) Record exact-copy ownership requirement for entire warning replacement; any later copy, including identical text, requires app-only warning.
-- [ ] Measure full-path timing and resolve exact-copy warning replacement safety; isolated ownership cases passed, but atomic cross-process guard/write remains unproven.
+- [ ] Measure full-path timing and test the approved late-conflict fallback: app warning/diff appears, and the late result never mutates the clipboard or overrides newer state.
+- [x] (2026-10-14) Coach superseded conditional clipboard replacement with an app-only warning for all late conflicts; no post-copy clipboard write.
 - [x] (2026-10-13) Read clipboard research sources and test single-item HTML, public WebArchive, ordinary Markdown paste and native Paste as Markdown. Only the native Markdown command retained tested semantic heading tiers; fixture restored and probe stopped.
 - [x] (2026-10-13) Coach selected Markdown handoff direction and paused for branch/worktree fixup acceptance.
 - [x] (2026-10-13) Selectively transfer the latest Markdown evidence and exact-copy clipboard decision into the learner-based integration line without replacing its learner architecture/OST.
@@ -207,9 +210,9 @@ ownership 13/13 and synthetic Markdown serialization 6/6. Do not aggregate these
 as native UI acceptance. Native Paste as Markdown retained tested heading tiers,
 but keyboard route, editor extraction, literal escaping round-trip, platform
 availability and full-path copy timing remain open. Strict atomic clipboard warning
-replacement is not established. Original fixture restored and probe quit. Native
-adjustment/tracking, production permissions/recovery and implementation approval
-are pending.
+replacement is not established and is no longer the chosen behavior. Original
+fixture restored and probe quit. Native adjustment/tracking, production permissions/
+recovery and implementation approval are pending.
 
 The boundary-change policy has a separate 24/24 synthetic assertion pass. It validates
 policy/model snapshots, not native undo, edit tracking, boundary-browser UI, hierarchy
@@ -447,3 +450,11 @@ but reveal a non-atomic cross-process replacement gap. Synthetic Markdown emissi
 passes its limited fixture. Native Notes accepted the menu command again; captured
 API readback verified heading tiers. Restored the test note byte-for-byte and quit
 the probe. No production handoff implementation or tutorial advancement follows.
+
+Decision/revision, 2026-10-14: after the cross-app guard/write race was explained,
+the coach chose the app-only late-conflict fallback. Checked-copy publication
+remains unchanged; subsequent verification only changes Gym Assistant's warning
+and diff state, never clipboard contents. This supersedes the 2026-10-13 conditional
+replacement decision. Validate stale-result routing and unchanged clipboard under
+no-copy, identical-recopy, unrelated-copy, and later-scratchpad-copy cases. No
+production code or tutorial progress changed.

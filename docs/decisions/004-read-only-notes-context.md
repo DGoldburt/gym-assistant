@@ -132,3 +132,15 @@ native heading tiers, bullets, and bold where ordinary paste did not. The coach
 selected that handoff direction for further testing, not production acceptance.
 Serializer fidelity, keyboard access, platform availability, and full-path timing
 remain open. These choices do not alter the read-only Notes adapter decision.
+
+## Late-conflict handoff update, 2026-10-14
+
+The coach approved the fallback after the isolated pasteboard experiment: late
+verification that finds a conflict updates Gym Assistant's visible warning and
+diff state but never replaces or clears the clipboard. This supersedes the
+conditional clipboard-warning replacement described in the 2026-10-13
+clarification above. It protects subsequent copies without claiming an atomic
+cross-app pasteboard operation. The already-published program copy remains
+available; a warning in Gym Assistant cannot stop a paste that already happened
+or guarantee the coach sees it while in Notes. Checked-copy timing and truthful
+not-verified status are unchanged.

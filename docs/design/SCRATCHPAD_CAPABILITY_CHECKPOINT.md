@@ -672,3 +672,10 @@ documents Markdown file import/export but does not establish clipboard-command
 availability; absence from that page is not evidence the command is absent.
 Supported-platform behavior and keyboard-only invocation remain open tests.
 The test probe was quit; app inventory confirmed it stopped.
+
+Decision after reviewing the race, 2026-10-14: the coach chose the app-only
+fallback. Late conflicts update Gym Assistant's warning and diff state and never
+write to the clipboard after the copy. The conditional replacement tested by the
+isolated probe remains diagnostic evidence only; it is not the active contract.
+This avoids the guard/write race but cannot prevent or retract a paste already
+performed.
