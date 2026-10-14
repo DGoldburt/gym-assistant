@@ -41,7 +41,9 @@
 
 ### Reusable work
 
-- Prepare each approved shared-harness, curriculum, or product-documentation update in a clean worktree based on `main`. Inspect its complete candidate diff for learner progress, reflections, identity, private links, credentials, and unrelated files before committing or pushing.
+- Once learner application work exists, evolve active `docs/PRODUCT.md` and `docs/OPPORTUNITY_SOLUTION_TREE.md` on branches based on refreshed `learner/main`. Treat the versions on `main` as curated reusable starter snapshots, not living mirrors; do not backport each feature discovery or tutorial checkpoint to `main` merely to keep these files synchronized.
+- Snapshot product direction into `main` only as part of an explicitly approved new starter version. Immediately before publishing its new immutable starter tag, review the active learner product documents, select only reusable and non-private content, and prepare that snapshot in a clean `main`-based worktree. Do not move an existing starter tag.
+- Prepare each approved shared-harness, curriculum, or reusable product-documentation snapshot in a clean worktree based on `main`. Inspect its complete candidate diff for learner progress, reflections, identity, private links, credentials, and unrelated files before committing or pushing.
 - Use a commit boundary for one coherent approved update, not mechanically for every conversation. Do not commit rejected drafts or incomplete exploration. If an approved update remains incomplete at handoff, report its worktree path, current status, and remaining work so it is not mistaken for finished work.
 - Once reviewed, commit and push the reusable update promptly. Then synchronize branch ancestry in this order before retaining or adding dependent learner state:
   1. merge or fast-forward the updated reusable `main` into `learner/main`;
