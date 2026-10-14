@@ -32,6 +32,9 @@ disposable Notes content; its evidence is recorded below.
 
 ## Progress
 
+- [x] (2026-10-13) Address PR 13 review: retain incoming exercise/name and parent/alias row kind when rebuilding Edit results, restoring selection before row-sensitive actions. An unavailable selection leaves actions disabled instead of silently selecting another exercise. Keep pre-upgrade backup destinations explicitly marked `.incomplete`, clean failures after creation, and publish the normal backup filename only after integrity verification and connection closure. Add row-restoration and post-creation/post-copy backup-failure regressions.
+- [ ] Reverify and publish the review corrections; foreground autocomplete-alias-to-Edit-to-Merge handoff needs a fresh manual check. Prior UI passes apply to the previous implementation, not this corrected handoff.
+
 - [x] (2026-10-08) Implement Merge target search as a smaller attached sheet under Edit Library with separate controls and retained parent state.
 - [x] (2026-10-08) Refresh the isolated bundle and verify attached-sheet search, nested alias confirmation cancellation, Escape returning to the parent with query/selected alias/expanded group intact. Automated verification passes with 102 tests. No foreground edit was committed for this sheet revision; post-commit parent refresh remains a human UI check.
 

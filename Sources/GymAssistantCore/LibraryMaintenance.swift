@@ -29,9 +29,20 @@ public enum LibraryMaintenanceRoute: Equatable, Sendable {
 public struct LibraryMaintenanceSelection: Equatable, Sendable {
     public let exerciseID: ExerciseID
     public let nameID: ExerciseNameID
-    public init(exerciseID: ExerciseID, nameID: ExerciseNameID) {
+    public let isAlias: Bool
+    public init(exerciseID: ExerciseID, nameID: ExerciseNameID, isAlias: Bool = false) {
         self.exerciseID = exerciseID
         self.nameID = nameID
+        self.isAlias = isAlias
+    }
+
+    /// Preserve row semantics even if a new query would display the alias as parent.
+    public func parentName(in match: ExerciseSearchMatch) -> String {
+        guard match.exerciseID == exerciseID,
+              let selected = match.confirmedNames.first(where: { $0.id == nameID }) else { return match.matchedName }
+        if !isAlias { return selected.text }
+        if match.matchedName != selected.text { return match.matchedName }
+        return match.confirmedNames.first(where: { $0.id != nameID })?.text ?? match.matchedName
     }
 }
 

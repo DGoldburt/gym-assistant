@@ -154,6 +154,24 @@ struct LibraryLifecycleMigrationTests {
         try second.validateForeignKeys()
     }
 
+    @Test(arguments: [UpgradeBackupCheckpoint.destinationOpened, .copied])
+    func failedBackupDoesNotLeaveRecoveryArtifact(stage: UpgradeBackupCheckpoint) throws {
+        let f = try LegacyLibraryFixture(version: 3)
+        let before = try Data(contentsOf: f.url)
+        #expect(throws: ExerciseLibraryError.self) {
+            try ExerciseLibrary.prepareUpgrade(databaseURL: f.url, backupCheckpoint: { checkpoint in
+                if checkpoint == stage {
+                    throw ExerciseLibraryError.database(message: "Injected post-creation backup failure")
+                }
+            })
+        }
+        #expect(try Data(contentsOf: f.url) == before)
+        #expect(try f.scalar("SELECT MAX(version) FROM schema_version") == 3)
+        let leftovers = try FileManager.default.contentsOfDirectory(at: f.directory, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.contains("pre-v4") }
+        #expect(leftovers.isEmpty)
+    }
+
     @Test func backupFailurePrecedesMutatingOpen() throws {
         let f = try LegacyLibraryFixture(version: 3)
         let before = try Data(contentsOf: f.url)

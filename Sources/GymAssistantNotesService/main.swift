@@ -155,6 +155,8 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
         if preselectTop, !rows.isEmpty {
             tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
             tableView.scrollRowToVisible(0)
+        } else {
+            tableView.deselectAll(nil)
         }
     }
 
@@ -198,6 +200,7 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
             }
         }) {
             tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+            tableView.scrollRowToVisible(index)
         }
     }
 
@@ -560,7 +563,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
 
     private var selectedLibraryIdentity: LibraryMaintenanceSelection? {
         guard let item = chooser.selectedItem, let nameID = chooser.selectedNameID else { return nil }
-        return .init(exerciseID: item.exerciseID, nameID: nameID)
+        return .init(exerciseID: item.exerciseID, nameID: nameID, isAlias: chooser.isAliasSelected)
     }
 
     @objc private func openLibraryEdit() {
@@ -1486,7 +1489,7 @@ private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSS
             return
         }
         do {
-            let selection = LibraryMaintenanceSelection(exerciseID: item.exerciseID, nameID: nameID)
+            let selection = LibraryMaintenanceSelection(exerciseID: item.exerciseID, nameID: nameID, isAlias: chooser.isAliasSelected)
             if !refreshingSearchResults, navigation.selection != selection { clearFeedback() }
             detail = try edits.detail(exerciseID: item.exerciseID)
             navigation.selection = selection
@@ -1515,11 +1518,18 @@ private final class LibraryEditWindowController: NSObject, NSWindowDelegate, NSS
         let matches = try (retainedDuplicateMatches ?? search.search(searchField.stringValue, limit: 20))
             .filter { !findingDuplicate || $0.exerciseID != detail?.exercise.id }
         visibleEditMatches = matches
+        let incomingSelection = findingDuplicate ? nil : navigation.selection
         chooser.setItems(matches.map { match in
             RankedCandidateItem(exerciseID: match.exerciseID, preferredName: match.preferredName, aliases: match.aliases,
-                                matchedName: match.matchedName, detail: "", selectable: true,
+                                matchedName: incomingSelection?.parentName(in: match) ?? match.matchedName, detail: "", selectable: true,
                                 nameIDs: Dictionary(uniqueKeysWithValues: match.confirmedNames.map { ($0.text, $0.id) }))
-        })
+        }, preselectTop: incomingSelection == nil)
+        if let selection = incomingSelection,
+           let match = matches.first(where: { $0.exerciseID == selection.exerciseID }),
+           let name = match.confirmedNames.first(where: { $0.id == selection.nameID }),
+           !selection.isAlias || selection.parentName(in: match) != name.text {
+            chooser.restoreSelection(exerciseID: selection.exerciseID, name: name.text)
+        }
         selectSearchResult()
     }
 

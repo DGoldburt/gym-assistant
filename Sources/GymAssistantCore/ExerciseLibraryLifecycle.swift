@@ -1,6 +1,8 @@
 import Foundation
 import SQLite3
 
+enum UpgradeBackupCheckpoint { case destinationOpened, copied }
+
 struct MergedExerciseRecord: Equatable, Sendable {
     let id: ExerciseID
     let targetID: ExerciseID
@@ -68,7 +70,8 @@ extension ExerciseLibrary {
 
     /// A read-only preflight precedes the first read/write connection. SQLite's
     /// backup API includes committed WAL pages; copying only the main file does not.
-    static func prepareUpgrade(databaseURL: URL, beforeBackup: () throws -> Void = {}) throws {
+    static func prepareUpgrade(databaseURL: URL, beforeBackup: () throws -> Void = {},
+                               backupCheckpoint: (UpgradeBackupCheckpoint) throws -> Void = { _ in }) throws {
         guard FileManager.default.fileExists(atPath: databaseURL.path) else { return }
         var source: OpaquePointer?
         guard sqlite3_open_v2(databaseURL.path, &source, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
@@ -94,13 +97,18 @@ extension ExerciseLibrary {
         try beforeBackup()
         let backupURL = databaseURL.deletingLastPathComponent()
             .appendingPathComponent("\(databaseURL.lastPathComponent).pre-v4-\(UUID().uuidString).sqlite")
+        let incompleteURL = backupURL.appendingPathExtension("incomplete")
         var destination: OpaquePointer?
-        guard sqlite3_open_v2(backupURL.path, &destination, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) == SQLITE_OK else {
+        var verified = false
+        defer {
             sqlite3_close(destination)
+            if !verified { try? FileManager.default.removeItem(at: incompleteURL) }
+        }
+        guard sqlite3_open_v2(incompleteURL.path, &destination, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) == SQLITE_OK else {
             throw ExerciseLibraryError.database(message: "Cannot create pre-upgrade backup")
         }
-        defer { sqlite3_close(destination) }
-        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backupURL.path)
+        try backupCheckpoint(.destinationOpened)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: incompleteURL.path)
         guard let backup = sqlite3_backup_init(destination, "main", source, "main") else {
             throw ExerciseLibraryError.database(message: "Cannot prepare pre-upgrade backup")
         }
@@ -109,6 +117,7 @@ extension ExerciseLibrary {
         guard copied == SQLITE_DONE, finished == SQLITE_OK else {
             throw ExerciseLibraryError.database(message: "Pre-upgrade backup failed; original library unchanged")
         }
+        try backupCheckpoint(.copied)
         var check: OpaquePointer?
         guard sqlite3_prepare_v2(destination, "PRAGMA integrity_check", -1, &check, nil) == SQLITE_OK else {
             throw ExerciseLibraryError.database(message: "Cannot verify pre-upgrade backup")
@@ -118,6 +127,14 @@ extension ExerciseLibrary {
               sqlite3_column_text(check, 0).map({ String(cString: $0) }) == "ok" else {
             throw ExerciseLibraryError.database(message: "Pre-upgrade backup failed integrity check")
         }
+        sqlite3_finalize(check)
+        check = nil
+        guard sqlite3_close(destination) == SQLITE_OK else {
+            throw ExerciseLibraryError.database(message: "Cannot close verified pre-upgrade backup")
+        }
+        destination = nil
+        try FileManager.default.moveItem(at: incompleteURL, to: backupURL)
+        verified = true
     }
 
     public func resolvedExerciseID(for id: ExerciseID) throws -> ExerciseID? {

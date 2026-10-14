@@ -4,6 +4,33 @@ import Testing
 
 @Suite("Library maintenance navigation and CSV import")
 struct LibraryMaintenanceTests {
+    @Test func restorationPreservesExactNameAndRowKindAcrossRankingChanges() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("restore-row-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let library = try ExerciseLibrary(databaseURL: directory.appendingPathComponent("library.sqlite"))
+        _ = try library.createExercise(preferredName: "Squat")
+        let source = try library.createExercise(preferredName: "Dumbbell Squat")
+        let alias = try library.addName("DB Squat", to: source.exercise.id)
+        let search = ExerciseAutocompleteSearch(library: library)
+        let aliasMatch = try #require(try search.search("DB Squat").first { $0.exerciseID == source.exercise.id })
+        #expect(aliasMatch.matchedName == alias.text)
+        let child = LibraryMaintenanceSelection(exerciseID: source.exercise.id, nameID: alias.id, isAlias: true)
+        #expect(child.isAlias)
+        #expect(child.parentName(in: aliasMatch) != alias.text)
+        #expect(aliasMatch.confirmedNames.contains { $0.id == child.nameID && $0.text == alias.text })
+        let matches = try search.search("Squat")
+        let nonTop = try #require(matches.last)
+        #expect(matches.count > 1)
+        let name = try #require(nonTop.confirmedNames.first)
+        let parent = LibraryMaintenanceSelection(exerciseID: nonTop.exerciseID, nameID: name.id)
+        #expect(!parent.isAlias)
+        #expect(parent.parentName(in: nonTop) == name.text)
+        #expect(parent.parentName(in: matches[0]) == matches[0].matchedName)
+        let stale = LibraryMaintenanceSelection(exerciseID: source.exercise.id, nameID: .init(rawValue: UUID()), isAlias: true)
+        #expect(stale.parentName(in: aliasMatch) == aliasMatch.matchedName)
+    }
+
     @Test func chooserExpansionsAreIndependent() {
         let first = ExerciseID(rawValue: UUID())
         let second = ExerciseID(rawValue: UUID())
