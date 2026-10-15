@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Coach approves read-only scratchpad during association and a left-side text-only diff against selected Notes content. Implement embedded right-side Notes browser, heading search, unique-heading suggestion, keyboard/drag selection, occupied-owner explanation, Cancel and explicit identity-only confirmation. Changed Notes clears selection before reconfirmation. Add “Not pasted yet” origin refresh. Two synthetic tests cover selection/diff, cancel, freshness, content preservation, occupancy and unrecorded continuation. All five stages pass (210 tests/33 suites); native visual/keyboard acceptance and New Session entry remain pending.
+
 - [x] (2026-10-15) Wire verified insertion promotion into live controller refresh without replacing editor content or undo history. Preserve conservative protection through pre-association formatting undo; ambiguous changes pause chat/comparison and retain the question. Block latest-entry creation of a competing owner while pending work exists. Two controller regressions cover promotion/redo and ambiguity/entry. All five verification stages pass (208 tests/33 suites); confirmation and New Session presentation remain outstanding.
 
 - [x] (2026-10-15) Add conservative post-paste insertion evaluation and persisted ownership transition. Capture semantic whole-note origin on new-session creation; require one exact insertion into otherwise unchanged content, preserve IDs/content/conversation and previous snapshot, reject stale/unsaved/occupied/ambiguous cases. Three new synthetic tests cover these paths. Automatic controller/entry invocation and confirmation UI remain outstanding; New Session is still disabled.
@@ -101,6 +103,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Association controls, 2026-10-15: the selected Notes content may intentionally
+differ from the scratchpad. Confirm identity and establish the Notes reference
+without replacing the editor; mark boundary correspondence uncertain so shrink
+cannot discard edits. A source refresh during review invalidates old offsets and
+must clear the selection, update the diff and require another confirmation.
 
 Live promotion, 2026-10-15: formatting undo captured before association contains
 no Notes-boundary protection. Restoring that state after promotion must preserve
@@ -284,6 +292,15 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: During association, make the scratchpad read-only and replace the
+  conversation pane with the read-only Notes browser. Reuse the left text-only diff
+  against selected Notes paragraphs; label the two sides explicitly. Do not build
+  synchronized scrolling or formatted two-pane difference highlighting. Confirm
+  identity only, preserve both contents, and require renewed selection after Notes
+  changes. Cancel restores editing/conversation. “Not pasted yet” retains an addition.
+  Rationale: Coach approved this bounded comparison interaction in this thread.
+  Date/Author: 2026-10-15, coach approval; Codex implementation.
 
 - Decision: Promote on verified live refresh only after saving the complete editor
   state; preserve the editor/undo stack and treat pre-association formatting undo as
@@ -505,6 +522,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 
 ## Outcomes & Retrospective
 
+Association controls, 2026-10-15: the embedded browser and identity-only transaction
+are connected to unrecorded scratchpad windows. The existing diff now follows the
+selected Notes region during review, with text-only limitations stated. Two new
+synthetic controller/pane tests pass; all five verification stages pass (210 tests/
+33 suites). This is not native visual or keyboard acceptance. New Session entry
+presentation remains unfinished and disabled; no installed app or Notes data changed.
+
 Live promotion, 2026-10-15: verified refresh now records ownership in an active
 window while preserving its editor, composer and undo stack. Ambiguous cases retain
 the question and refuse misleading context; latest entry cannot create competing
@@ -721,6 +745,20 @@ session ID. A workspace snapshot stores one session's formatted scratchpad and i
 conversations together. All examples and committed fixtures must be synthetic.
 
 ## Proposed user-visible contracts
+
+Association review accepted 2026-10-15: “Find session in Notes…” temporarily replaces
+the conversation pane with formatted read-only Notes. The left scratchpad is also
+read-only; its comparison toggle switches to a text-only diff against the highlighted
+Notes paragraphs, labeled “Only in Notes” and “Only in scratchpad.” Heading search
+and Shift–Arrow/drag selection remain available. A unique matching heading may be
+highlighted as a suggestion, never automatically confirmed. The footer states that
+association replaces neither version and any content differences remain. Occupied
+regions identify their owning workspace and cannot be confirmed. Re-read Notes on
+confirmation; changed content clears the selection and requires renewed review.
+Cancel/success restores editing and the conversation. “Not pasted yet” explicitly
+retains an unrecorded addition and refreshes its origin context without replacing
+scratchpad content. No content merge, automatic Notes write, synchronized scrolling,
+or formatting-aware diff is included.
 
 
 Entry uses Option-Command-G, then Command-P. Only this chosen branch captures one
@@ -1753,3 +1791,9 @@ Revision note, 2026-10-15, live promotion: connect verified insertion to automat
 controller refresh, preserve pre-association undo safely, and block ambiguous chat
 and competing ownership. Fix availability after assembly rejection. All five stages
 pass (208 tests/33 suites); confirmation and new-session entry UI remain pending.
+
+Revision note, 2026-10-15, association comparison approval: record and implement the
+read-only scratchpad plus existing left-side text diff/right Notes browser. Add
+identity-only confirmation and explicit unrecorded continuation with fresh-read and
+ownership checks. All five stages pass (210 tests/33 suites); native acceptance and
+New Session entry presentation remain outstanding.

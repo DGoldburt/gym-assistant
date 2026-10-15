@@ -15,6 +15,87 @@ private actor InsertionReader: NotesContextReading {
     private let original = "<div><h2>Session 1</h2></div><div>A1 Row</div><div><h3>Warmup</h3></div>"
     private let addition = "<div><h2>Session 2</h2></div><div><h3>Warmup</h3></div>"
     private func descendants(_ view: NSView) -> [NSView] { [view] + view.subviews.flatMap(descendants) }
+    private func eventually(_ condition: () -> Bool) async throws {
+        for _ in 0..<100 {
+            if condition() { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(condition())
+    }
+
+    @Test func embeddedReviewComparesSelectionRefreshesAndConfirmsWithoutReplacingContent() async throws {
+        let reader = InsertionReader()
+        let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let pending = try await create(reader, store)
+        let controller = try SessionScratchpadWindowController(snapshot: pending.snapshot, store: store, note: pending.note,
+            association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
+        let root = try #require(controller.window?.contentView)
+        let editor = try #require(descendants(root).first { $0.identifier?.rawValue == "scratchpad-editor" } as? NSTextView)
+        let comparison = try #require(descendants(root).first { $0.identifier?.rawValue == "notes-comparison" } as? NSTextView)
+        let toggle = try #require(descendants(root).compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        await reader.replace(original + addition + "<div>B2 Notes version</div>")
+        _ = try await pending.context.refresh(for: .resume)
+        controller.findSessionInNotes()
+        try await eventually { descendants(root).contains { $0 is SessionAssociationPane } }
+        var pane = try #require(descendants(root).compactMap { $0 as? SessionAssociationPane }.first)
+        #expect(!editor.isEditable)
+        let cancel = try #require(descendants(pane).compactMap { $0 as? NSButton }.first { $0.title == "Cancel" })
+        cancel.performClick(nil)
+        #expect(editor.isEditable && controller.snapshot.anchor.isUnrecorded)
+        controller.findSessionInNotes()
+        try await eventually { descendants(root).contains { $0 is SessionAssociationPane } }
+        pane = try #require(descendants(root).compactMap { $0 as? SessionAssociationPane }.first)
+        let source = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-source" } as? NSTextView)
+        let confirm = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-confirm" } as? NSButton)
+        source.setSelectedRange(pane.document.candidates().last!.range.nsRange)
+        pane.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification, object: source))
+        toggle.performClick(nil)
+        #expect(comparison.string.contains("Only in Notes") && comparison.string.contains("B2 Notes version"))
+        await reader.replace(original + addition + "<div>B2 Revised Notes version</div>")
+        _ = try await pending.context.refresh(for: .comparison)
+        #expect(pane.selectedRange == nil && !confirm.isEnabled)
+        #expect(controller.snapshot.anchor.isUnrecorded && !editor.isEditable)
+        source.setSelectedRange(pane.document.candidates().last!.range.nsRange)
+        pane.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification, object: source))
+        #expect(comparison.string.contains("B2 Revised Notes version"))
+        confirm.performClick(nil)
+        try await eventually { !controller.snapshot.anchor.isUnrecorded }
+        #expect(editor.isEditable && descendants(root).allSatisfy { !($0 is SessionAssociationPane) })
+        #expect(controller.snapshot.text == pending.snapshot.text)
+        #expect(controller.snapshot.anchor.baselineText.contains("B2 Revised Notes version"))
+        #expect(controller.snapshot.workspaceID == pending.snapshot.workspaceID)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
+    }
+
+    @Test func associationPaneRejectsOccupiedSelectionAndNotPastedRetainsAddition() async throws {
+        let reader = InsertionReader()
+        let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let pending = try await create(reader, store)
+        let document = try await pending.context.refresh(for: .resume)
+        let rich = try #require(pending.context.richText)
+        let owner = document.candidates()[0].range
+        let pane = SessionAssociationPane(frame: NSRect(x: 0, y: 0, width: 425, height: 572), document: document, rich: rich,
+            owners: [.init(label: "Session 1 workspace", range: owner)])
+        let source = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-source" } as? NSTextView)
+        let confirm = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-confirm" } as? NSButton)
+        let status = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-status" } as? NSTextField)
+        source.setSelectedRange(owner.nsRange)
+        pane.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification, object: source))
+        #expect(!confirm.isEnabled && status.stringValue.contains("Session 1 workspace"))
+        let controller = try SessionScratchpadWindowController(snapshot: pending.snapshot, store: store, note: document.snapshot,
+            association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
+        await reader.replace(original.replacingOccurrences(of: "Row", with: "Press"))
+        _ = try await pending.context.refresh(for: .resume)
+        controller.confirmNotPasted()
+        try await eventually { controller.snapshot.anchor.unrecordedOrigin?.text.contains("Press") == true }
+        #expect(controller.snapshot.anchor.isUnrecorded && controller.snapshot.text == pending.snapshot.text)
+        #expect(pending.context.registry.mappings.isEmpty)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
+    }
 
     @Test func liveRefreshPromotesWithoutReplacingEditorAndOldUndoKeepsProtection() async throws {
         let reader = InsertionReader()

@@ -117,6 +117,24 @@ import GymAssistantWorkspace
             throw WorkspaceError.staleAssociation
         }
         let evidence = try document.evidence(in: range)
+        return try recordAssociation(snapshot, evidence: evidence, range: range, certain: true, document: document, store: store)
+    }
+
+    /// The coach confirms identity only. Keep scratchpad content unchanged even
+    /// when it differs from the selected Notes section; protect uncertain edits.
+    public func confirmInsertedSession(_ snapshot: WorkspaceSnapshot, range: SourceRange,
+                                       observation: UUID, store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
+        guard failure == nil, let document = sourceDocument,
+              document.snapshot.observationID == observation, snapshot.anchor.isUnrecorded,
+              snapshot.anchor.noteID == noteID,
+              let saved = try store.load(id: snapshot.workspaceID), !saved.recoveredFromPrevious,
+              saved.snapshot == snapshot else { throw WorkspaceError.staleAssociation }
+        let evidence = try document.evidence(in: range)
+        return try recordAssociation(snapshot, evidence: evidence, range: range, certain: false, document: document, store: store)
+    }
+
+    private func recordAssociation(_ snapshot: WorkspaceSnapshot, evidence: SessionSourceEvidence, range: SourceRange,
+                                   certain: Bool, document: ProgramDocument, store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
         var candidate = snapshot
         candidate.anchor.recordingState = .recorded
         candidate.anchor.recordedHeading = evidence.paragraphs.first?.label ?? snapshot.anchor.recordedHeading
@@ -124,6 +142,7 @@ import GymAssistantWorkspace
         candidate.anchor.sourceEvidence = evidence
         candidate.anchor.unrecordedOrigin = nil
         candidate.boundaryProtection = BoundaryEditProtection(sourceRange: range)
+        if !certain { candidate.boundaryProtection?.markUncertain(currentLength: (candidate.text as NSString).length) }
         candidate.revision += 1
         var proposedRegistry = registry
         try proposedRegistry.register(candidate.anchor, range: range, in: document)

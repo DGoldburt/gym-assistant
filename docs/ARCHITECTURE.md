@@ -583,8 +583,16 @@ editor state before promotion and never replaces its text or undo stack. Formatt
 undo captured before association retains conservative boundary protection rather
 than restoring absent coordinates. Ambiguous/missing-origin changes preserve the
 composer and block chat/comparison until reviewed. Latest-session entry refuses to
-create another owner while unrecorded work is unresolved. Confirmation controls and
-New Session entry presentation remain unfinished.
+create another owner while unrecorded work is unresolved. `SessionAssociationPane`
+temporarily replaces the conversation with a formatted read-only Notes browser;
+the scratchpad becomes read-only and its existing text diff compares against the
+selection. Heading search and Shift–Arrow/drag selection identify a proposed region,
+not identity proof. Changed Notes clears selection before reconfirmation. Occupied
+regions are blocked; the transaction revalidates ownership after a fresh read.
+Explicit confirmation records identity/reference evidence without replacing either
+version and marks edit correspondence uncertain. Cancel restores the conversation
+and editor. “Not pasted yet” refreshes origin evidence while retaining the unrecorded
+addition. New Session entry presentation and native acceptance remain unfinished.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time

@@ -44,6 +44,10 @@ import GymAssistantWorkspace
     private var boundaryTask: Task<Void, Never>?
     private var committingBoundary = false
     private var preparedBoundaryRestore: WorkspaceSnapshot?
+    private var associationPane: SessionAssociationPane?
+    private var conversationViews: [NSView] = []
+    private let findSessionButton = NSButton(title: "Find session in Notes…", target: nil, action: nil)
+    private let notPastedButton = NSButton(title: "Not pasted yet", target: nil, action: nil)
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation?, profile: CoachingProfile,
@@ -274,6 +278,18 @@ import GymAssistantWorkspace
         stopButton.frame = NSRect(x: 857, y: 54, width: 83, height: 26)
         stopButton.autoresizingMask = [.minXMargin]
         root.addSubview(stopButton)
+        conversationViews = [chat, input, sendButton, stopButton]
+        findSessionButton.frame = NSRect(x: 605, y: 630, width: 235, height: 28)
+        findSessionButton.target = self; findSessionButton.action = #selector(findSessionInNotes)
+        findSessionButton.autoresizingMask = [.minXMargin, .minYMargin]
+        findSessionButton.isHidden = !snapshot.anchor.isUnrecorded
+        root.addSubview(findSessionButton)
+        notPastedButton.frame = NSRect(x: 850, y: 630, width: 180, height: 28)
+        notPastedButton.target = self; notPastedButton.action = #selector(confirmNotPasted)
+        notPastedButton.autoresizingMask = [.minXMargin, .minYMargin]
+        notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
+        root.addSubview(notPastedButton)
+        description.frame.size.width = 575
         status.frame = NSRect(x: 220, y: 27, width: 800, height: 20)
         status.identifier = NSUserInterfaceItemIdentifier("workspace-status")
         status.autoresizingMask = [.width]
@@ -293,6 +309,14 @@ import GymAssistantWorkspace
         guard !committingBoundary else { return }
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
+        if let pane = associationPane {
+            if let document = noteContext.sourceDocument, let rich = noteContext.richText {
+                if document.paragraphs != pane.document.paragraphs {
+                    pane.refresh(document: document, rich: rich, owners: associationOwners())
+                } else { pane.updateOwners(associationOwners()) }
+            }
+            return
+        }
         if snapshot.anchor.isUnrecorded {
             do {
                 switch try insertionState() {
@@ -312,6 +336,7 @@ import GymAssistantWorkspace
                     snapshot = try noteContext.associateInsertedSession(current, observation: note.observationID, store: store)
                     savedRevision = snapshot.revision
                     association = try noteContext.association(for: snapshot.anchor.sessionID)
+                    findSessionButton.isHidden = true; notPastedButton.isHidden = true
                     status.stringValue = "Session found in Notes · scratchpad and conversation preserved."
                     refreshTranscript()
                 }
@@ -346,6 +371,85 @@ import GymAssistantWorkspace
             richText: editor.attributedString())
         return UnrecordedSessionAssociation.evaluate(anchor: snapshot.anchor,
             scratchpad: SessionSourceEvidence(paragraphs: scratchpad.paragraphs), document: document)
+    }
+
+    private func associationOwners() -> [SessionBoundaryBrowser.Owner] {
+        guard let noteContext else { return [] }
+        return noteContext.registry.mappings.values.map {
+            .init(label: noteContext.registry.anchor(for: $0.sessionID)?.recordedHeading ?? "Saved workspace", range: $0.range)
+        }
+    }
+    @objc public func findSessionInNotes() {
+        guard snapshot.anchor.isUnrecorded, associationPane == nil, boundaryTask == nil,
+              gate.active == nil, !preparingRequest, let noteContext else { return }
+        boundaryTask = Task { [weak self] in
+            guard let self else { return }
+            defer { self.boundaryTask = nil }
+            do {
+                let document = try await noteContext.refresh(for: .comparison)
+                try Task.checkCancellation()
+                guard self.snapshot.anchor.isUnrecorded, let rich = noteContext.richText else { return }
+                self.saveTask?.cancel()
+                guard self.saveNow() else { return }
+                let pane = SessionAssociationPane(frame: NSRect(x: 605, y: 54, width: 425,
+                    height: self.editorScroll.frame.maxY - 54), document: document, rich: rich, owners: self.associationOwners())
+                self.associationPane = pane
+                self.editor.isEditable = false
+                self.conversationViews.forEach { $0.isHidden = true }
+                self.findSessionButton.isHidden = true; self.notPastedButton.isHidden = true
+                pane.selectionChanged = { [weak self] _ in if self?.showingDiff == true { self?.renderComparison() } }
+                pane.cancel = { [weak self] in self?.endAssociationReview() }
+                pane.apply = { [weak self, weak pane] range, preview in
+                    guard let self, let pane else { throw WorkspaceError.staleAssociation }
+                    let fresh = try await noteContext.refresh(for: .comparison)
+                    try Task.checkCancellation()
+                    guard self.associationPane === pane, fresh.paragraphs == preview.paragraphs else { throw WorkspaceError.staleAssociation }
+                    guard self.saveNow() else { throw WorkspaceError.invalidSnapshot }
+                    self.committingBoundary = true
+                    defer { self.committingBoundary = false }
+                    self.snapshot = try noteContext.confirmInsertedSession(self.snapshot, range: range,
+                        observation: fresh.snapshot.observationID, store: self.store)
+                    self.savedRevision = self.snapshot.revision
+                    self.association = try noteContext.association(for: self.snapshot.anchor.sessionID)
+                    self.endAssociationReview()
+                    self.status.stringValue = "Session associated. Neither Notes nor scratchpad content was replaced."
+                }
+                self.window?.contentView?.addSubview(pane)
+                pane.suggestHeading(self.editor.string.components(separatedBy: .newlines).first ?? "")
+                pane.focus(); self.updateAvailability()
+            } catch { self.status.stringValue = "Could not read Notes for association. Scratchpad preserved." }
+        }
+    }
+    private func endAssociationReview() {
+        associationPane?.stop(); associationPane?.removeFromSuperview(); associationPane = nil
+        editor.isEditable = true
+        conversationViews.forEach { $0.isHidden = false }
+        findSessionButton.isHidden = !snapshot.anchor.isUnrecorded; notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
+        updateAvailability()
+        if showingDiff { renderComparison() }
+        window?.makeFirstResponder(editor)
+    }
+    @objc public func confirmNotPasted() {
+        guard snapshot.anchor.isUnrecorded, associationPane == nil, boundaryTask == nil,
+              gate.active == nil, !preparingRequest, let noteContext else { return }
+        boundaryTask = Task { [weak self] in
+            guard let self else { return }
+            self.committingBoundary = true
+            defer { self.boundaryTask = nil; self.committingBoundary = false }
+            do {
+                let document = try await noteContext.refresh(for: .resume)
+                try Task.checkCancellation()
+                guard self.snapshot.anchor.isUnrecorded else { return }
+                var candidate = self.snapshot
+                candidate.anchor.unrecordedOrigin = .init(paragraphs: document.paragraphs)
+                candidate.text = self.editor.string; candidate.richTextArchive = try RichTextArchive.encode(self.editor.attributedString())
+                candidate.composerText = self.composer.string; candidate.revision += 1
+                try self.store.save(candidate)
+                self.snapshot = candidate; self.savedRevision = candidate.revision
+                self.note = document.snapshot
+                self.status.stringValue = "Confirmed not pasted · scratchpad remains an unrecorded addition."
+            } catch { self.status.stringValue = "Unrecorded state unchanged. Notes or local storage could not be verified." }
+        }
     }
     public func textDidChange(_ notification: Notification) {
         let changedEditor = notification.object as AnyObject? === editor
@@ -573,6 +677,7 @@ import GymAssistantWorkspace
     }
     @objc private func send() { submit() }
     private func submit() {
+        guard associationPane == nil else { return }
         guard gate.active == nil, !preparingRequest else { status.stringValue = "Reply in progress — Stop or wait; follow-up stays here."; return }
         let question = composer.string
         if let noteContext {
@@ -654,7 +759,7 @@ import GymAssistantWorkspace
         updateReply(requestID: request.id, text: "Stopped. No automatic resend.", status: .cancelled)
     }
     private func updateAvailability() {
-        sendButton.isEnabled = gate.active == nil && !preparingRequest
+        sendButton.isEnabled = associationPane == nil && gate.active == nil && !preparingRequest
         stopButton.isEnabled = gate.active != nil || preparingRequest
     }
     private func refreshTranscript() {
@@ -711,6 +816,11 @@ import GymAssistantWorkspace
         comparisonTask?.cancel()
         comparisonGeneration = UUID()
         if showingDiff {
+            if associationPane != nil {
+                renderComparison()
+                editorScroll.isHidden = true; diffScroll.isHidden = false
+                return
+            }
             if let noteContext {
                 diff.string = "Checking Notes… Scratchpad preserved."
                 let generation = comparisonGeneration
@@ -733,6 +843,13 @@ import GymAssistantWorkspace
         if !showingDiff { window?.makeFirstResponder(editor) }
     }
     private func renderComparison() {
+        if let pane = associationPane {
+            guard let range = pane.selectedRange else { diff.string = "Select a Notes region to compare with the read-only scratchpad."; return }
+            let selected = (pane.document.snapshot.text as NSString).substring(with: range.nsRange)
+            diff.string = "Text-only differences — formatting is not compared.\n− Only in Notes · + Only in scratchpad\nAssociation applies neither side.\n\n"
+                + SessionComparison.text(before: selected, after: editor.string)
+            return
+        }
         if snapshot.anchor.isUnrecorded {
             if noteContext != nil, (try? insertionState()) != .notInserted {
                 diff.string = "Notes changed or could not be verified. Session association needs review; scratchpad preserved."
@@ -761,6 +878,7 @@ import GymAssistantWorkspace
             + comparison
     }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
+        endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         stop(); saveTask?.cancel(); return saveNow()
     }
@@ -770,6 +888,7 @@ import GymAssistantWorkspace
         if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
     public func flushAndStop() -> Bool {
+        endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow()
     }
