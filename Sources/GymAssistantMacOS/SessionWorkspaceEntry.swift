@@ -6,6 +6,8 @@ public enum SessionEntryError: Error, Equatable {
     case boundaryReviewRequired
     case unresolvedSavedWorkspace
     case recoveryRequired(WorkspaceID)
+    case multipleUnrecordedWorkspaces
+    case skeletonSourceChanged
 }
 
 /// Local entry preparation, invoked only after choosing the programming branch.
@@ -32,6 +34,77 @@ public enum SessionEntryError: Error, Equatable {
         public let context: SessionNoteContext
         public let association: SessionAssociation
         public let note: NoteSnapshot
+    }
+
+    public struct UnrecordedSession: Sendable {
+        public let snapshot: WorkspaceSnapshot
+        public let context: SessionNoteContext
+        public let note: NoteSnapshot
+    }
+
+    public struct NewSessionProposal {
+        public let skeleton: SessionSkeleton
+        public let source: ProgramDocument
+    }
+
+    public enum NewSessionPreparation {
+        case resume(UnrecordedSession)
+        case proposal(NewSessionProposal)
+    }
+
+    /// Preview only: no file creation, no question about the new label. Any
+    /// unfamiliar headings remain visible as review items in the proposal.
+    public func prepareNewSession(in noteID: NoteID) async throws -> NewSessionPreparation {
+        let context = try pool.context(for: noteID)
+        let document = try await context.refresh(for: .resume)
+        try Task.checkCancellation()
+        if let existing = try unrecorded(in: noteID, context: context, note: document.snapshot) {
+            return .resume(existing)
+        }
+        guard context.registry.duplicateLabels.isEmpty else {
+            throw SessionEntryError.duplicateHeadings(context.registry.duplicateLabels.sorted())
+        }
+        guard let candidate = document.candidates().last, !candidate.needsClassification else {
+            throw SessionEntryError.boundaryReviewRequired
+        }
+        let previous = try document.evidence(in: candidate.range)
+        let headings = document.candidates().map(\.label)
+        return .proposal(NewSessionProposal(skeleton: try SessionSkeleton(previous: previous, existingHeadings: headings), source: document))
+    }
+
+    /// Explicit acceptance of the displayed headings-only proposal. A full read
+    /// revalidates it, then lookup/save occur without suspension so simultaneous
+    /// accepts in this app cannot create competing unrecorded scratchpads.
+    public func acceptNewSession(_ proposal: NewSessionProposal) async throws -> UnrecordedSession {
+        let noteID = proposal.source.snapshot.id
+        let context = try pool.context(for: noteID)
+        let document = try await context.refresh(for: .resume)
+        try Task.checkCancellation()
+        if let existing = try unrecorded(in: noteID, context: context, note: document.snapshot) { return existing }
+        guard document.paragraphs == proposal.source.paragraphs else { throw SessionEntryError.skeletonSourceChanged }
+        let rich = NSMutableAttributedString(string: "")
+        for paragraph in proposal.skeleton.evidence.paragraphs {
+            let style = NSMutableParagraphStyle(); style.headerLevel = paragraph.headingLevel
+            rich.append(NSAttributedString(string: paragraph.text, attributes: [
+                .paragraphStyle: style,
+                .font: NSFont.boldSystemFont(ofSize: paragraph.headingLevel == 2 ? 22 : 18)
+            ]))
+        }
+        let snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: noteID,
+            recordedHeading: proposal.skeleton.evidence.paragraphs.first?.label ?? SessionSkeleton.placeholderHeading,
+            baselineText: "", recordingState: .unrecorded), text: rich.string,
+            richTextArchive: try RichTextArchive.encode(rich))
+        try store.save(snapshot)
+        return UnrecordedSession(snapshot: snapshot, context: context, note: document.snapshot)
+    }
+
+    private func unrecorded(in noteID: NoteID, context: SessionNoteContext, note: NoteSnapshot) throws -> UnrecordedSession? {
+        let headers = try store.storedAnchors().filter { $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }
+        guard headers.count <= 1 else { throw SessionEntryError.multipleUnrecordedWorkspaces }
+        guard let header = headers.first else { return nil }
+        guard let loaded = try store.load(id: header.workspaceID) else { throw SessionEntryError.unresolvedSavedWorkspace }
+        guard !loaded.recoveredFromPrevious else { throw SessionEntryError.recoveryRequired(header.workspaceID) }
+        return UnrecordedSession(snapshot: loaded.snapshot, context: context, note: note)
     }
 
     /// Last region in document order, never highest label or modification date.

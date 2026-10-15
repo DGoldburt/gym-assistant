@@ -555,6 +555,12 @@ initial label hint, not proof of identity. `ProgramContextAssembler` appends the
 scratchpad separately to the unchanged whole note and marks the request as an
 unrecorded addition. New-session UI and later Notes association remain unfinished;
 the recorded-session controller currently refuses unrecorded snapshots.
+`SessionWorkspaceEntry.prepareNewSession` returns either existing unrecorded work
+or a non-writing skeleton proposal including omitted-heading review data.
+`acceptNewSession` rereads Notes, rejects a changed source, checks again for pending
+work and saves without suspension between lookup and creation. Multiple pending
+workspaces require explicit resolution rather than choosing one silently. These
+entry operations have synthetic coverage but are not yet exposed by the UI.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time

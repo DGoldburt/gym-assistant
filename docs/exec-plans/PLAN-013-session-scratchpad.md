@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Implement new-session entry preparation/acceptance: preview without writes, resume existing unrecorded work, retain uncertain-heading review data, fresh source validation before creation and no suspension between duplicate check and save. Three added entry tests cover concurrency, reopen, heading styles, changed source and multiple pending workspaces. UI connection and post-paste association remain outstanding.
+
 - [x] (2026-10-14) Add explicit unrecorded session state, schema-2 snapshots with read-only schema-1 compatibility, and context-as-addition. Five regressions cover legacy bytes/backups, downgrade rejection, no recorded-region ownership, identity and context limits. All five verification stages pass (198 tests/32 suites). Creation/resume UI and post-paste association remain pending; the existing recorded-session controller explicitly refuses an unrecorded snapshot.
 
 - [x] (2026-10-14) Coach resolves naming: increment the number or letter after Session; use an editable placeholder on ambiguity and never prompt. Implement automatic skeleton labels, omission of old date/suffix, overflow/rollover/mixed-label fallback, and collision avoidance. Placeholder remains ordinary editable content, not a verified Notes identity. Creation/persistence/UI wiring remains pending.
@@ -93,6 +95,11 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+New-session entry, 2026-10-14: two accepts can finish their Notes reads in either
+order. Lookup existing unrecorded work again after the read, then save without
+suspension. The simultaneous-accept regression observes one stored workspace and
+one local identity, not competing scratchpads.
 
 Unrecorded continuation, 2026-10-14: an optional new anchor field alone would let an
 older reader silently interpret a new session as a recorded Notes region. Use a new
@@ -250,6 +257,13 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Separate non-writing skeleton preparation from explicit acceptance.
+  Revalidate the source before creation and resume existing unrecorded work before
+  either step creates a file. Multiple pending workspaces are not silently ranked.
+  Rationale: Keep preview/cancel safe and preserve unfinished work through repeated
+  invocation, relaunch and simultaneous entry. No additional naming question.
+  Date/Author: 2026-10-14, Codex implementation of the approved new-session flow.
 
 - Decision: New snapshots use schema 2; schema 1 remains readable without eager
   migration. Missing recording state in a legacy anchor means recorded. Unrecorded
@@ -436,6 +450,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+New-session entry, 2026-10-14: `SessionWorkspaceEntry` can prepare, accept and reload
+a heading-only unrecorded scratchpad without reserving any recorded Notes range.
+All five verification stages pass (201 tests/32 suites), including three new entry
+regressions. The UI is not
+connected: it still needs proposal presentation, reuse of an unrecorded window,
+addition-aware comparison/copy/chat and conservative post-paste association.
 
 Unrecorded continuation, 2026-10-14: the persistence and request foundations now
 distinguish additions from replacements. Full verification passes (198 tests/32
@@ -1631,3 +1652,9 @@ Revision note, 2026-10-14, unrecorded foundation: implement schema-2 persistence
 legacy read compatibility and explicit addition context with five regressions.
 No actual snapshot migration or new-session UI is claimed. Preserve old bytes and
 backups and refuse recorded ownership for an unrecorded addition.
+
+Revision note, 2026-10-14, new-session entry preparation: add non-writing preview,
+explicit acceptance with a fresh source read, and durable resume before duplicate
+creation. Synthetic concurrent/reopen/changed-source tests and all five verification
+stages pass (201 tests/32 suites). New Session remains disabled until the
+addition-aware controller and post-paste association path are connected and tested.

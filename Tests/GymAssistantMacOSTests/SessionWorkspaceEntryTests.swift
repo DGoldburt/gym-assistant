@@ -25,6 +25,59 @@ private actor EntryReader: NotesContextReading {
         WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("entry-test-" + UUID().uuidString))
     }
 
+    @Test func newSessionPreviewCreatesNothingAndAcceptedSkeletonResumesWithoutDuplication() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let id = try await entry.captureNote()
+        guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id) else { Issue.record("Expected proposal"); return }
+        #expect(proposal.skeleton.evidence.text == "Session B\nWeek 1\nWeek 2\n")
+        #expect(try store.storedAnchors().isEmpty)
+        let first = Task { try await entry.acceptNewSession(proposal) }
+        let second = Task { try await entry.acceptNewSession(proposal) }
+        let created = try await first.value, repeated = try await second.value
+        #expect(created.snapshot.workspaceID == repeated.snapshot.workspaceID)
+        #expect(created.snapshot.anchor.isUnrecorded && created.snapshot.boundaryProtection == nil)
+        #expect(created.context.registry.mappings.isEmpty)
+        #expect(try store.storedAnchors().count == 1)
+        var edited = created.snapshot; edited.composerText = "Keep it unloaded"; edited.revision += 1
+        try store.save(edited)
+        let reopened = SessionWorkspaceEntry(store: store, reader: reader)
+        guard case .resume(let resumed) = try await reopened.prepareNewSession(in: id) else { Issue.record("Expected resume"); return }
+        #expect(resumed.snapshot == edited)
+        let rich = try RichTextArchive.decode(resumed.snapshot.richTextArchive)
+        #expect((rich.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?.headerLevel == 2)
+        #expect((rich.attribute(.paragraphStyle, at: 10, effectiveRange: nil) as? NSParagraphStyle)?.headerLevel == 3)
+    }
+
+    @Test func changedSkeletonSourceRefusesCreationAndUncertainHeadingsStayReviewable() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let id = try await entry.captureNote()
+        await reader.replace("<div><h2>Session Z</h2></div><div><h3>A1 Row</h3></div><div>3x5</div>")
+        guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id) else { Issue.record("Expected proposal"); return }
+        #expect(proposal.skeleton.evidence.text == "Session [number or letter]\n")
+        #expect(proposal.skeleton.headingsNeedingReview.map(\.paragraph.label) == ["A1 Row"])
+        await reader.replace("<div><h2>Session Z</h2></div><div><h3>A1 Press</h3></div><div>3x5</div>")
+        await #expect(throws: SessionEntryError.skeletonSourceChanged) { _ = try await entry.acceptNewSession(proposal) }
+        #expect(try store.storedAnchors().isEmpty)
+    }
+
+    @Test func multipleUnrecordedSessionsRequireExplicitChoiceRatherThanInventingAnother() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let id = NoteID("entry-fixture")
+        for label in ["Session B", "Session C"] {
+            let rich = NSAttributedString(string: label + "\n")
+            try store.save(WorkspaceSnapshot(anchor: .init(noteID: id, recordedHeading: label, baselineText: "", recordingState: .unrecorded),
+                text: rich.string, richTextArchive: try RichTextArchive.encode(rich)))
+        }
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        await #expect(throws: SessionEntryError.multipleUnrecordedWorkspaces) { _ = try await entry.prepareNewSession(in: id) }
+        #expect(try store.storedAnchors().count == 2)
+    }
+
     @Test func simultaneousEntriesReuseOneWindowAndClosedWindowsRetainIdentity() async throws {
         let reader = EntryReader(), store = temporaryStore()
         defer { try? FileManager.default.removeItem(at: store.directory) }
