@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Add a Foundation headings-only skeleton proposal with three regressions: remove old outer date/label via caller-supplied heading, retain all lettered-session weeks, exclude body exercises/doses/observations/Parking Lot and inline attributes, and hold ambiguous headings plus descendants for review. New-session heading defaults are awaiting coach choice; no new-session creation, persistence, or automatic post-paste association is claimed.
+
 - [x] (2026-10-14) Add Command-P to the feature branch's autocomplete chooser and defer an independent programming entry window until the Service callback returns. Wire captured-note latest-session entry, explicit permission/retry, active-window menus, retained-window reopen and quit-time flush. Label the fake assistant/empty profile; use a separate development store. Permission onboarding regression passes, as do all five verification stages (188 tests/29 suites). No Service launch/registration/installation or native shortcut acceptance; new-session/recovery entry remains disabled or explicitly unavailable.
 
 - [x] (2026-10-14) Wire the live-context boundary browser and apply path to shared full reads and atomic ownership persistence. Add asynchronous boundary-only undo/redo preflight; preserve rejected actions, isolate typing groups, cancel checks on close/quit, and keep ordinary undo immediate. Four added regressions exercise live apply/undo/redo, changed Notes, newly occupied regions, cancellation, menu labels and grouping. All five verification stages pass: 187 tests/28 suites. Native Notes/shortcut entry acceptance and unresolved-association recovery remain pending.
@@ -87,6 +89,11 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Skeleton continuation, 2026-10-14: omitting an ambiguous parent while copying its
+recognized child headings silently changes structure. Treat those descendants as
+review items too. The synthetic regression was corrected to require that stronger
+hierarchy guarantee rather than promoting orphan headings into the new session.
 
 Service entry continuation, 2026-10-14: the existing Service bundle had no Notes
 Automation usage description, because autocomplete did not read Notes. Add that
@@ -233,6 +240,12 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Pending coach choice: suggest the next numeric session heading without the old
+  date (Session 18 — 14 Oct becomes Session 19), but ask for lettered headings;
+  alternatively always ask for the new heading. The builder takes an explicit
+  label and does not implement either default while this choice is outstanding.
+  Date/Author: 2026-10-14, Codex clarification during new-session work.
 
 - Decision: Keep this entry composition explicitly developmental: fake assistant,
   empty profile, separate ServiceWorkspaces local store, and visible unavailable
@@ -403,6 +416,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Skeleton continuation, 2026-10-14: heading-only proposal generation is implemented
+and covered by three synthetic tests. All five verification stages pass with 191
+tests across 30 suites. Recognized structural names and bare block,
+slot and week headings can carry forward; unfamiliar/content-bearing or ambiguous
+hierarchy remains separate review data. This is deliberately not a complete
+new-session workflow. Pending work includes the coach's heading-default choice,
+preview/review UI, explicit unrecorded identity and context-as-addition, durable
+resume, and conservative post-paste association without replacing the last session.
 
 Service-entry continuation, 2026-10-14: the feature branch now connects chooser
 Command-P to independent captured-note latest-session entry. The Service pasteboard
@@ -1564,3 +1586,8 @@ Revision note, 2026-10-14, Service entry: connect the Command-P route and indepe
 latest-session/permission UI, including lifecycle and development-mode labeling.
 Supersede the preceding unconnected-Service note for this feature branch only;
 the installed app and native acceptance status remain unchanged.
+
+Revision note, 2026-10-14, skeleton extraction: implement the independent safe
+headings-only proposal while asking the coach how new session labels should be
+chosen. No inferred naming default, storage migration, new-session creation or
+native acceptance is included in this increment.

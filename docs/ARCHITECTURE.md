@@ -541,6 +541,12 @@ resources or silently dropping formatting. Boundary edit protection retains
 deletion/insertion evidence; the synthetic window has a keyboard-accessible read-only
 boundary browser and composite undo. `ScratchpadFormatting` applies bounded semantic styles; controller-owned Format
 commands route only to the editor and share revision/protection/persistence paths.
+Foundation `SessionSkeleton` now proposes heading-only content from a previous
+session and a caller-supplied new label. It preserves recognized nested structure,
+separates ambiguous headings (including descendants of ambiguous parents) for
+review, excludes attached Parking Lot content, and never copies body prescriptions
+or old inline attributes. It does not yet create/persist an unrecorded workspace;
+new-session UI and later Notes association remain unfinished.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time
