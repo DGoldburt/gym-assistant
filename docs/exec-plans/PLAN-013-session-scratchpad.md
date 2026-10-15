@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Add boundary commit validation/persistence before ownership publication, with a latched recovery requirement after uncertain local saves. Three regressions cover protected preview/adjacent and overlapping owners, stale observations/revisions, unchanged confirmed baseline, successful ownership persistence and failure after file promotion. Synthetic boundary selection now previews protected shrink before Apply. Live controller commit/undo and Service shortcut wiring remain incomplete.
+
 - [x] (2026-10-14) Add captured-identity latest-session entry preparation and app-owned window registry. Five injected-reader regressions cover lettered weeks, selection changes, simultaneous/repeated entry, closed-window reuse, renumbered relocation, duplicate/unknown/changed regions and damaged-current recovery refusal. Preserve scratchpad and baseline on verified relocation; mark old edit coordinates uncertain. Service entry UI, explicit recovery/boundary UI and native integration remain outstanding.
 
 - [x] (2026-10-14) Implement approved first-slice Format menu: Option-Command-2 Heading, Option-Command-3 Subheading, Option-Command-0 Body, Command-B Bold, Option-Command-7 Bulleted list; no toolbar. Semantic transforms, focus routing, revision/protection, undo/redo and persistence have regressions. Native keyboard conversion from ordinary text, Body conversion, list undo/redo, visible Return continuation/empty-bullet exit, bold typing, quit/reopen and Notes paste observed. Saved synthetic revision 79. Bounded supported-content authoring evidence, not completion of the full offline slice or arbitrary formatting fidelity.
@@ -81,6 +83,13 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Boundary continuation, 2026-10-14: snapshot saving can report a failure after the
+candidate has already reached the current file. Keeping only the old in-memory
+owner and clearing the error on the next Notes read would expose incorrect vacant
+regions. Latch context ownership failure until durable headers are reloaded, for
+both creation and boundary commits. The fault-injection regression fails at the
+promoted phase and verifies that another body read cannot clear that lock.
 
 Entry continuation, 2026-10-14: stable association correctly relocates a saved
 session when earlier labels change length, but controller restore still rejected
@@ -204,6 +213,13 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Treat unacknowledged workspace persistence as an ownership recovery
+  condition, not a Notes freshness failure. Keep the editor available and prevent
+  subsequent ownership-dependent actions in that context until recovery/reload.
+  Rationale: A successful read from Notes says nothing about whether the local
+  candidate file was promoted. Do not silently revert or overwrite either image.
+  Date/Author: 2026-10-14, Codex boundary implementation.
 
 - Decision: Reuse app-owned controllers after fresh entry validation; never treat
   a recovered or unresolved saved workspace as an empty region for new creation.
@@ -352,6 +368,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Boundary continuation, 2026-10-14: candidate commits now preserve the confirmed
+baseline and validate durable identity/revision before publishing ownership. The
+browser can explain protected shrink during selection without applying it. Three
+targeted tests and all five repository verification stages pass (183 tests across
+27 suites). The live controller still refuses boundary changes until its
+fresh-read, transaction and undo/redo paths are connected together; do not enable
+the command merely because the lower-level transaction now exists. Shortcut entry,
+native boundary acceptance and recovery controls are still pending.
 
 Entry continuation, 2026-10-14: the new composition components prepare a latest
 session and reuse its retained controller with an injected reader. Five targeted
@@ -1470,3 +1495,8 @@ window lifetime components with five regressions. Fix controller restoration aft
 verified relocation and remove the synthetic-only save label for live contexts.
 Retain explicit outstanding UI/recovery/native acceptance work; tests are not a
 claim of completed shortcut entry or completed PLAN 013.
+
+Revision note, 2026-10-14, boundary transactions: implement and test the persistence
+and ownership commit boundary, including failure after promotion, and add immediate
+protected-selection preview to the existing synthetic browser. Keep live editing
+disabled pending freshness-aware undo/redo integration; no native acceptance claim.

@@ -504,6 +504,12 @@ registration reserves a newly created workspace's range without rebuilding exist
 manual mappings. The shared context validates a candidate registry, persists the
 workspace, then publishes ownership; failed saves cannot reserve phantom regions.
 Unresolved saved owners block new creation rather than being treated as vacant.
+The context's boundary-commit operation validates the preview observation, saved
+identity, increased revision, unchanged confirmed baseline and non-overlapping
+ownership before saving/publishing the candidate. A save failure latches ownership
+unavailability until durable owners are reloaded: failure may occur after file
+promotion, so a successful Notes refresh alone cannot make ownership safe again.
+This transaction is tested but live controller/undo wiring is still pending.
 `SessionWorkspaceEntry` captures selection once, refreshes by captured identity,
 chooses the last region in note order, and loads its saved owner rather than creating
 a competing scratchpad. Duplicate headings, unknown boundaries, unresolved ownership

@@ -10,14 +10,17 @@ import GymAssistantWorkspace
     private let sourceDocument: ProgramDocument
     private let owners: [Owner]
     private let applyRange: @MainActor (SourceRange) async throws -> Void
+    private let previewRange: @MainActor (SourceRange) throws -> Void
     private let text = NSTextView()
     private let status = NSTextField(wrappingLabelWithString: "")
     private let applyButton = NSButton(title: "Use highlighted paragraphs", target: nil, action: nil)
     private var task: Task<Void, Never>?
 
     public init(document: ProgramDocument, richText: NSAttributedString, selected: SourceRange,
-                owners: [Owner], apply: @escaping @MainActor (SourceRange) async throws -> Void) {
+                owners: [Owner], preview: @escaping @MainActor (SourceRange) throws -> Void = { _ in },
+                apply: @escaping @MainActor (SourceRange) async throws -> Void) {
         self.sourceDocument = document; self.owners = owners; self.applyRange = apply
+        self.previewRange = preview
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 650),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -36,14 +39,17 @@ import GymAssistantWorkspace
         text.autoresizingMask = [.width]; text.textContainer?.widthTracksTextView = true
         text.textStorage?.setAttributedString(richText)
         text.setAccessibilityLabel("Read-only note — highlighted session boundary")
+        text.identifier = NSUserInterfaceItemIdentifier("boundary-source")
         text.setSelectedRange(selected.nsRange); text.delegate = self
         scroll.documentView = text; window.contentView?.addSubview(scroll)
         status.frame = NSRect(x: 18, y: 46, width: 420, height: 50)
+        status.identifier = NSUserInterfaceItemIdentifier("boundary-status")
         status.autoresizingMask = [.width]
         window.contentView?.addSubview(status)
         applyButton.frame = NSRect(x: 443, y: 18, width: 240, height: 28)
         applyButton.autoresizingMask = [.minXMargin]
         applyButton.target = self; applyButton.action = #selector(applySelection)
+        applyButton.identifier = NSUserInterfaceItemIdentifier("boundary-apply")
         applyButton.keyEquivalent = "\r"; applyButton.keyEquivalentModifierMask = [.command]
         window.contentView?.addSubview(applyButton)
         let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancelSelection))
@@ -70,6 +76,18 @@ import GymAssistantWorkspace
         guard let range = selection() else { status.stringValue = "Highlight at least one paragraph."; applyButton.isEnabled = false; return }
         if let owner = owners.first(where: { NSIntersectionRange($0.range.nsRange, range.nsRange).length > 0 }) {
             status.stringValue = "Overlaps the scratchpad for \(owner.label). Choose a non-overlapping boundary."
+            applyButton.isEnabled = false; return
+        }
+        do { try previewRange(range) }
+        catch {
+            switch error {
+            case BoundaryChangeError.editedRegion:
+                status.stringValue = "Cannot shrink through edited, added, or deleted scratchpad content."
+            case BoundaryChangeError.uncertainCorrespondence:
+                status.stringValue = "Earlier edits cannot be mapped reliably. Shrinking is blocked; expansion remains available."
+            default:
+                status.stringValue = "This boundary cannot be applied safely. Reopen the browser if Notes changed."
+            }
             applyButton.isEnabled = false; return
         }
         let neighbors = owners.filter { NSMaxRange($0.range.nsRange) == range.location || NSMaxRange(range.nsRange) == $0.range.location }

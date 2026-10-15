@@ -15,6 +15,9 @@ import GymAssistantWorkspace
     private var subscribers: [WorkspaceID: @MainActor () -> Void] = [:]
     private var cachedHTML: String?
     private var appliedSequence: UInt64 = 0
+    // A failed save may have reached disk before reporting failure. Do not let
+    // a later Notes read clear this uncertainty; reopening reloads durable owners.
+    private var persistenceFailure: String?
 
     public init(noteID: NoteID, anchors: [SessionAnchor], reader: any NotesContextReading) throws {
         self.noteID = noteID
@@ -50,7 +53,7 @@ import GymAssistantWorkspace
             }
             return sourceDocument
         } catch {
-            failure = "Notes could not be verified: \(error)"; publish(); throw error
+            failure = persistenceFailure ?? "Notes could not be verified: \(error)"; publish(); throw error
         }
     }
 
@@ -92,13 +95,52 @@ import GymAssistantWorkspace
         let rich = richText.attributedSubstring(from: range.nsRange)
         var snapshot = WorkspaceSnapshot(anchor: anchor, text: rich.string, richTextArchive: try RichTextArchive.encode(rich))
         snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: range)
-        try store.save(snapshot)
+        try persist(snapshot, store: store)
         registry = candidateRegistry
         publish()
         return snapshot
     }
 
+    /// Commit the controller's complete proposed edit only against the exact
+    /// observation it previewed. Never advance the confirmed Notes baseline.
+    public func commitBoundary(_ snapshot: WorkspaceSnapshot, range: SourceRange,
+                               observation: UUID, store: WorkspaceSnapshotStore) throws {
+        guard failure == nil, let document = sourceDocument,
+              document.snapshot.observationID == observation,
+              snapshot.anchor.noteID == noteID else { throw WorkspaceError.staleAssociation }
+        let session = snapshot.anchor.sessionID
+        guard let original = registry.anchor(for: session),
+              let saved = try store.load(id: snapshot.workspaceID), !saved.recoveredFromPrevious,
+              saved.snapshot.anchor.sessionID == session, saved.snapshot.anchor.noteID == noteID else {
+            throw SessionAssociationError.unknownSession
+        }
+        guard registry.duplicateLabels.isEmpty,
+              registry.unresolved.subtracting([session]).isEmpty else {
+            throw SessionAssociationError.unresolvedOwnership
+        }
+        guard snapshot.anchor.baselineText == original.baselineText,
+              snapshot.revision > saved.snapshot.revision,
+              snapshot.anchor.sourceEvidence == (try document.evidence(in: range)),
+              snapshot.boundaryProtection?.sourceRange == range else { throw WorkspaceError.invalidSnapshot }
+        var candidateRegistry = registry
+        try candidateRegistry.confirm(sessionID: session, range: range, in: document)
+        try persist(snapshot, store: store)
+        registry = candidateRegistry
+        publish()
+    }
+
+    private func persist(_ snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore) throws {
+        do { try store.save(snapshot) }
+        catch {
+            persistenceFailure = "Workspace save could not be confirmed. Keep the scratchpad open; resolve local recovery before changing session ownership."
+            failure = persistenceFailure
+            publish()
+            throw error
+        }
+    }
+
     private func accept(_ snapshot: NoteSnapshot) {
+        guard persistenceFailure == nil else { failure = persistenceFailure; return }
         if sourceDocument?.snapshot.observationID == snapshot.observationID { failure = nil; return }
         do {
             let document: ProgramDocument

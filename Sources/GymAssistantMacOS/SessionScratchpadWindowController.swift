@@ -304,7 +304,12 @@ import GymAssistantWorkspace
             let rich = NSAttributedString(string: note.text, attributes: [.font: NSFont.systemFont(ofSize: 15)])
             let document = try ProgramDocumentReader.document(snapshot: note, richText: rich)
             boundaryBrowser = SessionBoundaryBrowser(document: document, richText: rich, selected: association.range,
-                owners: [], apply: { [weak self] range in
+                owners: [], preview: { [weak self] range in
+                    guard let self, let protection = self.snapshot.boundaryProtection else {
+                        throw BoundaryChangeError.uncertainCorrespondence
+                    }
+                    _ = try protection.preview(range, in: document.snapshot.text)
+                }, apply: { [weak self] range in
                     guard let self else { throw WorkspaceError.staleAssociation }
                     try Task.checkCancellation()
                     try self.applyBoundary(range, document: document, source: rich)
