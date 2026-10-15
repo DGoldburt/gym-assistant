@@ -13,7 +13,16 @@ import GymAssistantWorkspace
 }
 
 public enum SnapshotSavePhase: Sendable { case staged, validated, backedUp, promoted, reopened }
-public enum SnapshotStoreError: Error, Equatable { case unavailable, identityMismatch, staleRevision, unsafeExistingFile }
+public enum SnapshotStoreError: Error, Equatable {
+    case unavailable, identityMismatch, staleRevision, unsafeExistingFile
+    case recoveryRequired(WorkspaceID)
+}
+public struct WorkspaceRecoveryPreview {
+    public let snapshot: WorkspaceSnapshot
+    public let backupModifiedAt: Date?
+    fileprivate let currentBytes: Data?
+    fileprivate let backupBytes: Data
+}
 public struct LoadedWorkspace {
     public let snapshot: WorkspaceSnapshot
     public let recoveredFromPrevious: Bool
@@ -55,7 +64,9 @@ public struct StoredWorkspaceAnchor: Decodable {
             let id = WorkspaceID(raw)
             let current = currentURL(for: id)
             let source = fileManager.fileExists(atPath: current.path) ? current : previousURL(for: id)
-            let value = try JSONDecoder().decode(StoredWorkspaceAnchor.self, from: Data(contentsOf: source))
+            let value: StoredWorkspaceAnchor
+            do { value = try JSONDecoder().decode(StoredWorkspaceAnchor.self, from: Data(contentsOf: source)) }
+            catch { throw SnapshotStoreError.recoveryRequired(id) }
             guard WorkspaceSnapshot.supportsSchema(value.schemaVersion) else { throw WorkspaceError.unsupportedSchema(value.schemaVersion) }
             guard !value.anchor.isUnrecorded || (value.schemaVersion >= 2 && value.anchor.baselineText.isEmpty
                 && value.anchor.sourceEvidence == nil && value.boundaryProtection == nil)
@@ -78,7 +89,7 @@ public struct StoredWorkspaceAnchor: Decodable {
             do { return LoadedWorkspace(snapshot: try validated(Data(contentsOf: current), id: id), recoveredFromPrevious: false) }
             catch WorkspaceError.unsupportedSchema(let version) { throw WorkspaceError.unsupportedSchema(version) }
             catch {
-                guard fileManager.fileExists(atPath: previous.path) else { throw SnapshotStoreError.unavailable }
+                guard fileManager.fileExists(atPath: previous.path) else { throw SnapshotStoreError.recoveryRequired(id) }
                 return LoadedWorkspace(snapshot: try validated(Data(contentsOf: previous), id: id), recoveredFromPrevious: true)
             }
         }
@@ -86,6 +97,57 @@ public struct StoredWorkspaceAnchor: Decodable {
             return LoadedWorkspace(snapshot: try validated(Data(contentsOf: previous), id: id), recoveredFromPrevious: true)
         }
         return nil
+    }
+
+    /// Read-only preview. Never offer rollback of a valid or newer-schema current file.
+    public func recoveryPreview(id: WorkspaceID) throws -> WorkspaceRecoveryPreview {
+        let current = currentURL(for: id), previous = previousURL(for: id)
+        let currentBytes = fileManager.fileExists(atPath: current.path) ? try Data(contentsOf: current) : nil
+        if let currentBytes {
+            do {
+                _ = try validated(currentBytes, id: id)
+                throw SnapshotStoreError.unsafeExistingFile
+            } catch let error as SnapshotStoreError where error == .unsafeExistingFile { throw error }
+            catch SnapshotStoreError.identityMismatch { throw SnapshotStoreError.identityMismatch }
+            catch WorkspaceError.unsupportedSchema(let version) { throw WorkspaceError.unsupportedSchema(version) }
+            catch { /* Unreadable current is retained verbatim during explicit recovery. */ }
+        }
+        let backupBytes = try Data(contentsOf: previous)
+        let snapshot = try validated(backupBytes, id: id)
+        if let currentBytes, let header = try? JSONDecoder().decode(StoredWorkspaceAnchor.self, from: currentBytes) {
+            guard header.anchor.noteID == snapshot.anchor.noteID, header.anchor.sessionID == snapshot.anchor.sessionID else {
+                throw SnapshotStoreError.identityMismatch
+            }
+        }
+        let attributes = try fileManager.attributesOfItem(atPath: previous.path)
+        return WorkspaceRecoveryPreview(snapshot: snapshot, backupModifiedAt: attributes[.modificationDate] as? Date,
+            currentBytes: currentBytes, backupBytes: backupBytes)
+    }
+
+    /// Confirm exactly the previewed bytes. Preserve the damaged file before promotion;
+    /// never rotate it over the valid backup. No cross-process writer is supported.
+    @discardableResult public func restore(_ preview: WorkspaceRecoveryPreview) throws -> URL? {
+        let id = preview.snapshot.workspaceID
+        let fresh = try recoveryPreview(id: id)
+        guard fresh.currentBytes == preview.currentBytes, fresh.backupBytes == preview.backupBytes else {
+            throw SnapshotStoreError.staleRevision
+        }
+        var preserved: URL?
+        if let damaged = preview.currentBytes {
+            let archive = directory.appendingPathComponent(id.rawValue.uuidString + ".damaged-" + UUID().uuidString + ".recovery")
+            try damaged.write(to: archive, options: .withoutOverwriting)
+            try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: archive.path)
+            guard try Data(contentsOf: archive) == damaged else { throw SnapshotStoreError.unavailable }
+            preserved = archive
+        }
+        try fault?(.backedUp)
+        try preview.backupBytes.write(to: currentURL(for: id), options: .atomic)
+        try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: currentURL(for: id).path)
+        try fault?(.promoted)
+        guard try validated(Data(contentsOf: currentURL(for: id)), id: id) == preview.snapshot else {
+            throw SnapshotStoreError.unavailable
+        }
+        return preserved
     }
     public func save(_ snapshot: WorkspaceSnapshot) throws {
         let data = try JSONEncoder().encode(snapshot)

@@ -284,3 +284,17 @@ All five verification stages pass with 219 tests across 36 suites. Four added te
 cover validated ranges, legacy/message round-trip compatibility, controller lookup
 gating and unchanged text, and underline/tooltip/focus behavior. A nested test macro
 initially failed compilation; split its intermediate value and rerun the full suite.
+
+### Backup recovery follow-up — 2026-10-15
+
+Launch with `--synthetic-entry --synthetic-recovery`. This creates a fresh isolated
+temporary store, saves two synthetic snapshots, then deliberately damages only that
+store's current file. Command-N reaches Preview last valid backup. Native observation:
+read-only contents and revision/file timestamp visible; Escape cancels; reopen preview
+and Command-Return restores; Command-N resumes the saved text and unsent synthetic
+question. The app was quit afterward. No real Notes, library, clipboard or installed
+workspace files were accessed or changed. Tests verify preserved damaged bytes,
+unchanged backup, stale-preview refusal, valid/future-current refusal, injected
+pre/post-promotion failures and explicit entry preview/cancel/restore. All five
+verification stages pass (223 tests/36 suites). Multi-session association recovery
+and actual user-data recovery are not established by this synthetic pass.

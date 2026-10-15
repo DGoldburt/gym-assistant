@@ -30,7 +30,18 @@ private actor SyntheticEntryReader: NotesContextReading {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if CommandLine.arguments.contains("--synthetic-entry") {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
-            let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: SyntheticEntryReader(),
+            let store = WorkspaceSnapshotStore(directory: root)
+            if CommandLine.arguments.contains("--synthetic-recovery") {
+                do {
+                    let rich = NSAttributedString(string: "Session 19\nSaved synthetic coach work\n")
+                    let snapshot = WorkspaceSnapshot(anchor: .init(noteID: NoteID("synthetic-entry-note"), recordedHeading: "Session 19",
+                        baselineText: "", recordingState: .unrecorded), text: rich.string,
+                        richTextArchive: try RichTextArchive.encode(rich), composerText: "Saved synthetic question")
+                    try store.save(snapshot); try store.save(snapshot)
+                    try Data("Synthetic damaged current file".utf8).write(to: store.currentURL(for: snapshot.workspaceID))
+                } catch { NSApp.terminate(nil); return }
+            }
+            let windows = SessionWorkspaceWindows(store: store, reader: SyntheticEntryReader(),
                 profile: .init(version: "synthetic-empty", entries: []),
                 assistant: CommandLine.arguments.contains("--synthetic-mentions") ? MentionFixtureAssistant() : FakeProgrammingAssistant(),
                 exerciseLookup: { text in

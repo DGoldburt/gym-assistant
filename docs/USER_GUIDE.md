@@ -49,6 +49,21 @@ synthetic content, including keyboard-only new-session creation, heading search,
 comparison and association. Broader keyboard selection and real Notes integration still
 need acceptance; they are not installed by these changes.
 
+## Recover a saved scratchpad
+
+If a saved scratchpad cannot be opened, the entry window offers **Preview last valid
+backup…**. Review its read-only contents, revision and backup file modification time;
+it may omit more recent edits. **Cancel** changes nothing. **Restore this backup**
+(Command-Return) restores the local snapshot, including saved conversation and unsent
+message. Notes is not changed. The damaged file is preserved separately beside the
+backup, which remains intact. Choose the session again to recheck its Notes association.
+
+If files changed during preview, reopen the preview before retrying. If other
+scratchpads are retained in the app, quit normally to save them and relaunch before
+restoring. When no valid backup is available, files stay untouched; the app does not
+silently start an empty scratchpad. Newer unsupported file versions cannot be restored
+over. Session-association recovery is a separate flow still under development.
+
 ## Exercise labels in replies
 
 Exercise names identified in assistant replies can have a subtle underline: solid

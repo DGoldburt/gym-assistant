@@ -20,6 +20,9 @@ import GymAssistantWorkspace
     private var proposal: SessionWorkspaceEntry.NewSessionProposal?
     private var previewStatus: NSTextField?
     private var acceptSkeleton: NSButton?
+    private var recoveryID: WorkspaceID?
+    private var recoveryPreview: WorkspaceRecoveryPreview?
+    private let previewBackup = NSButton(title: "Preview last valid backup…", target: nil, action: nil)
 
     public init(workspaces: SessionWorkspaceWindows, modeDescription: String,
                 presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)? = nil,
@@ -56,6 +59,10 @@ import GymAssistantWorkspace
         window.contentView?.addSubview(retry)
         latest.isEnabled = false; access.isHidden = true
         entryContent = window.contentView
+        previewBackup.frame = NSRect(x: 20, y: 64, width: 490, height: 32)
+        previewBackup.target = self; previewBackup.action = #selector(showBackupPreview)
+        previewBackup.identifier = .init("program-entry-preview-backup"); previewBackup.isHidden = true
+        window.contentView?.addSubview(previewBackup)
     }
     public required init?(coder: NSCoder) { nil }
 
@@ -70,6 +77,7 @@ import GymAssistantWorkspace
 
     @objc private func captureSelection() {
         restoreEntryContent()
+        recoveryID = nil; previewBackup.isHidden = true; latest.isHidden = false; skeleton.isHidden = false
         task?.cancel(); generation = UUID(); let operation = generation
         noteID = nil; latest.isEnabled = false; skeleton.isEnabled = false; retry.isEnabled = false; access.isHidden = true; access.isEnabled = true
         status.stringValue = "Reading the single selected note in Notes…"
@@ -208,11 +216,58 @@ import GymAssistantWorkspace
     }
 
     private func restoreEntryContent() {
-        guard proposal != nil, let entryContent else { return }
+        guard proposal != nil || recoveryPreview != nil, let entryContent else { return }
+        recoveryPreview = nil
         proposal = nil; previewStatus = nil; acceptSkeleton = nil
         window?.contentView = entryContent; window?.setContentSize(NSSize(width: 530, height: 250))
     }
     @objc private func cancelProposal() { stopPending(); restoreEntryContent() }
+
+    @objc private func showBackupPreview() {
+        guard task == nil, let recoveryID else { return }
+        do {
+            let preview = try workspaces.recoveryPreview(id: recoveryID)
+            recoveryPreview = preview
+            let root = NSView(frame: NSRect(x: 0, y: 0, width: 650, height: 560))
+            let date = preview.backupModifiedAt?.formatted(date: .abbreviated, time: .standard) ?? "unknown"
+            let title = NSTextField(wrappingLabelWithString: "Backup: \(preview.snapshot.anchor.recordedHeading) · revision \(preview.snapshot.revision)\nBackup file modified: \(date). This may omit more recent edits. Notes will not change.")
+            title.frame = NSRect(x: 20, y: 465, width: 610, height: 75); root.addSubview(title)
+            let scroll = NSScrollView(frame: NSRect(x: 20, y: 140, width: 610, height: 315)); scroll.hasVerticalScroller = true
+            let text = NSTextView(frame: scroll.bounds); text.isEditable = false; text.isSelectable = true
+            text.isVerticallyResizable = true; text.autoresizingMask = [.width]; text.textContainer?.widthTracksTextView = true
+            text.textStorage?.setAttributedString(try RichTextArchive.decode(preview.snapshot.richTextArchive))
+            text.identifier = .init("recovery-backup-preview"); scroll.documentView = text; root.addSubview(scroll)
+            let detail = NSTextField(wrappingLabelWithString: "Restore this local scratchpad, including its saved conversation and unsent message. The damaged file will be retained separately; the backup stays intact.")
+            detail.frame = NSRect(x: 20, y: 55, width: 610, height: 75); detail.identifier = .init("recovery-status")
+            root.addSubview(detail); previewStatus = detail
+            let restore = NSButton(title: "Restore this backup", target: self, action: #selector(restoreBackup))
+            restore.frame = NSRect(x: 410, y: 15, width: 220, height: 30)
+            restore.keyEquivalent = "\r"; restore.keyEquivalentModifierMask = [.command]
+            restore.identifier = .init("recovery-restore"); root.addSubview(restore); acceptSkeleton = restore
+            let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancelProposal))
+            cancel.frame = NSRect(x: 20, y: 15, width: 90, height: 30); cancel.keyEquivalent = "\u{1b}"
+            cancel.identifier = .init("recovery-cancel"); root.addSubview(cancel)
+            window?.contentView = root; window?.setContentSize(NSSize(width: 650, height: 560))
+            window?.makeFirstResponder(cancel)
+        } catch {
+            status.stringValue = "No safely restorable backup is available. Existing files are preserved; no empty scratchpad was created."
+        }
+    }
+
+    @objc private func restoreBackup() {
+        guard task == nil, let recoveryPreview else { return }
+        acceptSkeleton?.isEnabled = false
+        do {
+            let preserved = try workspaces.restoreBackup(recoveryPreview)
+            restoreEntryContent(); recoveryID = nil; previewBackup.isHidden = true
+            latest.isHidden = false; skeleton.isHidden = false
+            status.stringValue = "Backup restored locally. \(preserved == nil ? "No damaged current file existed." : "Damaged file retained beside the backup.") Choose the session again; Notes association will be rechecked."
+        } catch SessionWorkspaceWindows.RecoveryError.retainedWorkspaces {
+            previewStatus?.stringValue = "Other scratchpads are retained in this app. Quit normally to save them, relaunch, then review this backup again. Nothing was restored."
+        } catch {
+            previewStatus?.stringValue = "Restore could not be confirmed. Files were retained. Cancel and review again; do not assume restoration succeeded."
+        }
+    }
 
     private func present(_ error: any Error) {
         switch error {
@@ -225,8 +280,11 @@ import GymAssistantWorkspace
             status.stringValue = "Duplicate session headings: \(labels.joined(separator: ", ")). Correct them in Notes, then press Return again. No scratchpad was replaced."
         case SessionEntryError.boundaryReviewRequired:
             status.stringValue = "The latest session needs explicit boundary selection. Entry boundary review is not connected yet; existing scratchpads are preserved."
-        case SessionEntryError.recoveryRequired, SessionEntryError.unresolvedSavedWorkspace:
-            status.stringValue = "Saved work needs review. Choose New session to resume unrecorded work. Damaged-file recovery is not connected yet; nothing has been replaced."
+        case SessionEntryError.recoveryRequired(let id), SnapshotStoreError.recoveryRequired(let id):
+            recoveryID = id; previewBackup.isHidden = false; latest.isHidden = true; skeleton.isHidden = true
+            status.stringValue = "A saved scratchpad could not be opened safely. Preview its last valid backup before deciding whether to restore. Existing files are preserved."
+        case SessionEntryError.unresolvedSavedWorkspace:
+            status.stringValue = "Saved work needs association review. Choose New session to resume unrecorded work. Recorded-session association recovery is not connected yet; nothing has been replaced."
         case SessionEntryError.skeletonSourceChanged:
             status.stringValue = "Notes changed during preview. Cancel and choose New session again to review current headings. Nothing was created."
         case SessionEntryError.multipleUnrecordedWorkspaces:

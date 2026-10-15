@@ -5,7 +5,8 @@ import GymAssistantWorkspace
 /// a window hides it; re-entry reuses its editor, pending reply and unsaved text.
 @MainActor public final class SessionWorkspaceWindows {
     private let store: WorkspaceSnapshotStore
-    private let entry: SessionWorkspaceEntry
+    private var entry: SessionWorkspaceEntry
+    private let reader: any NotesContextReading
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
     private let exerciseLookup: (String) -> ExerciseMentionMatch
@@ -16,11 +17,25 @@ import GymAssistantWorkspace
                 profile: CoachingProfile, assistant: any ProgrammingAssistant,
                 exerciseLookup: @escaping (String) -> ExerciseMentionMatch = { _ in .unavailable }) {
         self.store = store; self.profile = profile; self.assistant = assistant
+        self.reader = reader
         self.exerciseLookup = exerciseLookup
         entry = SessionWorkspaceEntry(store: store, reader: reader)
     }
 
     public func captureNote() async throws -> NoteID { try await entry.captureNote() }
+
+    public func recoveryPreview(id: WorkspaceID) throws -> WorkspaceRecoveryPreview {
+        try store.recoveryPreview(id: id)
+    }
+
+    public enum RecoveryError: Error { case retainedWorkspaces }
+    @discardableResult public func restoreBackup(_ preview: WorkspaceRecoveryPreview) throws -> URL? {
+        // Retained editors may have newer unsaved content and cached ownership.
+        guard controllers.isEmpty else { throw RecoveryError.retainedWorkspaces }
+        let preserved = try store.restore(preview)
+        entry = SessionWorkspaceEntry(store: store, reader: reader)
+        return preserved
+    }
 
     public enum NewSessionEntry {
         case workspace(SessionScratchpadWindowController)

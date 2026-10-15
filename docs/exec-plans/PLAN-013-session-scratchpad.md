@@ -34,6 +34,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
+- [ ] Resolve multi-session association recovery: when several saved sessions cannot be located, individual confirmation cannot establish absence of another unknown owner. Proposed review each, then apply non-overlapping associations together; alternative is require Notes correction first. No batch recovery implemented pending coach decision. Single-session association entry also remains unconnected.
+
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
 
@@ -110,6 +113,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Recovery entry, 2026-10-15: malformed JSON can fail ownership-header discovery before
+the usual snapshot fallback returns its workspace ID. Discovery now reports a typed
+recovery-required identity, without treating that region as vacant. Recovery must
+not rotate damaged current bytes into the valid previous slot. Retained controllers
+also hold cached ownership/possibly newer work, so restoration refuses while any
+are retained and instructs a normal quit/relaunch before retry. A focused test
+command initially matched no tests; the subsequent full verification ran all tests.
 
 Exercise decoration, 2026-10-15: responses previously contained plain text only.
 Matching library names throughout prose would mistake ordinary words for exercise
@@ -326,6 +337,17 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Implement the described explicit backup preview/restore in the entry
+  window. Preserve damaged bytes in a unique `.recovery` file, retain the validated
+  backup unchanged, compare current/backup bytes again before promotion, and refuse
+  unsupported schemas/valid-current rollback. Show the file's modification time as
+  such, not a fabricated application save timestamp. Restore does not open a session
+  automatically: entry must recheck Notes association. No restoration with retained
+  editor controllers; quit normally and retry in a fresh process.
+  Rationale: Recover usable local work without silently losing newer edits, confusing
+  baseline/association, or overwriting the only known-good copy.
+  Date/Author: 2026-10-15 / coach-approved recovery direction; Codex implementation.
 
 - Decision: The coach approves solid/dotted neutral underlines for In library/Not
   matched, with compact hover/focus labels and canonical name for confirmed aliases.
@@ -584,6 +606,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 backup recovery: the entry window now offers a real read-only backup
+preview and explicit restore instead of only an unavailable message. Native isolated
+testing observed Cancel, Command-Return restore and resume with saved composer text.
+The original damaged fixture and valid backup are retained. Association recovery is
+a separate unfinished path; multi-unresolved ownership needs the coach's choice
+between coordinated review and requiring Notes correction. No production data,
+Notes content, installed Service, library or paid provider was touched.
 
 2026-10-15 decoration increment: optional mention evidence survives message storage
 without rewriting older snapshots; completed assistant messages alone are decorated.
@@ -1921,3 +1951,8 @@ Revision note, 2026-10-15, exercise decoration: record coach approval and implem
 validated mention metadata, exact read-only lookup, quiet underline presentation and
 keyboard label navigation. Keep ordinary prose/legacy replies undecorated; no model
 identity claims, eager storage migration, exercise actions or paid requests.
+
+Revision note, 2026-10-15, backup recovery: implement and test explicit preview and
+backup-preserving restoration, including stale files and injected failures. Record
+native synthetic evidence and the unresolved multi-session association decision;
+do not mark all recovery complete.

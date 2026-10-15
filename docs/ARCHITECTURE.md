@@ -622,6 +622,16 @@ library integration still need acceptance; package tests do not establish their 
 behavior. No module from concurrent client-history
 work is imported or changed by this implementation.
 
+Damaged snapshot discovery reports its workspace ID to the programming entry window.
+`WorkspaceSnapshotStore.recoveryPreview` validates the previous copy without writing;
+`restore` compares the current/backup bytes with the preview, preserves damaged bytes
+under a unique `.recovery` filename, promotes the valid backup and reopens it before
+acknowledging success. The valid backup is never rotated away by restoration.
+Valid-current rollback and newer-schema recovery are refused. Restoration with any
+retained workspace controller is refused until normal quit/relaunch; successful
+restoration resets entry context caching before a fresh association check. This is
+local file recovery, not resolution of multiple unlocated Notes-session owners.
+
 The selected product direction is a persistent, session-scoped working scratchpad
 with conversational assistance. The coach edits the scratchpad directly and later
 records the work in Apple Notes. This bounded working copy needs a context boundary

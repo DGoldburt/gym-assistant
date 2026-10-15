@@ -31,6 +31,38 @@ private actor PermissionEntryReader: NotesContextReading {
         }
         #expect(test())
     }
+    @Test func damagedWorkspacePreviewCancelAndRestoreAreExplicit() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("entry-recovery-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = PermissionEntryReader()
+        await reader.grant()
+        let text = "Session 2\nSaved coach work\n"
+        let snapshot = WorkspaceSnapshot(anchor: .init(noteID: NoteID("fixture"), recordedHeading: "Session 2", baselineText: "", recordingState: .unrecorded),
+            text: text, richTextArchive: try RichTextArchive.encode(NSAttributedString(string: text)), composerText: "Unsent question")
+        try store.save(snapshot); try store.save(snapshot)
+        let damaged = Data("damaged".utf8)
+        try damaged.write(to: store.currentURL(for: snapshot.workspaceID))
+        let workspaces = SessionWorkspaceWindows(store: store, reader: reader, profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let entry = SessionProgrammingEntryWindow(workspaces: workspaces, modeDescription: "Test", presentWorkspace: { _ in }, requestAccess: {})
+        func view(_ id: String) -> NSView? { entry.window?.contentView.flatMap { descendants($0).first { $0.identifier?.rawValue == id } } }
+        func button(_ id: String) throws -> NSButton { try #require(view(id) as? NSButton) }
+        try button("program-entry-capture").performClick(nil)
+        try await eventually { (view("program-entry-new") as? NSButton)?.isEnabled == true }
+        try button("program-entry-new").performClick(nil)
+        try await eventually { view("program-entry-preview-backup")?.isHidden == false }
+        try button("program-entry-preview-backup").performClick(nil)
+        let preview = try #require(view("recovery-backup-preview") as? NSTextView)
+        #expect(!preview.isEditable && preview.string == text)
+        #expect(try Data(contentsOf: store.currentURL(for: snapshot.workspaceID)) == damaged)
+        try button("recovery-cancel").performClick(nil)
+        #expect(try Data(contentsOf: store.currentURL(for: snapshot.workspaceID)) == damaged)
+        try button("program-entry-preview-backup").performClick(nil)
+        try button("recovery-restore").performClick(nil)
+        #expect(try store.load(id: snapshot.workspaceID)?.snapshot == snapshot)
+        #expect(view("program-entry-preview-backup")?.isHidden == true)
+        #expect(try store.storedAnchors().count == 1)
+        entry.cancel()
+    }
     @Test func newSessionPreviewCancelCreateAndResumeReuseOneWorkspace() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("entry-skeleton-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

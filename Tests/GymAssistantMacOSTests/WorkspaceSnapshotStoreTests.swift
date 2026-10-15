@@ -68,6 +68,53 @@ private enum Injected: Error { case failure }
         #expect(throws: (any Error).self) { try store.save(changed) }
         #expect(try Data(contentsOf: store.currentURL(for: original.workspaceID)) == broken)
     }
+    @Test func explicitRecoveryPreservesDamagedBytesAndBackupAndRejectsStalePreview() throws {
+        let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
+        let original = try snapshotFixture(); let store = WorkspaceSnapshotStore(directory: root)
+        try store.save(original)
+        var changed = original; changed.revision += 1; try store.save(changed)
+        let backup = try Data(contentsOf: store.previousURL(for: original.workspaceID))
+        let damaged = Data("damaged current".utf8)
+        try damaged.write(to: store.currentURL(for: original.workspaceID))
+        #expect(throws: SnapshotStoreError.recoveryRequired(original.workspaceID)) { _ = try store.storedAnchors() }
+        let preview = try store.recoveryPreview(id: original.workspaceID)
+        #expect(preview.snapshot == original)
+        #expect(try Data(contentsOf: store.currentURL(for: original.workspaceID)) == damaged)
+        try Data("changed while previewing".utf8).write(to: store.currentURL(for: original.workspaceID))
+        #expect(throws: SnapshotStoreError.staleRevision) { try store.restore(preview) }
+        try damaged.write(to: store.currentURL(for: original.workspaceID))
+        let archive = try #require(try store.restore(preview))
+        #expect(try Data(contentsOf: archive) == damaged)
+        #expect(try Data(contentsOf: store.previousURL(for: original.workspaceID)) == backup)
+        #expect(try store.load(id: original.workspaceID)?.snapshot == original)
+        #expect(throws: SnapshotStoreError.unsafeExistingFile) { try store.restore(preview) }
+    }
+
+    @Test(arguments: [SnapshotSavePhase.backedUp, .promoted])
+    func failedRecoveryRetainsDamagedBytesAndValidBackup(phase: SnapshotSavePhase) throws {
+        let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
+        let original = try snapshotFixture(); let store = WorkspaceSnapshotStore(directory: root)
+        try store.save(original); try store.save(original)
+        let damaged = Data("broken".utf8)
+        try damaged.write(to: store.currentURL(for: original.workspaceID))
+        let preview = try store.recoveryPreview(id: original.workspaceID)
+        let failing = WorkspaceSnapshotStore(directory: root, fault: { if $0 == phase { throw Injected.failure } })
+        #expect(throws: Injected.failure) { try failing.restore(preview) }
+        let archives = try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil).filter { $0.pathExtension == "recovery" }
+        #expect(archives.count == 1)
+        #expect(try Data(contentsOf: archives[0]) == damaged)
+        #expect(try JSONDecoder().decode(WorkspaceSnapshot.self, from: Data(contentsOf: store.previousURL(for: original.workspaceID))) == original)
+    }
+
+    @Test func recoveryRefusesValidCurrentAndFutureSchema() throws {
+        let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
+        var original = try snapshotFixture(); let store = WorkspaceSnapshotStore(directory: root)
+        try store.save(original); try store.save(original)
+        #expect(throws: SnapshotStoreError.unsafeExistingFile) { try store.recoveryPreview(id: original.workspaceID) }
+        original.schemaVersion = 99
+        try JSONEncoder().encode(original).write(to: store.currentURL(for: original.workspaceID))
+        #expect(throws: WorkspaceError.unsupportedSchema(99)) { try store.recoveryPreview(id: original.workspaceID) }
+    }
     @Test func unsupportedSchemaIsPreservedRatherThanDowngraded() throws {
         let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
         var snapshot = try snapshotFixture(); let store = WorkspaceSnapshotStore(directory: root)
