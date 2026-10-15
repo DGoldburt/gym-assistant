@@ -480,14 +480,15 @@ This supports retaining Notes as the initial workspace while keeping the resolve
 ## Contextual program assistance direction — capability work in progress
 
 Offline implementation has begun under PLAN 013 in the feature worktree; it is not
-installed or connected to real Notes. `GymAssistantWorkspace` owns typed snapshots,
+installed; live Notes composition is implemented but not natively accepted. `GymAssistantWorkspace` owns typed snapshots,
 context assembly, evidence-tagged profile inputs and a one-request gate without
 AppKit, a library-write dependency or provider transport. `GymAssistantMacOS` owns
 secure attributed-string persistence, supported Markdown export and the native
 synthetic development window. `ScratchpadDevelopment` composes these with a fake
 assistant and a frozen synthetic note; it registers no Service and calls no API.
-It uses a separate local synthetic store. The existing autocomplete/library Service
-is unchanged. A read-only `NotesContextReader` now implements the reader contract
+It uses a separate local synthetic store. The feature branch's Service adds a
+Command-P programming route; the installed autocomplete/library Service is unchanged.
+A read-only `NotesContextReader` now implements the reader contract
 on a shared serial worker queue, with non-prompting permission checks and an explicit
 separate access request. `NotesRefreshCoordinator` serializes each note's reads,
 batches consumers received before capture, polls visible notes every five seconds,
@@ -522,7 +523,15 @@ a competing scratchpad. Duplicate headings, unknown boundaries, unresolved owner
 and recovered snapshots require explicit handling instead of automatic replacement.
 `SessionWorkspaceWindows` retains one controller per saved workspace, including
 closed windows, and aggregates quit-time saves. These app-composition components
-are covered with injected-reader tests but are not yet connected to Service UI.
+are covered with injected-reader tests and connected to the feature branch's
+Service UI through `SessionProgrammingEntryWindow`. The callback schedules that
+window after returning without changing the Service pasteboard. Permission prompts
+are explicit and outside the callback; granting access requires explicit recapture.
+Latest-session entry is wired, while new-session and recovery entry remain visibly
+unavailable. This development composition uses a labeled fake assistant, empty
+profile and separate ServiceWorkspaces development store; it makes no API calls.
+Quit flushes retained windows; reopening restores the last standalone route without
+recapturing selection. Workspace-specific menus follow the active scratchpad window.
 A verified relocation after renumbering preserves scratchpad/baseline and resets
 old absolute edit coordinates conservatively; it does not discard coach edits.
 Native entry and native boundary acceptance remain incomplete. Foundation session

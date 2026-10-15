@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Add Command-P to the feature branch's autocomplete chooser and defer an independent programming entry window until the Service callback returns. Wire captured-note latest-session entry, explicit permission/retry, active-window menus, retained-window reopen and quit-time flush. Label the fake assistant/empty profile; use a separate development store. Permission onboarding regression passes, as do all five verification stages (188 tests/29 suites). No Service launch/registration/installation or native shortcut acceptance; new-session/recovery entry remains disabled or explicitly unavailable.
+
 - [x] (2026-10-14) Wire the live-context boundary browser and apply path to shared full reads and atomic ownership persistence. Add asynchronous boundary-only undo/redo preflight; preserve rejected actions, isolate typing groups, cancel checks on close/quit, and keep ordinary undo immediate. Four added regressions exercise live apply/undo/redo, changed Notes, newly occupied regions, cancellation, menu labels and grouping. All five verification stages pass: 187 tests/28 suites. Native Notes/shortcut entry acceptance and unresolved-association recovery remain pending.
 
 - [x] (2026-10-14) Add boundary commit validation/persistence before ownership publication, with a latched recovery requirement after uncertain local saves. Three regressions cover protected preview/adjacent and overlapping owners, stale observations/revisions, unchanged confirmed baseline, successful ownership persistence and failure after file promotion. Synthetic boundary selection now previews protected shrink before Apply. Live controller commit/undo and Service shortcut wiring remain incomplete.
@@ -85,6 +87,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Service entry continuation, 2026-10-14: the existing Service bundle had no Notes
+Automation usage description, because autocomplete did not read Notes. Add that
+description for the new explicit programming branch, without requesting permission
+at launch. Permission may take long enough for selection to change, so a grant
+does not automatically recapture; the coach explicitly retries the intended note.
+The injected-reader onboarding test verifies no capture at construction, no prompt
+on a denied read, no recapture on grant, and no workspace creation on capture alone.
 
 Live boundary continuation, 2026-10-14: Cocoa's undo stack advances synchronously,
 whereas Notes validation must be asynchronous. Starting a read inside the undo
@@ -223,6 +233,14 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Keep this entry composition explicitly developmental: fake assistant,
+  empty profile, separate ServiceWorkspaces local store, and visible unavailable
+  new-session/recovery paths until implemented. Do not launch the Service executable
+  for validation because its startup registers Services.
+  Rationale: Connect the approved local workflow without crossing API or installation
+  gates or implying completion of unfinished entry choices.
+  Date/Author: 2026-10-14, Codex Service-entry implementation.
 
 - Decision: Temporarily block scratchpad edits during boundary undo/redo validation,
   without blocking composer typing or adding Notes reads to ordinary text undo.
@@ -385,6 +403,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Service-entry continuation, 2026-10-14: the feature branch now connects chooser
+Command-P to independent captured-note latest-session entry. The Service pasteboard
+is untouched on that route; reads, permission prompts and window lifetime happen
+after its callback returns. Active-window menus, quit saves and retained-window
+reopen are wired. One added onboarding test and all five verification stages pass
+(188 tests/29 suites). Native shortcut/Notes acceptance has not run, and no app was
+installed or launched. New-session skeleton, unresolved entry/recovery UI, profile
+packaging and exercise decoration remain outstanding before offline acceptance.
 
 Live-boundary continuation, 2026-10-14: the optional live-context controller now
 opens the read-only browser with current neighboring owners, rechecks on apply,
@@ -1532,3 +1559,8 @@ undo/redo to shared Notes validation and the persisted ownership transaction.
 Supersede the preceding implementation-disabled note for optional live-context
 windows only. The default development launch remains frozen/synthetic and Service
 entry is still unconnected; native acceptance is not implied by package tests.
+
+Revision note, 2026-10-14, Service entry: connect the Command-P route and independent
+latest-session/permission UI, including lifecycle and development-mode labeling.
+Supersede the preceding unconnected-Service note for this feature branch only;
+the installed app and native acceptance status remain unchanged.

@@ -13,6 +13,7 @@ import GymAssistantWorkspace
 /// must be added before this controller can be used with real notes.
 @MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate, NSMenuItemValidation {
     public private(set) var snapshot: WorkspaceSnapshot
+    public var onActivate: (() -> Void)?
     private let store: WorkspaceSnapshotStore
     private var note: NoteSnapshot
     private var association: SessionAssociation
@@ -115,6 +116,7 @@ import GymAssistantWorkspace
         return menu
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if let keyWindow = NSApp.keyWindow, keyWindow !== window { return false }
         if item.action == #selector(formatScratchpad(_:)) {
             return window?.firstResponder === editor && !showingDiff && editor.isEditable
         }
@@ -264,6 +266,7 @@ import GymAssistantWorkspace
         NSApp.activate(ignoringOtherApps: true)
         if let noteContext { Task { await noteContext.setVisible(true, workspace: snapshot.workspaceID) } }
     }
+    public func windowDidBecomeKey(_ notification: Notification) { onActivate?() }
 
     private func sourceChanged() {
         guard !committingBoundary else { return }

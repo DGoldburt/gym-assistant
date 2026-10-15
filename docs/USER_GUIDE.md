@@ -3,6 +3,22 @@
 This guide is for coaches using Gym Assistant, separate from the development tutorial
 and product specifications. It is a starting point, not yet a complete app manual.
 
+## Session entry — development build only
+
+This is implemented on the feature branch, not installed or yet verified through
+the native Notes shortcut. After opening autocomplete with Option-Command-G,
+Command-P chooses **Program session**. Once the selected note has been captured,
+Return opens its latest session or reuses its existing scratchpad. The Service
+returns before the programming window opens; this action does not insert text.
+
+If Notes access is missing, choose **Allow Notes access**. After granting access,
+select the intended note in Notes and explicitly choose **Use currently selected
+Notes note**. Granting permission does not silently capture a new selection.
+
+This development route uses a clearly labeled local test assistant, not OpenAI,
+and has no coaching profile loaded. New-session skeletons and entry recovery
+controls are not connected yet. Do not treat this as the completed product slice.
+
 ## Paste formatted Markdown into Apple Notes
 
 The development scratchpad has a Format menu (not yet in the installed Service):

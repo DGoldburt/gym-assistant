@@ -26,6 +26,8 @@
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Read the note you choose for a session scratchpad and check for later Notes edits. Gym Assistant does not write to Notes.</string>
     <key>NSServices</key>
     <array>
         <dict>

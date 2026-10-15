@@ -9,6 +9,7 @@ import GymAssistantWorkspace
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
     private var controllers: [WorkspaceID: SessionScratchpadWindowController] = [:]
+    private var mostRecent: WorkspaceID?
 
     public init(store: WorkspaceSnapshotStore, reader: any NotesContextReading,
                 profile: CoachingProfile, assistant: any ProgrammingAssistant) {
@@ -22,12 +23,18 @@ import GymAssistantWorkspace
     /// permission prompt, focus change, clipboard publication or API call here.
     public func latest(in noteID: NoteID) async throws -> SessionScratchpadWindowController {
         let prepared = try await entry.latest(in: noteID)
+        mostRecent = prepared.snapshot.workspaceID
         if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
         let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
             note: prepared.note, association: prepared.association, profile: profile,
             assistant: assistant, noteContext: prepared.context)
         controllers[prepared.snapshot.workspaceID] = controller
         return controller
+    }
+
+    public func showMostRecent() -> Bool {
+        guard let mostRecent, let controller = controllers[mostRecent] else { return false }
+        controller.show(); return true
     }
 
     /// Attempt every save, not just until the first failure. A failed save vetoes

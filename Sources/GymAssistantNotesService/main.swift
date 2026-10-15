@@ -1,5 +1,7 @@
 import AppKit
 import GymAssistantCore
+import GymAssistantMacOS
+import GymAssistantWorkspace
 import UniformTypeIdentifiers
 
 private enum WorkflowEventLog {
@@ -52,6 +54,7 @@ private func panelScreenshotPNG(_ window: NSWindow) -> Data? {
 private enum AutocompletePanelResult {
     case insert(String)
     case maintenance(LibraryMaintenanceNavigation)
+    case programSession
     case cancel
 }
 
@@ -372,6 +375,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         action: #selector(openLibraryReview)
     )
     private lazy var editButton = NSButton(title: "Edit Library…  ⌘E", target: self, action: #selector(openLibraryEdit))
+    private lazy var programButton = NSButton(title: "Program session…  ⌘P", target: self, action: #selector(openProgramSession))
     private var matches: [ExerciseSearchMatch] = []
     private var result: AutocompletePanelResult = .cancel
     private let sessionID = UUID()
@@ -478,7 +482,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         let content = NSView(frame: panel.contentRect(forFrameRect: panel.frame))
         panel.contentView = content
 
-        searchField.frame = NSRect(x: 24, y: 270, width: 592, height: 32)
+        searchField.frame = NSRect(x: 24, y: 270, width: 355, height: 32)
         searchField.placeholderString = "Search exercises"
         searchField.font = .systemFont(ofSize: 16)
         searchField.delegate = self
@@ -488,6 +492,10 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         searchField.onChoose = { [weak self] in self?.chooseSelection() }
         searchField.onCancel = { [weak self] in self?.cancel() }
         content.addSubview(searchField)
+        programButton.frame = NSRect(x: 385, y: 270, width: 195, height: 32)
+        programButton.keyEquivalent = "p"; programButton.keyEquivalentModifierMask = [.command]
+        programButton.toolTip = "Open a persistent session scratchpad after returning to Notes (Command-P)"
+        content.addSubview(programButton)
 
         chooser.scrollView.frame = NSRect(x: 24, y: 52, width: 592, height: 202)
         chooser.tableView.tableColumns.first?.width = 576
@@ -612,6 +620,12 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         record(.init(kind: .opened))
         result = .maintenance(.init(route: .add, query: searchField.stringValue, selection: selectedLibraryIdentity))
         WorkflowEventLog.write("add_exercises_selected")
+        NSApp.stopModal()
+    }
+
+    @objc private func openProgramSession() {
+        result = .programSession
+        WorkflowEventLog.write("program_session_selected")
         NSApp.stopModal()
     }
 
@@ -1878,9 +1892,38 @@ private final class ExerciseServiceProvider: NSObject {
     private let identityReview: ExerciseIdentityReviewService
     private let library: ExerciseLibrary
     private var libraryEditWindow: LibraryEditWindowController?
+    private let notesReader = NotesContextReader()
+    private var sessionWindows: SessionWorkspaceWindows?
+    private var programEntry: SessionProgrammingEntryWindow?
+    private var lastStandaloneWasProgramming = false
+
+    func flushWorkspaces() -> Bool {
+        programEntry?.cancel()
+        return sessionWindows?.flushAndStop() ?? true
+    }
+
+    private func showProgramEntry() {
+        lastStandaloneWasProgramming = true
+        if programEntry == nil {
+            let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("GymAssistantScratchpadDevelopment", isDirectory: true)
+                .appendingPathComponent("ServiceWorkspaces", isDirectory: true)
+            let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: notesReader,
+                profile: CoachingProfile(version: "development-empty", entries: []), assistant: FakeProgrammingAssistant())
+            sessionWindows = windows
+            programEntry = SessionProgrammingEntryWindow(workspaces: windows,
+                modeDescription: "Development preview: local test assistant, no API calls. Coaching profile is not loaded. Notes are read only; handoff is manual.",
+                requestAccess: { [notesReader] in try await notesReader.requestAccess() })
+        }
+        programEntry?.start()
+    }
 
     func reopenLibraryMaintenance() -> Bool {
-        libraryEditWindow?.bringToFront() ?? false
+        if lastStandaloneWasProgramming, let programEntry {
+            if sessionWindows?.showMostRecent() != true { programEntry.showExisting() }
+            return true
+        }
+        return libraryEditWindow?.bringToFront() ?? false
     }
 
     override init() {
@@ -1931,6 +1974,10 @@ private final class ExerciseServiceProvider: NSObject {
             DispatchQueue.main.async { [weak self] in
                 self?.showLibraryMaintenance(navigation: navigation, returnFocusTo: invokingApplication)
             }
+        case .programSession:
+            // Do not touch the Services pasteboard or hold the callback while
+            // reading Notes, onboarding permission, or using a workspace.
+            DispatchQueue.main.async { [weak self] in self?.showProgramEntry() }
         case .cancel:
             restoreFocus(to: invokingApplication)
         }
@@ -1985,6 +2032,7 @@ private final class ExerciseServiceProvider: NSObject {
     }
 
     private func showLibraryMaintenance(navigation: LibraryMaintenanceNavigation, returnFocusTo application: NSRunningApplication?) {
+        lastStandaloneWasProgramming = false
         let controller: LibraryEditWindowController
         if let libraryEditWindow {
             controller = libraryEditWindow
@@ -2026,6 +2074,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         !serviceProvider.reopenLibraryMaintenance()
+    }
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        serviceProvider.flushWorkspaces() ? .terminateNow : .terminateCancel
     }
 }
 
