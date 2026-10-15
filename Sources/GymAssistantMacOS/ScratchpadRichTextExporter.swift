@@ -1,6 +1,8 @@
 import AppKit
 import GymAssistantWorkspace
 
+public enum ScratchpadExportError: Error { case invisibleListMarker }
+
 /// Supported first-slice semantic paragraphs. Unknown list/heading styles fail visibly.
 @MainActor public enum ScratchpadRichTextExporter {
     private enum RowKind { case body, heading, list, blank }
@@ -26,6 +28,12 @@ import GymAssistantWorkspace
             }
             var start = range.location
             var length = (raw as NSString).length
+            if list != nil && !raw.hasPrefix("\t•\t") && !raw.hasPrefix("\t-\t") {
+                // Old/incomplete AppKit list edits can carry list attributes
+                // without displaying a marker. Do not silently export a bullet
+                // the coach cannot see; Body/List commands explicitly repair it.
+                throw ScratchpadExportError.invisibleListMarker
+            }
             if list != nil, raw.hasPrefix("\t"), let end = raw.dropFirst().firstIndex(of: "\t") {
                 let prefix = String(raw[...end])
                 start += (prefix as NSString).length; length -= (prefix as NSString).length

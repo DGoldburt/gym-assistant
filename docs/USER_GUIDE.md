@@ -5,6 +5,22 @@ and product specifications. It is a starting point, not yet a complete app manua
 
 ## Paste formatted Markdown into Apple Notes
 
+The development scratchpad has a Format menu (not yet in the installed Service):
+
+| Format | Shortcut |
+| --- | --- |
+| Heading | Option-Command-2 |
+| Subheading | Option-Command-3 |
+| Body | Option-Command-0 |
+| Bold | Command-B |
+| Bulleted list | Option-Command-7 |
+
+Paragraph commands affect the current or selected paragraphs; Bold affects selected
+text or what you type next. Return continues a bullet; Return on an empty bullet
+returns to Body. Formatting commands do not target chat or the read-only comparison.
+If copy reports a list paragraph without a visible marker, select that paragraph
+and choose Body or Bulleted list before copying again.
+
 Use Notes' **Paste as Markdown** command to turn copied Markdown into native headings,
 lists and bold text. Ordinary Command-V may paste the Markdown symbols literally.
 Your Notes version must offer **Edit → Paste as Markdown**.

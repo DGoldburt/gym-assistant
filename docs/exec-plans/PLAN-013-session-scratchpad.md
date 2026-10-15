@@ -34,7 +34,7 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
-- [ ] (2026-10-14, coach-approved side conversation) Implement first-slice Format menu commands and discoverable keyboard shortcuts for Heading, Subheading, Body, Bold and Bulleted list. No permanent toolbar. Verify keyboard authoring, semantic styles, undo/redo, revision/freshness and boundary-protection tracking, persistence and native Notes handoff; existing styled samples are not acceptance evidence.
+- [x] (2026-10-14) Implement approved first-slice Format menu: Option-Command-2 Heading, Option-Command-3 Subheading, Option-Command-0 Body, Command-B Bold, Option-Command-7 Bulleted list; no toolbar. Semantic transforms, focus routing, revision/protection, undo/redo and persistence have regressions. Native keyboard conversion from ordinary text, Body conversion, list undo/redo, visible Return continuation/empty-bullet exit, bold typing, quit/reopen and Notes paste observed. Saved synthetic revision 79. Bounded supported-content authoring evidence, not completion of the full offline slice or arbitrary formatting fidelity.
 
 - [x] (2026-10-14) Coach authorizes local prep and implementation. Move accepted plan to PLAN 013; reserve ADR 005 and PLAN 012 for Notes direction/capability evidence because current learner/main uses ADR 004/PLAN 011 for alias guidance. Mockup artifacts in this checkout match the old source byte-for-byte. App archival is blocked by other-chat ownership; preserve that checkout.
 - [x] (2026-10-14) Commit approved preparation as 0a023a2 and reconcile local learner/main (221544f) into this feature branch as 5e7f4bb. One merge base equals current learner/main; baseline five-stage verification passes. No push or merge into learner/main.
@@ -77,6 +77,17 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Formatting continuation, 2026-10-14: ordinary NSTextView Return retained list style
+without creating a visible marker. Add explicit visible continuation through normal
+text-edit/undo/delegate handling; Return in an empty bullet invokes Body. The earlier
+failed test left a line with invisible list attributes that pasted as a bullet.
+Refuse export of list-styled paragraphs lacking visible markers, without changing
+the clipboard, and explain Body/Bulleted list repair. Tests cover that failure and
+repair. In the native test, explicitly repair the synthetic line with Body, reopen,
+copy and paste; exported Notes HTML now agrees with the visible list/body structure.
+The fixture was restored exactly after both handoff tests. Native reimport of the
+first authored paste succeeded with 97 supported paragraphs/three session regions.
 
 Approved spacing controls, 2026-10-14: native Notes HTML confirms two-space Markdown
 hard breaks become separate `div` paragraphs without the trailing spaces inserted
@@ -1375,3 +1386,10 @@ Bold and Bulleted list. Add implementation work and keyboard/native acceptance
 coverage because retaining seeded styles alone does not make the scratchpad a
 usable program-writing editor. No toolbar, broader formatting scope, implemented
 control or passing native-authoring test is implied by this documentation update.
+
+Revision note, 2026-10-14, formatting implementation: add the approved five commands
+with local shortcuts, semantic transformation, protected revisions and composite
+undo, plus visible list continuation. Native keyboard authoring/reopen/handoff
+evidence and regressions expose/fix invisible list markers; final five-stage
+verification passes. No Service installation, API call, profile learning or
+client-history changes. Shared live workspace/boundary integration remains next.

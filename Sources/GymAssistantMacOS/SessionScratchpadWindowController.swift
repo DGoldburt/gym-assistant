@@ -11,7 +11,7 @@ import GymAssistantWorkspace
 
 /// Offline development entry. Native Notes capture/monitor and Service integration
 /// must be added before this controller can be used with real notes.
-@MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate {
+@MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate, NSMenuItemValidation {
     public private(set) var snapshot: WorkspaceSnapshot
     private let store: WorkspaceSnapshotStore
     private var note: NoteSnapshot
@@ -20,7 +20,7 @@ import GymAssistantWorkspace
     private let assistant: any ProgrammingAssistant
     private let noteContext: SessionNoteContext?
     private let pasteboard: NSPasteboard
-    private let editor = NSTextView()
+    private let editor = ScratchpadTextView()
     private let transcript = NSTextView()
     private let composer = ChatComposer()
     private let diff = NSTextView()
@@ -80,6 +80,76 @@ import GymAssistantWorkspace
         noteContext?.subscribe(workspace: snapshot.workspaceID) { [weak self] in self?.sourceChanged() }
     }
     public required init?(coder: NSCoder) { nil }
+    public func formattingMenu() -> NSMenu {
+        let menu = NSMenu(title: "Format")
+        for command in ScratchpadFormat.allCases {
+            let item = NSMenuItem(title: command.title, action: #selector(formatScratchpad(_:)), keyEquivalent: command.key)
+            item.tag = command.rawValue; item.target = self; item.keyEquivalentModifierMask = command.modifiers
+            menu.addItem(item)
+        }
+        return menu
+    }
+    public func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(formatScratchpad(_:)) { return window?.firstResponder === editor && !showingDiff }
+        return true
+    }
+    private struct FormattingState {
+        let rich: NSAttributedString
+        let selection: NSRange
+        let typing: [NSAttributedString.Key: Any]
+        let protection: BoundaryEditProtection?
+    }
+    private func formattingState() -> FormattingState {
+        FormattingState(rich: NSAttributedString(attributedString: editor.attributedString()), selection: editor.selectedRange(),
+                        typing: editor.typingAttributes, protection: snapshot.boundaryProtection)
+    }
+    private func restoreFormatting(_ state: FormattingState) {
+        let inverse = formattingState()
+        editor.undoManager?.registerUndo(withTarget: self) { $0.restoreFormatting(inverse) }
+        editor.undoManager?.disableUndoRegistration()
+        editor.textStorage?.setAttributedString(state.rich)
+        editor.setSelectedRange(state.selection); editor.typingAttributes = state.typing
+        editor.undoManager?.enableUndoRegistration()
+        snapshot.boundaryProtection = state.protection
+        textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+    }
+    @objc public func formatScratchpad(_ sender: NSMenuItem) {
+        guard validateMenuItem(sender), let command = ScratchpadFormat(rawValue: sender.tag) else { return }
+        let before = formattingState()
+        if command == .bold && before.selection.length == 0 {
+            let font = before.typing[.font] as? NSFont ?? .systemFont(ofSize: 16)
+            let bold = NSFontManager.shared.traits(of: font).contains(.boldFontMask)
+            editor.typingAttributes[.font] = bold ? NSFontManager.shared.convert(font, toNotHaveTrait: .boldFontMask)
+                : NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+            return
+        }
+        let source = NSMutableAttributedString(attributedString: before.rich)
+        // An empty final paragraph needs an actual paragraph to hold a semantic
+        // style in persistence/export. Keep the insertion point on that paragraph.
+        if command != .bold && before.selection.location == source.length && (source.length == 0 || source.string.hasSuffix("\n")) {
+            source.append(NSAttributedString(string: "\n", attributes: before.typing))
+        }
+        let affected = command == .bold ? before.selection : ScratchpadFormatting.paragraphRange(before.selection, in: source.string as NSString)
+        let result = ScratchpadFormatting.apply(command, to: source, selection: before.selection)
+        do {
+            let oldLength = min(affected.length, max(0, before.rich.length - affected.location))
+            let oldRange = NSRange(location: affected.location, length: oldLength)
+            if result.length != before.rich.length {
+                try snapshot.boundaryProtection?.edited(range: oldRange, replacementLength: oldLength + result.length - before.rich.length)
+            } else { try snapshot.boundaryProtection?.formattingChanged(range: oldRange) }
+        } catch { snapshot.boundaryProtection?.markUncertain(currentLength: result.length) }
+        editor.undoManager?.registerUndo(withTarget: self) { $0.restoreFormatting(before) }
+        editor.undoManager?.setActionName(command.title)
+        editor.undoManager?.disableUndoRegistration()
+        editor.textStorage?.setAttributedString(result)
+        let delta = result.length - before.rich.length
+        let position = min(result.length, max(affected.location, before.selection.location + (command == .bulletedList ? max(0, delta) : min(0, delta))))
+        editor.setSelectedRange(before.selection.length == 0 ? NSRange(location: position, length: 0)
+            : NSRange(location: affected.location, length: affected.length + result.length - source.length))
+        if result.length > 0 { editor.typingAttributes = result.attributes(at: min(position, result.length - 1), effectiveRange: nil) }
+        editor.undoManager?.enableUndoRegistration()
+        textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+    }
     private func snapshotDidRestore() { snapshot.markInterruptedRequests() }
     private func scroll(_ text: NSTextView, frame: NSRect, editable: Bool, rich: Bool) -> NSScrollView {
         let scroll = NSScrollView(frame: frame)
@@ -99,6 +169,11 @@ import GymAssistantWorkspace
     }
     private func configure(rich: NSAttributedString) {
         guard let root = window?.contentView else { return }
+        editor.returnToBody = { [weak self] in
+            let item = NSMenuItem(title: "Body", action: #selector(Self.formatScratchpad(_:)), keyEquivalent: "")
+            item.tag = ScratchpadFormat.body.rawValue
+            self?.formatScratchpad(item)
+        }
         let description = NSTextField(labelWithString: noteContext == nil
             ? "Synthetic note · saved locally · fake assistant · no Notes/API access"
             : "Notes context · scratchpad saved locally · manual handoff")
@@ -376,9 +451,14 @@ import GymAssistantWorkspace
         let anchor = snapshot.anchor
         let context = noteContext
         let board = pasteboard
+        var preparationFailure: String?
         status.stringValue = "Preparing Markdown copy…"
         checkedCopy.start(prepareAndPublish: {
-            try ScratchpadRichTextExporter.publishMarkdown(rich, to: board)
+            do { try ScratchpadRichTextExporter.publishMarkdown(rich, to: board) }
+            catch ScratchpadExportError.invisibleListMarker {
+                preparationFailure = "Copy blocked: a list paragraph has no visible bullet. Use Format → Body or Bulleted list on that paragraph."
+                throw ScratchpadExportError.invisibleListMarker
+            }
         }, verify: {
             guard let context else { return .unavailable }
             do {
@@ -399,7 +479,7 @@ import GymAssistantWorkspace
             case .copiedVerified: self.status.stringValue = "Copied—Notes checked. Use Notes Paste as Markdown." + suffix
             case .copiedUnverified: self.status.stringValue = "Copied—Notes not verified. Check Notes before pasting." + suffix
             case .copiedConflict: self.status.stringValue = "Copied—Notes changed in this session. Compare before pasting; clipboard unchanged." + suffix
-            case .failed: self.status.stringValue = "Copy failed; no formatted handoff claimed."
+            case .failed: self.status.stringValue = preparationFailure ?? "Copy failed; no formatted handoff claimed."
             }
         })
     }

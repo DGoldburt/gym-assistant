@@ -1,5 +1,32 @@
 # Initial offline scratchpad implementation checkpoint
 
+Formatting-authoring continuation, 2026-10-14: implement the five approved Format
+menu commands without a toolbar. Local shortcuts are Option-Command-2/3/0 for
+Heading/Subheading/Body, Command-B for Bold, and Option-Command-7 for Bulleted list.
+Commands are disabled outside the scratchpad or while comparison is shown.
+Paragraph styles use semantic attributes; selected bold preserves other text.
+Regression tests cover routing, protection, revision, undo/redo, saved formatting,
+selection scope, list-to-Body conversion and normal Return continuation.
+
+Native testing reset the synthetic scratchpad to ordinary Body text, authored
+Heading/Subheading/list via keyboard, converted a list back to Body and back,
+undid/redid the list, typed continuing bullets, exited an empty bullet and typed
+bold text. Quit/reopen retained formatting and composer text. An initial Return
+defect produced invisible list attributes; explicit continuation fixes new typing,
+and export now blocks such mismatched legacy paragraphs until Body/List repair.
+The failure regression verifies clipboard contents/change count remain untouched.
+Native Body repair, reopen and final copy/paste preserve the visible heading, bold,
+list and body structure. Pasted HTML shows h2/h3, b and two li elements. The accepted
+blank separator remains. Notes trims trailing empty end-of-copy paragraphs; this
+test does not establish exact terminal whitespace preservation or automatic matching.
+
+Native reimport of the first authored paste succeeded (97 paragraphs/three session
+regions). Both pastes and inserted test paragraphs were undone; guarded HTML reads
+confirmed exact fixture restoration. Only the synthetic note was edited. The app
+is left running with saved synthetic revision 79, and the clipboard holds that
+synthetic Markdown copy. All five verification stages pass; full PLAN 013 remains
+in progress, especially live ownership/boundary integration and API gates.
+
 Acceptance update, 2026-10-14: the coach accepts the first handoff adding one blank
 separator after a bulleted list before ordinary body text. Other spacing/formatting
 changes are not implicitly approved. The importer now normalizes only the two exact

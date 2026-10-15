@@ -504,7 +504,11 @@ structure compares supported body/formatting evidence, never mutable labels alon
 The semantic Notes importer rejects unsupported HTML instead of rendering web
 resources or silently dropping formatting. Boundary edit protection retains
 deletion/insertion evidence; the synthetic window has a keyboard-accessible read-only
-boundary browser and composite undo. `CheckedScratchpadCopy` separates one-time
+boundary browser and composite undo. `ScratchpadFormatting` applies bounded semantic styles; controller-owned Format
+commands route only to the editor and share revision/protection/persistence paths.
+`ScratchpadTextView` supplies visible list continuation through normal text edits.
+Export refuses invisible-marker list states rather than silently changing apparent
+body text into bullets. `CheckedScratchpadCopy` separates one-time
 clipboard publication from asynchronous verification and timeout/status delivery.
 Generation guards suppress obsolete copy results; late verification never writes
 the clipboard. The comparison remains explicitly text-only, not formatting agreement

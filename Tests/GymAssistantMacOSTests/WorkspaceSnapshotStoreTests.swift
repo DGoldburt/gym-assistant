@@ -105,6 +105,19 @@ private enum Injected: Error { case failure }
 }
 
 @Suite("Scratchpad Markdown handoff", .serialized) @MainActor struct ScratchpadMarkdownTests {
+    @Test func invisibleListMarkerCannotSilentlyBecomeBulletOnPaste() throws {
+        let rich = NSMutableAttributedString(string: "Looks like body\n")
+        let list = NSMutableParagraphStyle(); list.textLists = [NSTextList(markerFormat: .disc, options: 0)]
+        rich.addAttribute(.paragraphStyle, value: list, range: NSRange(location: 0, length: rich.length))
+        let board = NSPasteboard.withUniqueName(); defer { board.releaseGlobally() }
+        board.setString("Untouched", forType: .string)
+        let before = board.changeCount
+        #expect(throws: ScratchpadExportError.self) { try ScratchpadRichTextExporter.publishMarkdown(rich, to: board) }
+        #expect(board.changeCount == before)
+        #expect(board.string(forType: .string) == "Untouched")
+        let repaired = ScratchpadFormatting.apply(.body, to: rich, selection: NSRange(location: 0, length: 0))
+        #expect(try ScratchpadRichTextExporter.markdown(repaired) == "Looks like body\n")
+    }
     @Test func nativeHeadingsAndBoldParagraphSerialize() throws {
         let rich = NSMutableAttributedString(attributedString: richFixture("Session 1\nB2 Dowel squat\n"))
         rich.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: 15), range: (rich.string as NSString).range(of: "B2"))

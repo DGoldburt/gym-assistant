@@ -26,6 +26,45 @@ private actor WindowNotesReader: NotesContextReading {
         }
         #expect(condition())
     }
+    @Test func formattingRoutesToEditorProtectsBoundaryAndPersistsUndoRedo() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-format-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let body = "Session 1\nWarmup\nA1 Row\n"
+        let note = NoteSnapshot(id: NoteID("format-fixture"), text: body)
+        let rich = NSAttributedString(string: body, attributes: [.font: NSFont.systemFont(ofSize: 16)])
+        let snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: note.id, recordedHeading: "Session 1", baselineText: body), text: body, richTextArchive: try RichTextArchive.encode(rich))
+        let store = WorkspaceSnapshotStore(directory: root)
+        let controller = try SessionScratchpadWindowController(snapshot: snapshot, store: store, note: note,
+            association: SessionAssociation(sessionID: snapshot.anchor.sessionID, noteID: note.id, observationID: note.observationID,
+                range: SourceRange(location: 0, length: rich.length)), profile: CoachingProfile(version: "empty", entries: []))
+        let views = descendants(try #require(controller.window?.contentView))
+        let editor = try #require(views.first { $0.identifier?.rawValue == "scratchpad-editor" } as? NSTextView)
+        let composer = try #require(views.first { $0.identifier?.rawValue == "chat-composer" } as? NSTextView)
+        let item = try #require(controller.formattingMenu().items.first { $0.tag == ScratchpadFormat.heading.rawValue })
+        controller.window?.makeFirstResponder(composer)
+        #expect(!controller.validateMenuItem(item))
+        controller.formatScratchpad(item)
+        #expect(controller.snapshot.revision == 0)
+        controller.window?.makeFirstResponder(editor)
+        editor.setSelectedRange(NSRange(location: 0, length: 0))
+        let undo = try #require(editor.undoManager)
+        undo.beginUndoGrouping(); controller.formatScratchpad(item); undo.endUndoGrouping()
+        #expect(controller.snapshot.revision == 1)
+        #expect((editor.attributedString().attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?.headerLevel == 2)
+        #expect(throws: BoundaryChangeError.editedRegion) {
+            try controller.snapshot.boundaryProtection?.preview(SourceRange(location: 10, length: rich.length - 10), in: body)
+        }
+        undo.undo()
+        #expect(editor.attributedString().isEqual(to: rich))
+        #expect(controller.snapshot.revision == 2)
+        undo.redo()
+        #expect(controller.snapshot.revision == 3)
+        #expect(controller.flushAndStop())
+        let saved = try #require(store.load(id: snapshot.workspaceID)?.snapshot)
+        #expect((try RichTextArchive.decode(saved.richTextArchive).attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?.headerLevel == 2)
+        #expect(saved.boundaryProtection == controller.snapshot.boundaryProtection)
+        controller.window?.close()
+    }
     @Test func checkedCopyAndDiffReadNotesWithoutReplacingScratchpad() async throws {
         let reader = WindowNotesReader()
         let initial = try ProgramDocumentReader.read(await reader.read(id: NoteID("fixture")))

@@ -56,6 +56,10 @@ import GymAssistantMacOS
             boundary.keyEquivalentModifierMask = [.command, .shift]; boundary.target = controller
             editMenu.addItem(boundary)
             edit.submenu = editMenu; menu.addItem(edit); NSApp.mainMenu = menu
+            let redo = NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+            redo.keyEquivalentModifierMask = [.command, .shift]; editMenu.insertItem(redo, at: 1)
+            let format = NSMenuItem(); format.title = "Format"; format.submenu = controller?.formattingMenu()
+            menu.addItem(format)
             let windowItem = NSMenuItem(); windowItem.title = "Window"
             let windowMenu = NSMenu(title: "Window")
             let reopen = NSMenuItem(title: "Session Scratchpad", action: #selector(showScratchpad), keyEquivalent: "0")
