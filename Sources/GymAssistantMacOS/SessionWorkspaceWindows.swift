@@ -12,6 +12,55 @@ import GymAssistantWorkspace
     private let exerciseLookup: (String) -> ExerciseMentionMatch
     private var controllers: [WorkspaceID: SessionScratchpadWindowController] = [:]
     private var mostRecent: WorkspaceID?
+    private var planningWindow: PreviousPlanningWindow?
+
+    /// Isolated evidence read: browsing must not register owners, promote an
+    /// insertion, interrupt a request, save an editor or rewrite old snapshots.
+    public func planningReferences(in noteID: NoteID) async throws -> [PlanningReference] {
+        let headers = try store.storedAnchors().filter { $0.anchor.noteID == noteID }
+        var snapshots: [WorkspaceSnapshot] = []
+        for header in headers {
+            guard let loaded = try store.load(id: header.workspaceID), !loaded.recoveredFromPrevious else {
+                throw SnapshotStoreError.recoveryRequired(header.workspaceID)
+            }
+            snapshots.append(loaded.snapshot)
+        }
+        var document: ProgramDocument?
+        do { document = try ProgramDocumentReader.read(await reader.read(id: noteID)).0 }
+        catch { try Task.checkCancellation() /* local references remain accessible offline */ }
+        try Task.checkCancellation()
+        // Capture retained editors after the read, including still-unsaved typing.
+        snapshots = try snapshots.map { try controllers[$0.workspaceID]?.planningReferenceSnapshot() ?? $0 }
+        var registry = try SessionAssociationRegistry(noteID: noteID,
+            anchors: snapshots.filter { !$0.anchor.isUnrecorded }.map(\.anchor))
+        if let document { try registry.observe(document) }
+        return try snapshots.map { snapshot in
+            let attributes = try FileManager.default.attributesOfItem(atPath: store.currentURL(for: snapshot.workspaceID).path)
+            let heading: String?
+            if let document, let mapping = registry.mappings[snapshot.anchor.sessionID] {
+                heading = try document.evidence(in: mapping.range).paragraphs.first?.label
+            } else { heading = nil }
+            return PlanningReference(snapshot: snapshot, savedAt: attributes[.modificationDate] as? Date,
+                includesOpenEditor: controllers[snapshot.workspaceID] != nil, verifiedHeading: heading)
+        }.sorted {
+            if $0.savedAt != $1.savedAt { return ($0.savedAt ?? .distantPast) > ($1.savedAt ?? .distantPast) }
+            return $0.snapshot.workspaceID.rawValue.uuidString < $1.snapshot.workspaceID.rawValue.uuidString
+        }
+    }
+
+    public func showPreviousPlanning(in noteID: NoteID) async throws {
+        let records = try await planningReferences(in: noteID)
+        try Task.checkCancellation()
+        let window = try PreviousPlanningWindow(records: records)
+        planningWindow?.close(); planningWindow = window; window.show()
+    }
+
+    private func connectPlanning(_ controller: SessionScratchpadWindowController) {
+        controller.onPreviousPlanning = { [weak self, weak controller] in
+            guard let self, let controller else { return }
+            try await self.showPreviousPlanning(in: controller.snapshot.anchor.noteID)
+        }
+    }
 
     public init(store: WorkspaceSnapshotStore, reader: any NotesContextReading,
                 profile: CoachingProfile, assistant: any ProgrammingAssistant,
@@ -60,6 +109,7 @@ import GymAssistantWorkspace
             note: prepared.note, association: nil, profile: profile, assistant: assistant, noteContext: prepared.context,
             exerciseLookup: exerciseLookup)
         controllers[prepared.snapshot.workspaceID] = controller
+        connectPlanning(controller)
         return controller
     }
 
@@ -73,6 +123,7 @@ import GymAssistantWorkspace
             note: prepared.note, association: prepared.association, profile: profile,
             assistant: assistant, noteContext: prepared.context, exerciseLookup: exerciseLookup)
         controllers[prepared.snapshot.workspaceID] = controller
+        connectPlanning(controller)
         return controller
     }
 

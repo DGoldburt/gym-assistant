@@ -14,6 +14,26 @@ import GymAssistantWorkspace
 @MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate, NSMenuItemValidation {
     public private(set) var snapshot: WorkspaceSnapshot
     public var onActivate: (() -> Void)?
+    public var onPreviousPlanning: (@MainActor () async throws -> Void)?
+    private var planningTask: Task<Void, Never>?
+
+    public func planningReferenceSnapshot() throws -> WorkspaceSnapshot {
+        var reference = snapshot
+        reference.text = editor.string
+        reference.richTextArchive = try RichTextArchive.encode(editor.attributedString())
+        reference.composerText = composer.string
+        try reference.validate()
+        return reference
+    }
+
+    @objc public func previousPlanning() {
+        guard planningTask == nil, let onPreviousPlanning else { return }
+        planningTask = Task { [weak self] in
+            defer { self?.planningTask = nil }
+            do { try await onPreviousPlanning() }
+            catch { if !Task.isCancelled { self?.status.stringValue = "Previous planning could not be opened safely. Existing work is unchanged." } }
+        }
+    }
     private let store: WorkspaceSnapshotStore
     private var note: NoteSnapshot
     private var association: SessionAssociation?
@@ -314,6 +334,13 @@ import GymAssistantWorkspace
         notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
         root.addSubview(notPastedButton)
         description.frame.size.width = 575
+        let history = NSButton(title: "Previous planning…", target: self, action: #selector(previousPlanning))
+        history.frame = NSRect(x: 395, y: 630, width: 190, height: 25)
+        history.identifier = .init("scratchpad-previous-planning")
+        history.keyEquivalent = "h"; history.keyEquivalentModifierMask = [.command, .shift]
+        history.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
+        root.addSubview(history)
+        description.frame.size.width = 370
         status.frame = NSRect(x: 220, y: 27, width: 800, height: 20)
         status.identifier = NSUserInterfaceItemIdentifier("workspace-status")
         status.autoresizingMask = [.width]
@@ -922,11 +949,13 @@ import GymAssistantWorkspace
         stop(); saveTask?.cancel(); return saveNow()
     }
     public func windowWillClose(_ notification: Notification) {
+        planningTask?.cancel()
         checkedCopy.cancel()
         comparisonTask?.cancel()
         if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
     public func flushAndStop() -> Bool {
+        planningTask?.cancel()
         endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow()

@@ -14,9 +14,10 @@ private struct MentionFixtureAssistant: ProgrammingAssistant {
 }
 
 private actor SyntheticEntryReader: NotesContextReading {
+    static let html = "<div><h2>Session 18</h2></div><div><h3>Warmup</h3></div><div>Balance preparation</div><div><h3>Strength</h3></div><div>A1 Row</div><div><h2>Parking Lot</h2></div><ul><li>Try a <b>light clean</b> next time</li></ul>"
     func captureSelectedNote() async throws -> NoteSnapshot { try await read(id: NoteID("synthetic-entry-note")) }
     func read(id: NoteID) async throws -> NoteSnapshot {
-        NoteSnapshot(id: id, text: "", html: "<div><h2>Session 18</h2></div><div><h3>Warmup</h3></div><div>Balance preparation</div><div><h3>Strength</h3></div><div>A1 Row</div>")
+        NoteSnapshot(id: id, text: "", html: Self.html)
     }
     func metadata(id: NoteID) async throws -> NoteMetadata { NoteMetadata(id: id, modifiedAt: .distantPast) }
 }
@@ -31,6 +32,25 @@ private actor SyntheticEntryReader: NotesContextReading {
         if CommandLine.arguments.contains("--synthetic-entry") {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
             let store = WorkspaceSnapshotStore(directory: root)
+            if CommandLine.arguments.contains("--synthetic-planning") {
+                do {
+                    let noteID = NoteID("synthetic-entry-note")
+                    for (html, question) in [
+                        (SyntheticEntryReader.html, "Could the finisher challenge coordination without more load?"),
+                        ("<div><h2>Session 17</h2></div><div>An older idea not found in current Notes</div>", "Keep this idea for another session")
+                    ] {
+                        let (document, rich) = try ProgramDocumentReader.read(.init(id: noteID, text: "", html: html))
+                        let evidence = SessionSourceEvidence(paragraphs: document.paragraphs)
+                        var snapshot = WorkspaceSnapshot(anchor: .init(noteID: noteID,
+                            recordedHeading: evidence.paragraphs[0].label, baselineText: evidence.text, sourceEvidence: evidence),
+                            text: rich.string, richTextArchive: try RichTextArchive.encode(rich), composerText: question)
+                        snapshot.messages = [.init(requestID: UUID(), conversationID: snapshot.conversationID,
+                            role: .coach, text: "I chose a light movement to leave room for coordination practice.",
+                            status: .complete, scratchpadRevision: 0, observationID: UUID())]
+                        try store.save(snapshot)
+                    }
+                } catch { NSApp.terminate(nil); return }
+            }
             if CommandLine.arguments.contains("--synthetic-recovery") {
                 do {
                     let rich = NSAttributedString(string: "Session 19\nSaved synthetic coach work\n")

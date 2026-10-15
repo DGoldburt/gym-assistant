@@ -37,7 +37,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
 - [x] (2026-10-15) Implement parking-lot carry-forward with unchanged semantic idea formatting, empty-heading fallback, creation messaging and coach documentation. Add three regressions and update old skeleton/paste fixtures for the explicitly changed product contract. All five stages pass (226 tests/36 suites). Native visual/manual-consolidation acceptance is not yet performed.
-- [ ] Implement lifecycle/replacement and Previous planning access per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
+- [x] (2026-10-15) Implement read-only Previous planning from entry and scratchpad (Command-Shift-H), including conversation/unsent text, verified versus uncertain grouping, live-editor capture without saving, and isolated association inspection. Three regressions cover preservation, offline/unlocated references, damaged-file refusal, read-only UI and menu routing. All five stages pass (229 tests/37 suites). Synthetic native opening, keyboard selection between uncertain/verified records and Command-W return observed. User manual retrieval/copy test is next; no complete revision timeline or set-aside claim.
+- [ ] Implement remaining lifecycle/replacement and durable set-aside per the approved follow-up milestone after the manual Previous planning test. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
@@ -115,6 +116,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Read-only reference windows must own menu routing: otherwise Format or Copy for
+Notes can still target the scratchpad behind the browser. Previous planning and
+entry now install read-only Copy/Select All and correct-window Close commands when
+active; returning to the scratchpad restores its existing menus. A local reference
+browser does not require introducing durable historical ownership before it is useful.
 
 Parking-lot carry-forward exposed a headings-only creation assumption: rebuilding
 each paragraph would flatten idea formatting. Acceptance now copies the verified
@@ -632,6 +639,18 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 Previous planning increment: existing local workspace records and retained
+editor captures are viewable side by side with conversations, including unsent text.
+One isolated Notes read labels reliable session locations without mutating shared
+ownership or saved content; unavailable Notes yields note-level unverified references.
+Synthetic native opening and chooser labeling observed; manual retrieval/copy and
+return-to-programming usability is the next explicit test. No set-aside, Notes
+replacement, imported history or full revision archive is implemented in this increment.
+Final verification: 229 tests/37 suites and all five stages pass. Native synthetic
+Command-Shift-H, Down/Down/Return record selection, and Command-W back to entry
+observed in the final build. Left the isolated app open at entry for the coach's
+manual test; no real Notes or clipboard contents were changed by agent validation.
 
 2026-10-15 lifecycle revision increment: reconciled OST content against local
 learner/main b5d9916 without merging either branch or disturbing client-history.
@@ -1455,6 +1474,19 @@ labeled synthetic note, never overwrite a real program to demonstrate acceptance
 
 ## Validation and Acceptance
 
+Previous planning manual test: build with `bash app/scratchpad-development/build.sh`,
+then launch that emitted bundle with `--synthetic-entry --synthetic-planning`.
+Each launch creates a fresh temporary synthetic store, never accesses real Notes,
+and seeds Session 18 with a trailing rich Parking Lot plus an unlocated Session 17
+with an older idea and conversation. From entry, Command-Shift-H opens the read-only
+browser. Confirm Session 17 is grouped as Other planning for this note and Session
+18 is verified; inspect both panes and copy an idea. Close with Command-W, create a
+new session with Command-N, and confirm the Parking Lot appears in the preview and
+preserves its bullet/bold in the created editor. Paste the copied idea there. Reopen
+Previous planning from that scratchpad and confirm the source record remains
+unchanged. Judge whether recovering rationale and returning to programming feels
+lightweight; passing package checks does not establish this usability result.
+
 
 Verify that GymAssistantWorkspace has no dependency on GymAssistantMacOS, AppKit,
 or ApplicationServices. Its reader contract uses Foundation-only snapshots/errors.
@@ -2024,3 +2056,9 @@ local learner/main OST additions without deleting this branch's contextual oppor
 Implement parking-lot carry-forward with rich preservation and empty-heading fallback;
 five stages pass with 226 tests. No Notes edits, live API calls, branch merge, or
 completed lifecycle/native-acceptance claim.
+
+Revision note, 2026-10-15, Previous planning milestone: implement the independently
+testable read-only retrieval UI before durable set-aside/replacement so the coach can
+judge the interaction now. Preserve source association uncertainty and current editor
+content without writes. Full verification passes; native keyboard navigation observed.
+Stop at the explicitly authorized manual UI test, not an ordinary plan milestone.

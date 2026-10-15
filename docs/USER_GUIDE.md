@@ -19,6 +19,25 @@ This development route uses a clearly labeled local test assistant, not OpenAI,
 and has no coaching profile loaded. Damaged-file recovery and uncertain initial
 boundary entry remain unfinished. Do not treat this as the completed product slice.
 
+### Recover an earlier idea
+
+Choose **Previous planning…** from the programming entry window or scratchpad
+(Command-Shift-H). Select a record at the top to view its scratchpad and conversation
+side by side, both read-only. Unsent questions are shown separately. Select a passage
+and use Command-C, then return to your scratchpad and paste it where useful, including
+the Parking Lot. Command-W closes the reference window.
+
+Verified session locations are labeled with their current heading. Unlocated records
+appear under **Other planning for this note**, with their original heading retained;
+the app does not infer identity from a matching session number. If Notes is unavailable,
+local planning remains readable without a verified association. The timestamp is the
+saved file's modification time, not a claimed session/performance date. An open editor
+is captured when the browser opens; reopen the browser to see subsequent edits.
+
+This first browser exposes existing local workspace records, not imported ChatGPT
+history or a complete revision timeline. Set-aside and replacement controls are still
+under development. Browsing does not save, repair associations, or write Notes.
+
 ### Start or resume a new session
 
 Choose **New session** (Command-N in the programming entry window). Existing

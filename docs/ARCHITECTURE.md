@@ -485,10 +485,18 @@ paragraph count; acceptance revalidates the source and copies that suffix direct
 from the imported attributed Notes text, preserving bullet and inline formatting.
 Missing/ambiguous sections yield an empty heading. Consolidation is manual in Notes.
 
-Approved lifecycle follow-up (not yet implemented): separate active editing claims
+Previous planning now reads validated local snapshots and captures retained editors
+without saving or stopping requests. It performs one isolated Notes read and builds
+a temporary association registry solely to label references; it does not publish
+ownership, trigger insertion promotion, or repair associations. Failed Notes reads
+leave local records accessible as unverified. Damaged snapshots are not silently
+replaced by backups. The native reference window is read-only and uses its own
+Copy/Select All menu routing, not the underlying scratchpad's mutation commands.
+No new history schema, revision archive or automatic preference learning is added.
+
+Remaining approved lifecycle follow-up: separate active editing claims
 from historical source associations; resume saved scratchpads with explicit verified
-Notes replacement and recoverable prior content. Previous planning is read-only,
-with uncertain associations grouped at note level. Batch association repair is
+Notes replacement and recoverable prior content. Batch association repair is
 deferred. Existing saved-owner registration remains unchanged until this follow-up;
 do not treat it as implemented archival or extracted session history.
 

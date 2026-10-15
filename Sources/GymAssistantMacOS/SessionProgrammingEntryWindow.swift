@@ -23,6 +23,7 @@ import GymAssistantWorkspace
     private var recoveryID: WorkspaceID?
     private var recoveryPreview: WorkspaceRecoveryPreview?
     private let previewBackup = NSButton(title: "Preview last valid backup…", target: nil, action: nil)
+    private let previousPlanning = NSButton(title: "Previous planning…", target: nil, action: nil)
 
     public init(workspaces: SessionWorkspaceWindows, modeDescription: String,
                 presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)? = nil,
@@ -63,6 +64,15 @@ import GymAssistantWorkspace
         previewBackup.target = self; previewBackup.action = #selector(showBackupPreview)
         previewBackup.identifier = .init("program-entry-preview-backup"); previewBackup.isHidden = true
         window.contentView?.addSubview(previewBackup)
+        // Leave the existing entry/recovery controls together; add one quiet route below.
+        window.contentView?.subviews.forEach { $0.frame.origin.y += 45 }
+        window.setContentSize(NSSize(width: 530, height: 295))
+        previousPlanning.frame = NSRect(x: 20, y: 12, width: 220, height: 28)
+        previousPlanning.target = self; previousPlanning.action = #selector(openPreviousPlanning)
+        previousPlanning.identifier = .init("program-entry-previous-planning")
+        previousPlanning.keyEquivalent = "h"; previousPlanning.keyEquivalentModifierMask = [.command, .shift]
+        previousPlanning.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
+        previousPlanning.isEnabled = false; window.contentView?.addSubview(previousPlanning)
     }
     public required init?(coder: NSCoder) { nil }
 
@@ -80,6 +90,7 @@ import GymAssistantWorkspace
         recoveryID = nil; previewBackup.isHidden = true; latest.isHidden = false; skeleton.isHidden = false
         task?.cancel(); generation = UUID(); let operation = generation
         noteID = nil; latest.isEnabled = false; skeleton.isEnabled = false; retry.isEnabled = false; access.isHidden = true; access.isEnabled = true
+        previousPlanning.isEnabled = false
         status.stringValue = "Reading the single selected note in Notes…"
         task = Task { [weak self] in
             guard let self else { return }
@@ -87,6 +98,7 @@ import GymAssistantWorkspace
                 let captured = try await self.workspaces.captureNote()
                 guard self.generation == operation, !Task.isCancelled else { return }
                 self.noteID = captured; self.latest.isEnabled = true; self.skeleton.isEnabled = true
+                self.previousPlanning.isEnabled = true
                 self.status.stringValue = "Return: latest session. Command-N: new session or resume unrecorded work. Changing your selection in Notes will not change this captured target."
             } catch {
                 guard self.generation == operation, !Task.isCancelled else { return }
@@ -131,6 +143,23 @@ import GymAssistantWorkspace
             } catch { if !Task.isCancelled { self.present(error) } }
             guard self.generation == operation else { return }
             self.latest.isEnabled = true; self.skeleton.isEnabled = true; self.retry.isEnabled = true; self.task = nil
+        }
+    }
+
+    @objc private func openPreviousPlanning() {
+        guard task == nil, let noteID else { return }
+        let operation = generation
+        previousPlanning.isEnabled = false
+        status.stringValue = "Opening local planning and checking session locations…"
+        task = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.workspaces.showPreviousPlanning(in: noteID)
+                if !Task.isCancelled { self.status.stringValue = "Previous planning opened read-only. Your scratchpads and Notes are unchanged." }
+            }
+            catch { if !Task.isCancelled { self.present(error) } }
+            guard self.generation == operation else { return }
+            self.previousPlanning.isEnabled = true; self.task = nil
         }
     }
 
@@ -219,7 +248,7 @@ import GymAssistantWorkspace
         guard proposal != nil || recoveryPreview != nil, let entryContent else { return }
         recoveryPreview = nil
         proposal = nil; previewStatus = nil; acceptSkeleton = nil
-        window?.contentView = entryContent; window?.setContentSize(NSSize(width: 530, height: 250))
+        window?.contentView = entryContent; window?.setContentSize(NSSize(width: 530, height: 295))
     }
     @objc private func cancelProposal() { stopPending(); restoreEntryContent() }
 
@@ -325,7 +354,11 @@ import GymAssistantWorkspace
         task?.cancel(); task = nil; generation = UUID()
         retry.isEnabled = true; access.isEnabled = true; latest.isEnabled = noteID != nil
         skeleton.isEnabled = noteID != nil
+        previousPlanning.isEnabled = noteID != nil
     }
     public func windowWillClose(_ notification: Notification) { stopPending(); restoreEntryContent() }
+    public func windowDidBecomeKey(_ notification: Notification) {
+        PreviousPlanningWindow.installReadOnlyMenus(for: window)
+    }
     public func cancel() { stopPending(); restoreEntryContent(); window?.orderOut(nil) }
 }
