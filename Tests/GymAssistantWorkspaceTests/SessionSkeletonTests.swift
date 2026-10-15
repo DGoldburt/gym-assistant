@@ -3,6 +3,35 @@ import Testing
 @testable import GymAssistantWorkspace
 
 @Suite("Heading-only session skeleton") struct SessionSkeletonTests {
+    @Test func incrementsNumberOrLetterWithoutPromptingOrCarryingDate() throws {
+        for (previous, expected) in [("Session 18 — 14 Oct", "Session 19"), ("Session 009", "Session 010"),
+                                     ("Session A", "Session B"), ("session b: three weeks", "Session C"),
+                                     ("Session Y", "Session Z")] {
+            let source = SessionSourceEvidence(paragraphs: [.init(text: previous + "\n", headingLevel: 2),
+                                                           .init(text: "Warmup\n", headingLevel: 3)])
+            let skeleton = try SessionSkeleton(previous: source)
+            #expect(skeleton.evidence.text == expected + "\nWarmup\n")
+        }
+    }
+
+    @Test func ambiguityUsesEditableNonIdentityPlaceholder() throws {
+        for previous in ["Session Z", "Session AA", "Session A1", "Session 1/2", "Session", "Other heading",
+                         "Session " + String(Int.max), "Session 999999999999999999999999999999999"] {
+            #expect(SessionSkeleton.nextHeading(after: previous) == SessionSkeleton.placeholderHeading)
+        }
+        #expect(SessionSkeleton.nextHeading(after: "Session 18", existingHeadings: ["Session 18", "Session 19 — old"])
+                == SessionSkeleton.placeholderHeading)
+        #expect(SessionSkeleton.nextHeading(after: "Session A", existingHeadings: ["Session A", "Session A"])
+                == SessionSkeleton.placeholderHeading)
+        #expect(SessionSkeleton.nextHeading(after: "Session 009", existingHeadings: ["Session 10"])
+                == SessionSkeleton.placeholderHeading)
+        let source = SessionSourceEvidence(paragraphs: [.init(text: "Session Z\n", headingLevel: 2)])
+        let skeleton = try SessionSkeleton(previous: source)
+        #expect(skeleton.evidence.text == "Session [number or letter]\n")
+        // A temporary label is editable text, not a new authoritative Notes identity.
+        #expect(ProgramDocument.sessionLabel(skeleton.evidence.paragraphs[0].label) == nil)
+    }
+
     @Test func excludesExerciseDoseDateAndParkingLotContent() throws {
         let previous = SessionSourceEvidence(paragraphs: [
             .init(text: "Session 18 — 14 Oct\n", headingLevel: 2),

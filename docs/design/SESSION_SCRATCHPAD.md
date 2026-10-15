@@ -166,7 +166,13 @@ to a fragment. "Latest" may mean last in note order rather than most recently ed
 when structure is ambiguous, show the proposed session before starting.
 
 Approved new-session skeleton: **headings only** from the previous session. Do not
-carry forward exercise selections, prescriptions, warmup content, loads, dates,
+prompt for its name: increment the number or single letter after Session, dropping
+the previous suffix/date. If the sequence is ambiguous (for example Z rollover,
+mixed labels, or a proposed label already present), insert the editable placeholder
+`Session [number or letter]`. Do not guess a sequence or use the placeholder as a
+confirmed Notes identity. This naming choice must not block entry.
+
+Do not carry forward exercise selections, prescriptions, warmup content, loads, dates,
 test outcomes, symptoms, or observations. Preserve the existing heading structure;
 do not invent a mandatory A/B or conditioning format. Habitual warmup content waits
 for reusable library-block insertion, not duplication in this slice.

@@ -1,9 +1,38 @@
 import Foundation
 
 /// A proposal, not a persisted workspace or a claim that a new session is in
-/// Notes. The caller supplies the coach-approved outer label. Uncertain headings
+/// Notes. The outer label increments automatically or uses an editable placeholder.
+/// Uncertain headings
 /// are separate review items and never appear in generated session content.
 public struct SessionSkeleton: Equatable, Sendable {
+    public static let placeholderHeading = "Session [number or letter]"
+
+    /// Never ask for a name or guess a mixed/rollover sequence. Existing labels
+    /// prevent proposing a duplicate; they do not cause us to skip ahead.
+    public static func nextHeading(after previous: String, existingHeadings: [String] = []) -> String {
+        guard let label = ProgramDocument.sessionLabel(previous.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return placeholderHeading
+        }
+        let next: String
+        if label.allSatisfy({ $0.isASCII && $0.isNumber }), let number = Int(label), number < Int.max {
+            let incremented = String(number + 1)
+            next = String(repeating: "0", count: max(0, label.count - incremented.count)) + incremented
+        } else if label.utf8.count == 1, let letter = label.utf8.first, (65..<90).contains(letter) {
+            next = String(UnicodeScalar(letter + 1))
+        } else { return placeholderHeading }
+        let labels = existingHeadings.compactMap {
+            ProgramDocument.sessionLabel($0.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        func comparable(_ value: String) -> String { Int(value).map(String.init) ?? value }
+        guard !labels.contains(where: { comparable($0) == comparable(next) }),
+              labels.filter({ comparable($0) == comparable(label) }).count <= 1 else { return placeholderHeading }
+        return "Session " + next
+    }
+
+    public init(previous: SessionSourceEvidence, existingHeadings: [String] = []) throws {
+        try self.init(previous: previous,
+            newHeading: Self.nextHeading(after: previous.paragraphs.first?.label ?? "", existingHeadings: existingHeadings))
+    }
     public struct HeadingForReview: Equatable, Sendable {
         public let sourceParagraphIndex: Int
         public let paragraph: ProgramParagraph
@@ -14,7 +43,7 @@ public struct SessionSkeleton: Equatable, Sendable {
     public init(previous: SessionSourceEvidence, newHeading: String) throws {
         let heading = newHeading.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !heading.isEmpty, !heading.contains(where: { $0.isNewline }),
-              ProgramDocument.sessionLabel(heading) != nil,
+              (ProgramDocument.sessionLabel(heading) != nil || heading == Self.placeholderHeading),
               let first = previous.paragraphs.first else { throw WorkspaceError.invalidSnapshot }
         let outerLevel = first.headingLevel > 0 ? first.headingLevel : 2
         var paragraphs = [ProgramParagraph(text: heading + "\n", headingLevel: outerLevel)]
