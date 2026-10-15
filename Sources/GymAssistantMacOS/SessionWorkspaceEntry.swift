@@ -142,6 +142,11 @@ public enum SessionEntryError: Error, Equatable {
             }
             snapshot = loaded.snapshot
         } else {
+            // An unrecorded scratchpad may be the session just pasted. Do not
+            // create a competing recorded owner before its association is resolved.
+            if try store.storedAnchors().contains(where: { $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }) {
+                throw SessionEntryError.unresolvedSavedWorkspace
+            }
             guard context.registry.unresolved.isEmpty else {
                 throw SessionEntryError.unresolvedSavedWorkspace
             }

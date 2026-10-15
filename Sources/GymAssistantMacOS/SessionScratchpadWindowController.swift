@@ -155,7 +155,12 @@ import GymAssistantWorkspace
         editor.textStorage?.setAttributedString(state.rich)
         editor.setSelectedRange(state.selection); editor.typingAttributes = state.typing
         editor.undoManager?.enableUndoRegistration()
-        snapshot.boundaryProtection = state.protection
+        if let association, state.protection?.sourceRange != association.range {
+            // An undo captured before association has no recorded coordinates.
+            // Keep the undo, but never restore absent/stale boundary protection.
+            snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: association.range)
+            snapshot.boundaryProtection?.markUncertain(currentLength: state.rich.length)
+        } else { snapshot.boundaryProtection = state.protection }
         textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
     }
     @objc public func formatScratchpad(_ sender: NSMenuItem) {
@@ -289,9 +294,34 @@ import GymAssistantWorkspace
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
         if snapshot.anchor.isUnrecorded {
-            status.stringValue = noteContext.failure ?? "Unrecorded session · scratchpad saved locally; Notes not written."
-            if showingDiff { renderComparison() }
-            return
+            do {
+                switch try insertionState() {
+                case .notInserted:
+                    status.stringValue = "Unrecorded session · scratchpad saved locally; Notes not written."
+                case .needsReview:
+                    status.stringValue = "Notes changed · session association needs review. Scratchpad preserved; chat paused."
+                case .verified:
+                    var current = snapshot
+                    current.text = editor.string
+                    current.richTextArchive = try RichTextArchive.encode(editor.attributedString())
+                    current.composerText = composer.string
+                    committingBoundary = true
+                    defer { committingBoundary = false }
+                    // Save the complete editor state before ownership changes.
+                    try store.save(current)
+                    snapshot = try noteContext.associateInsertedSession(current, observation: note.observationID, store: store)
+                    savedRevision = snapshot.revision
+                    association = try noteContext.association(for: snapshot.anchor.sessionID)
+                    status.stringValue = "Session found in Notes · scratchpad and conversation preserved."
+                    refreshTranscript()
+                }
+            } catch {
+                status.stringValue = "Session association could not be verified. Scratchpad preserved; review Notes or local recovery."
+            }
+            if snapshot.anchor.isUnrecorded {
+                if showingDiff { renderComparison() }
+                return
+            }
         }
         if let fresh = try? noteContext.association(for: snapshot.anchor.sessionID) {
             if fresh.range != association?.range {
@@ -307,6 +337,15 @@ import GymAssistantWorkspace
             status.stringValue = noteContext.failure ?? "Session association needs review. Use Adjust Session Boundary."
         }
         if showingDiff { renderComparison() }
+    }
+    private func insertionState() throws -> UnrecordedSessionAssociation.Result {
+        guard let noteContext, noteContext.failure == nil, let document = noteContext.sourceDocument else {
+            throw WorkspaceError.staleAssociation
+        }
+        let scratchpad = try ProgramDocumentReader.document(snapshot: NoteSnapshot(id: note.id, text: editor.string),
+            richText: editor.attributedString())
+        return UnrecordedSessionAssociation.evaluate(anchor: snapshot.anchor,
+            scratchpad: SessionSourceEvidence(paragraphs: scratchpad.paragraphs), document: document)
     }
     public func textDidChange(_ notification: Notification) {
         let changedEditor = notification.object as AnyObject? === editor
@@ -566,6 +605,9 @@ import GymAssistantWorkspace
         do {
             let request: ProgrammingRequest
             if snapshot.anchor.isUnrecorded {
+                if noteContext != nil {
+                    guard try insertionState() == .notInserted else { throw WorkspaceError.staleAssociation }
+                }
                 request = try ProgramContextAssembler.assembleUnrecorded(note: note, workspace: snapshot,
                     profile: profile, question: question, maximumContextBytes: 1_000_000)
             } else {
@@ -591,7 +633,10 @@ import GymAssistantWorkspace
                     self.updateReply(requestID: request.id, text: "Reply unavailable. No automatic retry.", status: .failed)
                 }
             }
-        } catch { status.stringValue = "Question not sent: \(error). Your text is still in the composer." }
+        } catch {
+            updateAvailability()
+            status.stringValue = "Question not sent: \(error). Your text is still in the composer."
+        }
     }
     private func updateReply(requestID: UUID, text: String, status: MessageStatus) {
         if let index = snapshot.messages.firstIndex(where: { $0.requestID == requestID && $0.role == .assistant }) {
@@ -689,6 +734,10 @@ import GymAssistantWorkspace
     }
     private func renderComparison() {
         if snapshot.anchor.isUnrecorded {
+            if noteContext != nil, (try? insertionState()) != .notInserted {
+                diff.string = "Notes changed or could not be verified. Session association needs review; scratchpad preserved."
+                return
+            }
             diff.string = "Unrecorded scratchpad r\(snapshot.revision) — proposed addition, not a replacement.\n"
                 + "No Notes section is associated yet.\n\n" + SessionComparison.text(before: "", after: snapshot.text)
             return

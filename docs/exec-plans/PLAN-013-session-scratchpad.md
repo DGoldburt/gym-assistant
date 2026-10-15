@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Wire verified insertion promotion into live controller refresh without replacing editor content or undo history. Preserve conservative protection through pre-association formatting undo; ambiguous changes pause chat/comparison and retain the question. Block latest-entry creation of a competing owner while pending work exists. Two controller regressions cover promotion/redo and ambiguity/entry. All five verification stages pass (208 tests/33 suites); confirmation and New Session presentation remain outstanding.
+
 - [x] (2026-10-15) Add conservative post-paste insertion evaluation and persisted ownership transition. Capture semantic whole-note origin on new-session creation; require one exact insertion into otherwise unchanged content, preserve IDs/content/conversation and previous snapshot, reject stale/unsaved/occupied/ambiguous cases. Three new synthetic tests cover these paths. Automatic controller/entry invocation and confirmation UI remain outstanding; New Session is still disabled.
 
 - [x] (2026-10-15) Connect unrecorded snapshots to the scratchpad controller/window registry with an explicitly absent Notes association, no invented boundary protection, addition-aware chat/comparison, conservative unverified copy, and retained-window reuse. Two new synthetic tests exercise these paths and reject fabricated associations. Programming-entry New Session remains disabled pending post-paste association/ambiguity handling and proposal presentation; native acceptance remains outstanding.
@@ -99,6 +101,13 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Live promotion, 2026-10-15: formatting undo captured before association contains
+no Notes-boundary protection. Restoring that state after promotion must preserve
+the new boundary and mark correspondence uncertain, not restore nil protection or
+discard undo. The ambiguous-request regression also exposed Send remaining disabled
+after assembly rejection; refresh availability in that error path while preserving
+the unsent question.
 
 Post-paste transaction, 2026-10-15: AppKit may include a heading's terminating
 newline in a bold run while Notes leaves that newline unstyled. Clip inline marks
@@ -275,6 +284,15 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Promote on verified live refresh only after saving the complete editor
+  state; preserve the editor/undo stack and treat pre-association formatting undo as
+  uncertain boundary correspondence. While unrecorded association needs review,
+  preserve edits and composer but block context assembly/comparison; do not create
+  a competing latest-session owner.
+  Rationale: Automatic association must not erase work, fabricate context, or bypass
+  the one-workspace ownership contract. Existing copy remains available/unverified.
+  Date/Author: 2026-10-15, Codex implementation.
 
 - Decision: Begin automatic insertion verification with exact single-insertion
   evidence against the note at creation. Store that semantic origin separately from
@@ -486,6 +504,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Live promotion, 2026-10-15: verified refresh now records ownership in an active
+window while preserving its editor, composer and undo stack. Ambiguous cases retain
+the question and refuse misleading context; latest entry cannot create competing
+ownership. All five verification stages pass (208 tests/33 suites). Ambiguous-case
+confirmation controls and New Session presentation remain unfinished, so the button
+stays disabled. No live Notes, installed shortcut or paid provider acceptance is
+claimed.
 
 Post-paste transaction, 2026-10-15: the new evaluator and atomic association method
 are implemented with synthetic tests. No actual Notes or saved client workspaces
@@ -1722,3 +1748,8 @@ insertion evidence and durable ownership promotion with identity/backup preserva
 Retain ambiguous cases for review, including missing origin evidence. Tests exposed
 newline styling and empty-body relocation limits; address the former narrowly and
 preserve the latter. Automatic UI invocation is not yet connected.
+
+Revision note, 2026-10-15, live promotion: connect verified insertion to automatic
+controller refresh, preserve pre-association undo safely, and block ambiguous chat
+and competing ownership. Fix availability after assembly rejection. All five stages
+pass (208 tests/33 suites); confirmation and new-session entry UI remain pending.

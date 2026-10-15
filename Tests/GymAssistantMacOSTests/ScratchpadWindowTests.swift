@@ -35,8 +35,9 @@ private actor WindowNotesReader: NotesContextReading {
         let board = NSPasteboard.withUniqueName()
         defer { board.releaseGlobally() }
         let rich = NSAttributedString(string: "Session 2\nWarmup\n")
-        let snapshot = WorkspaceSnapshot(anchor: .init(noteID: document.snapshot.id, recordedHeading: "Session 2",
+        var snapshot = WorkspaceSnapshot(anchor: .init(noteID: document.snapshot.id, recordedHeading: "Session 2",
             baselineText: "", recordingState: .unrecorded), text: rich.string, richTextArchive: try RichTextArchive.encode(rich))
+        snapshot.anchor.unrecordedOrigin = SessionSourceEvidence(paragraphs: document.paragraphs)
         let store = WorkspaceSnapshotStore(directory: root)
         let invented = SessionAssociation(sessionID: snapshot.anchor.sessionID, noteID: document.snapshot.id,
             observationID: document.snapshot.observationID, range: document.candidates()[0].range)

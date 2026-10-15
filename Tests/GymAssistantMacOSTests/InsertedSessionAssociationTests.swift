@@ -11,9 +11,73 @@ private actor InsertionReader: NotesContextReading {
     func replace(_ value: String) { html = value }
 }
 
-@Suite("Inserted session association") @MainActor struct InsertedSessionAssociationTests {
+@Suite("Inserted session association", .serialized) @MainActor struct InsertedSessionAssociationTests {
     private let original = "<div><h2>Session 1</h2></div><div>A1 Row</div><div><h3>Warmup</h3></div>"
     private let addition = "<div><h2>Session 2</h2></div><div><h3>Warmup</h3></div>"
+    private func descendants(_ view: NSView) -> [NSView] { [view] + view.subviews.flatMap(descendants) }
+
+    @Test func liveRefreshPromotesWithoutReplacingEditorAndOldUndoKeepsProtection() async throws {
+        let reader = InsertionReader()
+        let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let pending = try await create(reader, store)
+        let controller = try SessionScratchpadWindowController(snapshot: pending.snapshot, store: store, note: pending.note,
+            association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
+        let views = descendants(try #require(controller.window?.contentView))
+        let editor = try #require(views.first { $0.identifier?.rawValue == "scratchpad-editor" } as? NSTextView)
+        let composer = try #require(views.first { $0.identifier?.rawValue == "chat-composer" } as? NSTextView)
+        controller.window?.makeFirstResponder(editor)
+        editor.setSelectedRange(NSRange(location: 10, length: 0))
+        let body = try #require(controller.formattingMenu().items.first { $0.tag == ScratchpadFormat.body.rawValue })
+        let undo = try #require(editor.undoManager)
+        undo.beginUndoGrouping(); controller.formatScratchpad(body); undo.endUndoGrouping()
+        undo.undo()
+        #expect(undo.canRedo)
+        composer.string = "Keep this unloaded"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: composer))
+        let before = NSAttributedString(attributedString: editor.attributedString())
+        await reader.replace(original + addition)
+        let document = try await pending.context.refresh(for: .resume)
+        #expect(!controller.snapshot.anchor.isUnrecorded)
+        #expect(controller.snapshot.workspaceID == pending.snapshot.workspaceID)
+        #expect(editor.attributedString().isEqual(to: before))
+        #expect(composer.string == "Keep this unloaded")
+        undo.redo()
+        #expect(controller.snapshot.boundaryProtection != nil)
+        #expect(controller.snapshot.boundaryProtection?.sourceRange == document.candidates().last?.range)
+        #expect(controller.flushAndStop())
+        #expect(try store.load(id: pending.snapshot.workspaceID)?.snapshot.anchor.isUnrecorded == false)
+        controller.window?.close()
+    }
+
+    @Test func ambiguousRefreshPreservesQuestionAndLatestEntryCannotCreateCompetingOwner() async throws {
+        let reader = InsertionReader()
+        let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let pending = try await create(reader, store)
+        let controller = try SessionScratchpadWindowController(snapshot: pending.snapshot, store: store, note: pending.note,
+            association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
+        let views = descendants(try #require(controller.window?.contentView))
+        let composer = try #require(views.first { $0.identifier?.rawValue == "chat-composer" } as? NSTextView)
+        let send = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Send" })
+        await reader.replace(original.replacingOccurrences(of: "Row", with: "Press") + addition)
+        _ = try await pending.context.refresh(for: .resume)
+        composer.string = "What should A1 be?"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: composer))
+        send.performClick(nil)
+        for _ in 0..<100 {
+            if send.isEnabled { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(send.isEnabled)
+        #expect(controller.snapshot.messages.isEmpty && composer.string == "What should A1 be?")
+        #expect(controller.snapshot.anchor.isUnrecorded)
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        await #expect(throws: SessionEntryError.unresolvedSavedWorkspace) { _ = try await entry.latest(in: pending.note.id) }
+        #expect(try store.storedAnchors().count == 1)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
+    }
 
     private func create(_ reader: InsertionReader, _ store: WorkspaceSnapshotStore) async throws -> SessionWorkspaceEntry.UnrecordedSession {
         let entry = SessionWorkspaceEntry(store: store, reader: reader)

@@ -578,7 +578,13 @@ duplicate labels, other Notes changes or changed session content require review.
 observation, validates unoccupied ownership, persists the recorded transition and
 then publishes ownership. IDs, editor content and conversation stay unchanged; the
 previous snapshot remains the recovery copy. This transaction has synthetic tests
-but is not yet invoked automatically by the controller/entry UI.
+and is now invoked by live controller refresh. The controller saves its complete
+editor state before promotion and never replaces its text or undo stack. Formatting
+undo captured before association retains conservative boundary protection rather
+than restoring absent coordinates. Ambiguous/missing-origin changes preserve the
+composer and block chat/comparison until reviewed. Latest-session entry refuses to
+create another owner while unrecorded work is unresolved. Confirmation controls and
+New Session entry presentation remain unfinished.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time
