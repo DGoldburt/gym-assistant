@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Run bounded native acceptance using a new isolated `--synthetic-entry` development route: Command-N preview, Escape cancellation, Return creation, heading search, comparison, cancellation and Command-Return identity-only association preserve scratchpad content. Fix misleading diff labels on unchanged interior headings; add two regressions. All five verification stages pass (214 tests/34 suites). Real Notes integration, full keyboard-only entry/selection and installed rollout remain outstanding.
+
 - [x] (2026-10-15) Connect New Session/Command-N to existing-work resume or a non-writing headings-only preview. List uncertain omitted headings; Create rechecks Notes, Cancel creates nothing, and ambiguous labels remain editable placeholders without prompts. Add two injected-presentation tests for preview/cancel/create/reuse and placeholder/omissions/stale-source refusal. Update coach-facing instructions. Native UI/shortcut acceptance and installed rollout remain pending.
 
 - [x] (2026-10-15) Coach approves read-only scratchpad during association and a left-side text-only diff against selected Notes content. Implement embedded right-side Notes browser, heading search, unique-heading suggestion, keyboard/drag selection, occupied-owner explanation, Cancel and explicit identity-only confirmation. Changed Notes clears selection before reconfirmation. Add “Not pasted yet” origin refresh. Two synthetic tests cover selection/diff, cancel, freshness, content preservation, occupancy and unrecorded continuation. All five stages pass (210 tests/33 suites); native visual/keyboard acceptance and New Session entry remain pending.
@@ -105,6 +107,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Native synthetic association review exposed a coarse-diff defect: changing a session
+number and removing exercise lines labeled unchanged Warmup/Strength headings as
+removed and added. Line-level differences now retain those headings as context,
+with two context lines around each change. The rebuilt native pane confirmed the
+correction. In the focused heading search, Escape clears nonempty search first;
+a second Escape cancels review. This is native search-field behavior, not a failed
+Cancel action.
 
 New-session presentation, 2026-10-15: assigning a new content view can resize it to
 the old window's bounds before the next statement. Set the preview's explicit
@@ -300,6 +310,12 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Add an explicit synthetic entry mode to the non-installing development
+  app, with an in-memory Notes reader and a fresh temporary store per launch.
+  Rationale: Exercise actual entry and association controls without reading client
+  Notes, touching existing scratchpads, registering Services or calling a provider.
+  Date/Author: 2026-10-15 / Codex, within approved synthetic acceptance scope.
 
 - Decision: Expose New Session as Command-N in the independent programming entry
   window. Resume existing unrecorded work first; otherwise display the headings-only
@@ -537,6 +553,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 bounded native entry/association pass: the actual AppKit controls worked
+with synthetic Session 18 as source and a Session 19 skeleton. Association retained
+Session 19 text rather than replacing it with the source. Comparison now avoids
+false changes on matching interior headings. This pass used mouse entry into Find
+and the comparison toggle, then keyboard search/confirmation; it does not establish
+fully keyboard-only navigation, real Notes monitoring or installed readiness.
 
 New-session presentation, 2026-10-15: the formerly disabled entry is connected on
 the development branch. Two new tests demonstrate preview/cancel without writes,
@@ -1827,3 +1850,8 @@ and Command-N, reusing safe preparation/acceptance and existing unrecorded windo
 Add a single-window preview with omissions and fresh-read rejection; update the
 user guide. This supersedes earlier disabled-button notes, not native acceptance or
 installed rollout gates.
+
+Revision note, 2026-10-15, synthetic native acceptance: add an isolated development
+entry route, record observed New Session and association interactions, and fix the
+false interior-heading changes exposed by that pass. Preserve separate real Notes,
+full keyboard-navigation and rollout gates; 214 tests/34 suites pass.

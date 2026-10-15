@@ -2,11 +2,32 @@ import AppKit
 import GymAssistantWorkspace
 import GymAssistantMacOS
 
+private actor SyntheticEntryReader: NotesContextReading {
+    func captureSelectedNote() async throws -> NoteSnapshot { try await read(id: NoteID("synthetic-entry-note")) }
+    func read(id: NoteID) async throws -> NoteSnapshot {
+        NoteSnapshot(id: id, text: "", html: "<div><h2>Session 18</h2></div><div><h3>Warmup</h3></div><div>Balance preparation</div><div><h3>Strength</h3></div><div>A1 Row</div>")
+    }
+    func metadata(id: NoteID) async throws -> NoteMetadata { NoteMetadata(id: id, modifiedAt: .distantPast) }
+}
+
 /// Explicit development app; Notes access requires a separate fixture-test command.
 @MainActor final class DevelopmentDelegate: NSObject, NSApplicationDelegate {
     private var controller: SessionScratchpadWindowController?
+    private var entry: SessionProgrammingEntryWindow?
+    private var workspaces: SessionWorkspaceWindows?
     private let notesReader = NotesContextReader()
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if CommandLine.arguments.contains("--synthetic-entry") {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
+            let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: SyntheticEntryReader(),
+                profile: .init(version: "synthetic-empty", entries: []), assistant: FakeProgrammingAssistant())
+            workspaces = windows
+            entry = SessionProgrammingEntryWindow(workspaces: windows,
+                modeDescription: "Synthetic entry acceptance · temporary store · no Notes access · local test assistant",
+                requestAccess: { throw NotesReadError.unavailable })
+            entry?.start()
+            return
+        }
         do {
             let noteID = NoteID("synthetic-development-note")
             let workspaceID = WorkspaceID(UUID(uuidString: "B1FB8360-E88A-4245-BFAD-FE8BB89C48EE")!)
@@ -79,6 +100,10 @@ import GymAssistantMacOS
         }
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if let entry {
+            if workspaces?.showMostRecent() != true { entry.showExisting() }
+            return false
+        }
         controller?.show(); return false
     }
     @objc private func showScratchpad() { controller?.show() }
@@ -108,6 +133,7 @@ import GymAssistantMacOS
         alert.informativeText = message; alert.runModal()
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if let workspaces, !workspaces.flushAndStop() { return .terminateCancel }
         if let controller, !controller.flushAndStop() { return .terminateCancel }
         return .terminateNow
     }

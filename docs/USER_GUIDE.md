@@ -35,13 +35,16 @@ read-only and the Notes browser temporarily replaces the conversation. Find a
 heading, then use Shift–Arrow or drag to select the session paragraphs. The left
 **Compare with source** toggle shows text-only differences for that selection—not
 formatting differences. **Associate selected session** connects identity without
-replacing either version. Cancel returns to editing. Notes changes require a new
+replacing either version (Command-Return confirms). Cancel returns to editing;
+in a focused heading search, Escape clears the search first and a second Escape
+cancels review. If comparison is still on, turn it off to edit. Notes changes require a new
 selection; a region owned by another workspace cannot be selected for association.
 
 Choose **Not pasted yet** only if the scratchpad is still an addition, not a session
 already in Notes. This refreshes context without changing scratchpad content.
-These development interactions have automated tests but still need native keyboard
-and visual acceptance; they are not installed by these changes.
+These development interactions have automated tests and a bounded native pass with
+synthetic content. Full keyboard-only navigation and real Notes integration still
+need acceptance; they are not installed by these changes.
 
 ## Paste formatted Markdown into Apple Notes
 

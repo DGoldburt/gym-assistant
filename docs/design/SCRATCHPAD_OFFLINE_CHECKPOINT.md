@@ -230,3 +230,28 @@ repair controls, app-level crash durability and supported macOS versions are not
 established by this checkpoint. Live API defaults/limits remain a separate approval.
 Client-history worktree is untouched. Legacy-worktree archive remains blocked by
 another chat's ownership; mockups are already preserved here byte-for-byte.
+
+## Native synthetic entry and association follow-up — 2026-10-15
+
+Build with `bash app/scratchpad-development/build.sh`, then launch the returned
+bundle using `open -n <bundle-path> --args --synthetic-entry`. This explicit mode
+uses an in-memory Session 18 fixture, an empty synthetic profile, a local fake
+assistant and a new temporary workspace store on every launch. It neither reads
+Notes nor registers Services. Quit normally to flush its synthetic workspace.
+
+Observed in the native app: Command-N previews Session 19/Warmup/Strength without
+exercise body; Escape cancels; Command-N then Return creates that scratchpad.
+Find session in Notes opens the read-only browser and disables scratchpad editing.
+Searching Session 18 selects its region. Compare shows that selection alongside
+the scratchpad text diff. Unchanged interior headings originally appeared as false
+changes; a line-level diff correction and two tests now preserve them as context,
+confirmed in the rebuilt app. Escape clears a nonempty focused search, then another
+Escape cancels review. Turning comparison off restores the editable scratchpad.
+Reopening review, searching and pressing Command-Return associates the region,
+restores conversation/editing and retains the Session 19 scratchpad unchanged.
+The app was quit afterward; no real Notes or clipboard content was changed.
+
+All five deterministic verification stages passed (214 tests/34 suites). This
+bounded pass used mouse clicks for Find and Compare: complete keyboard navigation,
+selection adjustment, real Notes freshness/round-trip behavior, profile/library
+integration and installed rollout are not established by it.
