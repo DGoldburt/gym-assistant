@@ -504,6 +504,15 @@ registration reserves a newly created workspace's range without rebuilding exist
 manual mappings. The shared context validates a candidate registry, persists the
 workspace, then publishes ownership; failed saves cannot reserve phantom regions.
 Unresolved saved owners block new creation rather than being treated as vacant.
+`SessionWorkspaceEntry` captures selection once, refreshes by captured identity,
+chooses the last region in note order, and loads its saved owner rather than creating
+a competing scratchpad. Duplicate headings, unknown boundaries, unresolved ownership
+and recovered snapshots require explicit handling instead of automatic replacement.
+`SessionWorkspaceWindows` retains one controller per saved workspace, including
+closed windows, and aggregates quit-time saves. These app-composition components
+are covered with injected-reader tests but are not yet connected to Service UI.
+A verified relocation after renumbering preserves scratchpad/baseline and resets
+old absolute edit coordinates conservatively; it does not discard coach edits.
 Native entry and live boundary command integration remain incomplete. Foundation session
 structure compares supported body/formatting evidence, never mutable labels alone.
 The semantic Notes importer rejects unsupported HTML instead of rendering web

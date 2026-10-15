@@ -1,0 +1,42 @@
+import AppKit
+import GymAssistantWorkspace
+
+/// App-owned lifetime, independent of the short-lived Services callback. Closing
+/// a window hides it; re-entry reuses its editor, pending reply and unsaved text.
+@MainActor public final class SessionWorkspaceWindows {
+    private let store: WorkspaceSnapshotStore
+    private let entry: SessionWorkspaceEntry
+    private let profile: CoachingProfile
+    private let assistant: any ProgrammingAssistant
+    private var controllers: [WorkspaceID: SessionScratchpadWindowController] = [:]
+
+    public init(store: WorkspaceSnapshotStore, reader: any NotesContextReading,
+                profile: CoachingProfile, assistant: any ProgrammingAssistant) {
+        self.store = store; self.profile = profile; self.assistant = assistant
+        entry = SessionWorkspaceEntry(store: store, reader: reader)
+    }
+
+    public func captureNote() async throws -> NoteID { try await entry.captureNote() }
+
+    /// The caller chooses when to show the window and install its menus. No
+    /// permission prompt, focus change, clipboard publication or API call here.
+    public func latest(in noteID: NoteID) async throws -> SessionScratchpadWindowController {
+        let prepared = try await entry.latest(in: noteID)
+        if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
+        let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
+            note: prepared.note, association: prepared.association, profile: profile,
+            assistant: assistant, noteContext: prepared.context)
+        controllers[prepared.snapshot.workspaceID] = controller
+        return controller
+    }
+
+    /// Attempt every save, not just until the first failure. A failed save vetoes
+    /// application termination so its editor remains available for recovery.
+    public func flushAndStop() -> Bool {
+        var succeeded = true
+        for controller in controllers.values {
+            if !controller.flushAndStop() { succeeded = false }
+        }
+        return succeeded
+    }
+}

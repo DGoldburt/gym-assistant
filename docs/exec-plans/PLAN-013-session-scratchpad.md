@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Add captured-identity latest-session entry preparation and app-owned window registry. Five injected-reader regressions cover lettered weeks, selection changes, simultaneous/repeated entry, closed-window reuse, renumbered relocation, duplicate/unknown/changed regions and damaged-current recovery refusal. Preserve scratchpad and baseline on verified relocation; mark old edit coordinates uncertain. Service entry UI, explicit recovery/boundary UI and native integration remain outstanding.
+
 - [x] (2026-10-14) Implement approved first-slice Format menu: Option-Command-2 Heading, Option-Command-3 Subheading, Option-Command-0 Body, Command-B Bold, Option-Command-7 Bulleted list; no toolbar. Semantic transforms, focus routing, revision/protection, undo/redo and persistence have regressions. Native keyboard conversion from ordinary text, Body conversion, list undo/redo, visible Return continuation/empty-bullet exit, bold typing, quit/reopen and Notes paste observed. Saved synthetic revision 79. Bounded supported-content authoring evidence, not completion of the full offline slice or arbitrary formatting fidelity.
 
 - [x] (2026-10-14) Coach authorizes local prep and implementation. Move accepted plan to PLAN 013; reserve ADR 005 and PLAN 012 for Notes direction/capability evidence because current learner/main uses ADR 004/PLAN 011 for alias guidance. Mockup artifacts in this checkout match the old source byte-for-byte. App archival is blocked by other-chat ownership; preserve that checkout.
@@ -79,6 +81,20 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Entry continuation, 2026-10-14: stable association correctly relocates a saved
+session when earlier labels change length, but controller restore still rejected
+its old absolute protection range. Accept only the shared context's current verified
+association, preserve editor content/baseline, and reset protection conservatively.
+The renumber/reopen regression now constructs the controller and checks persistence;
+it is not evidence that automatic association works after arbitrary content edits.
+
+Full-suite entry verification exposed an existing copy test's scheduler assumptions:
+publication failure can cancel verification before it starts, and a 20ms checking
+status may expire before the test polls it. Correct the synchronization expectations
+without changing production copy logic or the dedicated timeout test. The rerun
+passes all five verification stages and 180 tests across 26 suites; the initial
+failure is retained here rather than reported as an uninterrupted pass.
 
 Formatting continuation, 2026-10-14: ordinary NSTextView Return retained list style
 without creating a visible marker. Add explicit visible continuation through normal
@@ -188,6 +204,13 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Reuse app-owned controllers after fresh entry validation; never treat
+  a recovered or unresolved saved workspace as an empty region for new creation.
+  Rationale: Closing/re-entering or concurrent invocations must not create competing
+  scratchpads or overwrite a pending editor. This implements existing ownership and
+  recovery requirements, without adding a new product choice.
+  Date/Author: 2026-10-14, Codex implementation continuation.
 
 Accepted 2026-10-14: handoff comparison may ignore only empty body paragraphs at
 the end of the copied session, since native Notes omitted those paragraphs. Keep
@@ -329,6 +352,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Entry continuation, 2026-10-14: the new composition components prepare a latest
+session and reuse its retained controller with an injected reader. Five targeted
+tests pass; full verification passes five stages and 180 tests/26 suites after the
+copy-test synchronization correction described above. They are not yet wired to the Service's Command-P branch or development
+app menus; native entry, boundary/recovery interaction and new-session skeleton
+remain unfinished. No installed Service, Notes content, clipboard or API changed.
 
 Terminal-blank follow-up, 2026-10-14: the coach approved the narrow comparison
 exception. Implementation preserves stored scratchpad content and significant
@@ -1434,3 +1464,9 @@ Revision note, 2026-10-14, terminal-blank acceptance: record coach approval and 
 tested structured comparison without destructive normalization. Use the bounded
 exception in live-context comparison/checked-copy baseline checks; absence of a
 verified association still blocks those checks. No full reconciliation claim.
+
+Revision note, 2026-10-14, entry ownership: implement captured-ID preparation and
+window lifetime components with five regressions. Fix controller restoration after
+verified relocation and remove the synthetic-only save label for live contexts.
+Retain explicit outstanding UI/recovery/native acceptance work; tests are not a
+claim of completed shortcut entry or completed PLAN 013.

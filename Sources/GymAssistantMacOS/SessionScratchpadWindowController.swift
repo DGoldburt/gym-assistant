@@ -52,7 +52,18 @@ import GymAssistantWorkspace
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
-        if let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
+        if let noteContext {
+            guard try noteContext.association(for: snapshot.anchor.sessionID) == association,
+                  noteContext.sourceDocument?.snapshot.observationID == note.observationID else {
+                throw WorkspaceError.staleAssociation
+            }
+            if let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
+                // Stable association may relocate a session after earlier headings
+                // change length. Old absolute edit coordinates are not reusable.
+                self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: association.range)
+                self.snapshot.boundaryProtection?.markUncertain(currentLength: rich.length)
+            }
+        } else if let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
             guard savedRange.isParagraphAligned(in: note.text),
                   snapshot.anchor.sourceEvidence?.text == (note.text as NSString).substring(with: savedRange.nsRange) else {
                 throw WorkspaceError.staleAssociation
@@ -360,7 +371,8 @@ import GymAssistantWorkspace
             snapshot.composerText = composer.string
             try store.save(snapshot)
             savedRevision = snapshot.revision
-            status.stringValue = gate.active == nil ? "Saved scratchpad r\(snapshot.revision) locally · synthetic Notes unverified" : "Saved locally · reply in progress\(snapshot.revision == gate.active?.revision ? "" : " · Scratchpad changed")"
+            status.stringValue = gate.active == nil ? "Saved scratchpad r\(snapshot.revision) locally · \(noteContext == nil ? "synthetic Notes unverified" : "Notes not written")" : "Saved locally · reply in progress\(snapshot.revision == gate.active?.revision ? "" : " · Scratchpad changed")"
+            if gate.active == nil { sourceChanged() }
             return true
         } catch {
             status.stringValue = "Local save failed; last saved revision \(savedRevision.map(String.init) ?? "unknown"). Keep this window open."
