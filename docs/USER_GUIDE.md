@@ -36,7 +36,15 @@ is captured when the browser opens; reopen the browser to see subsequent edits.
 
 This first browser exposes existing local workspace records, not imported ChatGPT
 history or a complete revision timeline. Browsing does not save, repair associations,
-or write Notes. Explicit replacement from Notes is still under development.
+or write Notes.
+
+In the scratchpad's comparison view, **Replace scratchpad with current Notes…**
+copies the verified session region into the scratchpad after confirmation. Notes
+does not change. Conversation and the unsent message remain attached; the previous
+scratchpad remains read-only in Previous planning, labeled **Preserved before Notes
+replacement**. If the location is uncertain, replacement is unavailable. If either
+side changes during confirmation, compare again. An uncertain storage failure locks
+editing and asks you to quit and reopen rather than risk overwriting preserved work.
 
 Choose **Set aside…** on a planning record when you no longer want it to remain an
 active scratchpad. Review the confirmation: it stops any current reply, preserves the

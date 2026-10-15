@@ -1,6 +1,13 @@
 import AppKit
 import GymAssistantWorkspace
 
+public struct NotesReplacementPreview {
+    public let expected: WorkspaceSnapshot
+    fileprivate let paragraphs: [ProgramParagraph]
+    fileprivate let range: SourceRange
+}
+public enum NotesReplacementError: Error { case persistenceUncertain }
+
 /// App composition retains one instance per NoteID. Every saved anchor for that
 /// note participates, whether its window is visible, closed or not opened yet.
 @MainActor public final class SessionNoteContext {
@@ -74,6 +81,40 @@ import GymAssistantWorkspace
         guard failure == nil, let association = registry.mappings[id],
               association.observationID == sourceDocument?.snapshot.observationID else { throw WorkspaceError.staleAssociation }
         return association
+    }
+
+    public func replacementPreview(_ snapshot: WorkspaceSnapshot) throws -> NotesReplacementPreview {
+        guard snapshot.isActive, !snapshot.anchor.isUnrecorded, snapshot.anchor.noteID == noteID,
+              let document = sourceDocument else { throw WorkspaceError.staleAssociation }
+        let mapping = try association(for: snapshot.anchor.sessionID)
+        return NotesReplacementPreview(expected: snapshot, paragraphs: document.paragraphs, range: mapping.range)
+    }
+
+    public func replaceFromNotes(_ preview: NotesReplacementPreview, current: WorkspaceSnapshot,
+                                 store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
+        guard current == preview.expected, current.isActive, !current.anchor.isUnrecorded,
+              let document = sourceDocument, document.paragraphs == preview.paragraphs,
+              let richText else { throw WorkspaceError.staleAssociation }
+        let mapping = try association(for: current.anchor.sessionID)
+        guard mapping.range == preview.range else { throw WorkspaceError.staleAssociation }
+        let evidence = try document.evidence(in: mapping.range)
+        let rich = richText.attributedSubstring(from: mapping.range.nsRange)
+        var candidate = current
+        candidate.text = rich.string; candidate.richTextArchive = try RichTextArchive.encode(rich)
+        candidate.anchor.baselineText = evidence.text; candidate.anchor.sourceEvidence = evidence
+        candidate.anchor.recordedHeading = evidence.paragraphs.first?.label ?? current.anchor.recordedHeading
+        candidate.boundaryProtection = BoundaryEditProtection(sourceRange: mapping.range)
+        candidate.revision += 1
+        var updatedRegistry = registry
+        try updatedRegistry.acceptReplacement(candidate.anchor, in: document)
+        do { try store.replacePreservingPrevious(current, with: candidate) }
+        catch {
+            persistenceFailure = "Replacement save could not be confirmed. Preserve the open scratchpad and reopen for recovery."
+            failure = persistenceFailure; publish()
+            throw NotesReplacementError.persistenceUncertain
+        }
+        registry = updatedRegistry; publish()
+        return candidate
     }
 
     public func confirm(session: SessionID, range: SourceRange, observation: UUID) throws -> SessionAnchor {

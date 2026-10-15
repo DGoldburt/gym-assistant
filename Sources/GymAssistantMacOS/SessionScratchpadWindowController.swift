@@ -70,6 +70,10 @@ import GymAssistantWorkspace
     private let findSessionButton = NSButton(title: "Find session in Notes…", target: nil, action: nil)
     private var compareButton: NSButton?
     private let notPastedButton = NSButton(title: "Not pasted yet", target: nil, action: nil)
+    private let replaceButton = NSButton(title: "Replace scratchpad with current Notes…", target: nil, action: nil)
+    private var replacementTask: Task<Void, Never>?
+    private var replacing = false
+    private var replacementNeedsReopen = false
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation?, profile: CoachingProfile,
@@ -161,6 +165,7 @@ import GymAssistantWorkspace
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
         if let keyWindow = NSApp.keyWindow, keyWindow !== window { return false }
+        if replacing || replacementNeedsReopen { return false }
         if item.action == #selector(focusConversation) { return associationPane == nil }
         if item.action == #selector(findSessionInNotes) {
             return snapshot.anchor.isUnrecorded && associationPane == nil && boundaryTask == nil
@@ -342,7 +347,11 @@ import GymAssistantWorkspace
         history.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
         root.addSubview(history)
         description.frame.size.width = 370
-        status.frame = NSRect(x: 220, y: 27, width: 800, height: 20)
+        replaceButton.frame = NSRect(x: 215, y: 25, width: 375, height: 26)
+        replaceButton.target = self; replaceButton.action = #selector(replaceFromCurrentNotes)
+        replaceButton.identifier = .init("replace-scratchpad-from-notes")
+        replaceButton.isHidden = true; root.addSubview(replaceButton)
+        status.frame = NSRect(x: 16, y: 3, width: 1014, height: 20)
         status.identifier = NSUserInterfaceItemIdentifier("workspace-status")
         status.autoresizingMask = [.width]
         status.textColor = .secondaryLabelColor
@@ -359,6 +368,7 @@ import GymAssistantWorkspace
     public func windowDidBecomeKey(_ notification: Notification) { onActivate?() }
 
     private func sourceChanged() {
+        updateReplacementAvailability()
         guard !committingBoundary else { return }
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
@@ -433,6 +443,7 @@ import GymAssistantWorkspace
         }
     }
     @objc public func findSessionInNotes() {
+        guard !replacing, !replacementNeedsReopen else { return }
         guard snapshot.anchor.isUnrecorded, associationPane == nil, boundaryTask == nil,
               gate.active == nil, !preparingRequest, let noteContext else { return }
         boundaryTask = Task { [weak self] in
@@ -483,6 +494,7 @@ import GymAssistantWorkspace
         window?.makeFirstResponder(editor)
     }
     @objc public func confirmNotPasted() {
+        guard !replacing, !replacementNeedsReopen else { return }
         guard snapshot.anchor.isUnrecorded, associationPane == nil, boundaryTask == nil,
               gate.active == nil, !preparingRequest, let noteContext else { return }
         boundaryTask = Task { [weak self] in
@@ -534,6 +546,7 @@ import GymAssistantWorkspace
     }
 
     @objc public func adjustBoundary() {
+        guard !replacing, !replacementNeedsReopen else { return }
         guard let association, !snapshot.anchor.isUnrecorded else {
             status.stringValue = "Unrecorded session has no Notes boundary to adjust."; return
         }
@@ -714,6 +727,9 @@ import GymAssistantWorkspace
         snapshot.revision += 1; saveNow(); refreshTranscript()
     }
     @discardableResult private func saveNow() -> Bool {
+        // Replacement starts from a fully saved editor and preserves its prior
+        // state. On uncertain promotion, freeze writes until a fresh app reopen.
+        if replacementNeedsReopen { return true }
         guard snapshot.isActive else { return true }
         do {
             snapshot.text = editor.string
@@ -731,6 +747,7 @@ import GymAssistantWorkspace
     }
     @objc private func send() { submit() }
     private func submit() {
+        guard !replacing, !replacementNeedsReopen else { return }
         guard snapshot.isActive else { return }
         guard associationPane == nil else { return }
         guard gate.active == nil, !preparingRequest else { status.stringValue = "Reply in progress — Stop or wait; follow-up stays here."; return }
@@ -815,8 +832,78 @@ import GymAssistantWorkspace
         updateReply(requestID: request.id, text: "Stopped. No automatic resend.", status: .cancelled)
     }
     private func updateAvailability() {
-        sendButton.isEnabled = associationPane == nil && gate.active == nil && !preparingRequest
+        sendButton.isEnabled = !replacing && !replacementNeedsReopen && associationPane == nil && gate.active == nil && !preparingRequest
         stopButton.isEnabled = gate.active != nil || preparingRequest
+        updateReplacementAvailability()
+    }
+    private func updateReplacementAvailability() {
+        replaceButton.isHidden = !showingDiff || noteContext == nil || associationPane != nil
+        replaceButton.isEnabled = snapshot.isActive && !snapshot.anchor.isUnrecorded
+            && !replacing && !replacementNeedsReopen && gate.active == nil && !preparingRequest
+            && boundaryTask == nil && editor.boundaryUndoManager?.checking != true
+            && (try? noteContext?.association(for: snapshot.anchor.sessionID)) != nil
+    }
+
+    @objc public func replaceFromCurrentNotes() {
+        updateReplacementAvailability()
+        guard replaceButton.isEnabled, let noteContext, let window else { return }
+        replacing = true; updateAvailability(); editor.isEditable = false
+        replacementTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await noteContext.refresh(for: .comparison)
+                try Task.checkCancellation()
+                self.saveTask?.cancel()
+                guard self.saveNow() else { throw SnapshotStoreError.unavailable }
+                let preview = try noteContext.replacementPreview(self.snapshot)
+                self.showingDiff = true; self.compareButton?.state = .on
+                self.editorScroll.isHidden = true; self.diffScroll.isHidden = false; self.renderComparison()
+                let alert = NSAlert()
+                alert.messageText = "Replace this scratchpad with current Notes?"
+                alert.informativeText = "Only the verified session region will be copied into the scratchpad. Its previous content will remain in Previous planning. Conversation and unsent message stay attached. Notes will not change."
+                alert.addButton(withTitle: "Cancel"); alert.addButton(withTitle: "Replace scratchpad")
+                alert.beginSheetModal(for: window) { [weak self] response in
+                    guard let self else { return }
+                    if response == .alertSecondButtonReturn { self.confirmReplacement(preview) }
+                    else { self.finishReplacement() }
+                }
+            } catch {
+                self.status.stringValue = "Replacement unavailable: verify the session location and current Notes first. Scratchpad preserved."
+                self.finishReplacement()
+            }
+        }
+    }
+    private func confirmReplacement(_ preview: NotesReplacementPreview) {
+        replacementTask = Task { [weak self] in
+            guard let self, let noteContext = self.noteContext else { return }
+            defer { self.finishReplacement() }
+            do {
+                _ = try await noteContext.refresh(for: .comparison)
+                try Task.checkCancellation()
+                let current = try self.planningReferenceSnapshot()
+                self.committingBoundary = true
+                defer { self.committingBoundary = false }
+                let next = try noteContext.replaceFromNotes(preview, current: current, store: self.store)
+                self.snapshot = next; self.savedRevision = next.revision
+                self.association = try noteContext.association(for: next.anchor.sessionID)
+                self.editor.undoManager?.removeAllActions()
+                self.editor.textStorage?.setAttributedString(try RichTextArchive.decode(next.richTextArchive))
+                self.refreshTranscript(); self.renderComparison()
+                self.status.stringValue = "Scratchpad replaced from Notes. Previous content retained in Previous planning; conversation preserved."
+            } catch NotesReplacementError.persistenceUncertain {
+                self.replacementNeedsReopen = true
+                self.editor.undoManager?.removeAllActions(); self.saveTask?.cancel()
+                self.status.stringValue = "Replacement could not be confirmed. Work is preserved on disk. Quit and reopen before editing; no retry was made."
+            } catch {
+                self.status.stringValue = "Notes or scratchpad changed, or location is no longer verified. Nothing replaced; compare again."
+            }
+        }
+    }
+    private func finishReplacement() {
+        replacing = false; replacementTask = nil
+        editor.isEditable = !replacementNeedsReopen && associationPane == nil
+        composer.isEditable = !replacementNeedsReopen
+        updateAvailability()
     }
     private func refreshTranscript() {
         let text = NSMutableAttributedString(string: "")
@@ -838,6 +925,7 @@ import GymAssistantWorkspace
         transcript.display(text, decorations: decorations)
     }
     @objc public func copyForNotes() {
+        guard !replacing, !replacementNeedsReopen else { return }
         saveTask?.cancel(); saveNow()
         let rich = NSAttributedString(attributedString: editor.attributedString())
         let copiedRevision = snapshot.revision
@@ -881,7 +969,9 @@ import GymAssistantWorkspace
         })
     }
     @objc private func toggleDiff() {
+        guard !replacing else { return }
         showingDiff.toggle()
+        updateReplacementAvailability()
         compareButton?.state = showingDiff ? .on : .off
         comparisonTask?.cancel()
         comparisonGeneration = UUID()
@@ -948,6 +1038,7 @@ import GymAssistantWorkspace
             + comparison
     }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard !replacing else { return false }
         endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         stop(); saveTask?.cancel(); return saveNow()
@@ -959,6 +1050,7 @@ import GymAssistantWorkspace
         if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
     public func flushAndStop() -> Bool {
+        guard !replacing else { return false }
         planningTask?.cancel()
         endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()

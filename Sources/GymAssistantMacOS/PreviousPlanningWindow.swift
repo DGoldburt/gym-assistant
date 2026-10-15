@@ -74,7 +74,8 @@ public struct PlanningReference {
             + (record.includesOpenEditor ? "Includes the open editor as captured when this browser opened. " : "Saved local content. ")
             + (record.verifiedHeading == nil ? "Current session location is not verified; no session association is implied." : "Session location verified when this browser opened.")
         if let date = record.snapshot.setAsideAt {
-            detail.stringValue += " Set aside \(date.formatted(date: .abbreviated, time: .shortened)); retained for reference."
+            let reason = record.snapshot.preservedFromWorkspaceID == nil ? "Set aside" : "Preserved before Notes replacement"
+            detail.stringValue += " \(reason) \(date.formatted(date: .abbreviated, time: .shortened)); retained for reference."
         }
         do { scratchpad.textStorage?.setAttributedString(try RichTextArchive.decode(record.snapshot.richTextArchive)) }
         catch { scratchpad.string = "This saved scratchpad could not be displayed safely." }

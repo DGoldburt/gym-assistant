@@ -40,8 +40,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-15) Implement read-only Previous planning from entry and scratchpad (Command-Shift-H), including conversation/unsent text, verified versus uncertain grouping, live-editor capture without saving, and isolated association inspection. Three regressions cover preservation, offline/unlocated references, damaged-file refusal, read-only UI and menu routing. All five stages pass (229 tests/37 suites). Synthetic native opening, keyboard selection between uncertain/verified records and Command-W return observed. User manual retrieval/copy test is next; no complete revision timeline or set-aside claim.
 - [x] (2026-10-15) Coach accepts Previous planning interaction, clarifying that copied ideas normally go directly into Notes. Update helper text and guide; no new transfer mechanism or Notes-write permission implied.
 - [x] (2026-10-15) Implement explicit set-aside: schema-3 optional lifecycle date, preservation-first store operation, immutable historical content, release only after save acknowledgement, stale-preview refusal and retirement of retained editors. Older files remain active without eager migration. All five stages pass (233 tests/37 suites); four additional regressions cover released ownership, old-schema/fault preservation, stale previews and unrecorded work. Native synthetic Cancel/confirm/retained content and return to entry observed.
-- [ ] Coach manual set-aside test: Session 18 is open in the isolated fixture; set it aside via Previous planning, confirm editor closes and contents remain, then continue from entry without reviving it. Native parking-lot handoff/real Notes and broader lifecycle acceptance remain separate.
-- [ ] Implement remaining explicit verified Notes replacement and orphaned-workspace resumption per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
+- [x] (2026-10-15) Coach explicitly marks the manual set-aside test passed: close the active editor, retain planning, and continue from entry without reviving the set-aside copy. Native parking-lot handoff/real Notes and broader lifecycle acceptance remain separate.
+- [x] (2026-10-15) Implement explicit verified Notes replacement with independent preserved prior content, conversation/composer continuity, fresh confirmation checks and uncertain-save editing lock. Three regressions cover preservation beyond backup rotation, stale/unlocated refusal and post-promotion failure. All five verification stages pass (236 tests/38 suites). Native replacement acceptance remains open.
+- [ ] Implement orphaned-workspace resumption and targeted recorded-session association per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Native parking-lot preview/handoff acceptance remains open.
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
@@ -364,6 +365,12 @@ into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
 
+- Decision: Preserve pre-replacement content as an independent inactive workspace
+  reference before updating the active workspace; retain conversation and composer.
+  Rationale: A rotating backup alone would lose the old idea after later autosaves.
+  Uncertain save outcomes lock editing until reopen instead of risking a stale save.
+  Date/Author: 2026-10-15 / Codex, implementing the approved replacement contract.
+
 - Decision: Implement explicit set-aside with optional schema-3 setAsideAt. Old
   schema-1/2 snapshots remain active without eager rewrite. Preserve the full saved
   snapshot and backup before releasing active ownership. Refuse stale previews and
@@ -660,6 +667,12 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 replacement increment: explicit verified-region replacement now preserves
+prior content independently of backup rotation, retains conversation and unsent text,
+and rejects stale previews. All five deterministic stages pass (236 tests/38 suites).
+Native acceptance and targeted resumption of unlocated recorded work remain pending;
+passing tests do not establish real Notes or installed-app correctness.
 
 2026-10-15 set-aside increment: recorded and unrecorded work can explicitly leave
 active editing while retaining full text, conversation, unsent message and source
@@ -2110,3 +2123,8 @@ favor direct reuse in Notes. Implement explicit preservation-first lifecycle sta
 exclude it from active ownership/resume, and prevent stale-editor writes. Separate
 historical labeling from ownership exclusivity. Full verification and bounded native
 fixture checks pass; stop for the requested manual open-editor lifecycle test.
+
+Revision note, 2026-10-15, replacement: record the coach's manual set-aside pass
+and implement preservation-first explicit replacement. The coach now asks to commit
+at milestones and continue until a decision is needed; routine manual-test readiness
+no longer stops implementation. Native acceptance remains tracked separately.

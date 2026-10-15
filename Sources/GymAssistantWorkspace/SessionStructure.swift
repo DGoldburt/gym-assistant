@@ -126,6 +126,14 @@ public struct SessionAssociationRegistry: Sendable {
         anchors.removeValue(forKey: id); mappings.removeValue(forKey: id); unresolved.remove(id)
     }
 
+    public mutating func acceptReplacement(_ anchor: SessionAnchor, in document: ProgramDocument) throws {
+        guard let mapping = mappings[anchor.sessionID], anchor.noteID == noteID,
+              mapping.observationID == document.snapshot.observationID,
+              anchor.sourceEvidence == (try document.evidence(in: mapping.range)),
+              anchor.baselineText == anchor.sourceEvidence?.text else { throw SessionAssociationError.stale }
+        anchors[anchor.sessionID] = anchor
+    }
+
     /// Reserve a newly created workspace without rebuilding the registry and
     /// losing existing manual confirmations. Unlocated saved owners are not free
     /// space: resolve them before creating another workspace in this note.

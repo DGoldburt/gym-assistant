@@ -503,8 +503,16 @@ immutable to stale editors and excluded from active ownership and unrecorded res
 but retain source evidence and appear in Previous planning. No deletion or automatic
 reactivation occurs. The older app must reject schema 3 rather than ignore this state.
 
-Remaining approved lifecycle follow-up: resume saved scratchpads with explicit verified
-Notes replacement and recoverable prior content. Batch association repair is
+Explicit Notes replacement rechecks the preview's source paragraphs, verified range
+and exact saved/editor snapshot. It saves an independent inactive reference with a
+fresh workspace ID and optional preservedFromWorkspaceID before replacing the active
+snapshot. Conversation identity, messages and composer stay attached. Only this
+explicit operation advances the original comparison baseline. Any uncertain persistence
+failure latches the context and locks the editor until reopen; subsequent autosaves
+cannot overwrite the uncertain result. Historical references survive backup rotation.
+
+Remaining approved lifecycle follow-up: reopen unlocated saved scratchpads and offer
+targeted association before replacement. Batch association repair is
 deferred. Historical evidence is not an extracted session/performance record.
 
 Offline implementation has begun under PLAN 013 in the feature worktree; it is not

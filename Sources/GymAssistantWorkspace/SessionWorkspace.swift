@@ -123,6 +123,8 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
     public var boundaryProtection: BoundaryEditProtection?
     /// Absent in older snapshots: those remain active until explicitly set aside.
     public var setAsideAt: Date?
+    /// Read-only copy preserved before explicit Notes replacement, not an owner.
+    public var preservedFromWorkspaceID: WorkspaceID?
     public var isActive: Bool { setAsideAt == nil }
     public init(workspaceID: WorkspaceID = WorkspaceID(), anchor: SessionAnchor, revision: Int = 0,
                 text: String, richTextArchive: Data, messages: [ConversationMessage] = [],
@@ -135,6 +137,9 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
     public func validate() throws {
         guard Self.supportsSchema(schemaVersion) else { throw WorkspaceError.unsupportedSchema(schemaVersion) }
         guard setAsideAt == nil || schemaVersion >= 3 else { throw WorkspaceError.invalidSnapshot }
+        guard preservedFromWorkspaceID == nil || (!isActive && preservedFromWorkspaceID != workspaceID) else {
+            throw WorkspaceError.invalidSnapshot
+        }
         guard revision >= 0, !anchor.noteID.rawValue.isEmpty, !richTextArchive.isEmpty,
               Set(messages.map(\.id)).count == messages.count,
               messages.allSatisfy({ $0.scratchpadRevision >= 0 && $0.scratchpadRevision <= revision })

@@ -208,4 +208,24 @@ public struct StoredWorkspaceAnchor: Decodable {
         try save(preserved)
         return preserved
     }
+
+    /// Keep an immutable full reference before replacing the active file. Extra
+    /// references after a failed promotion are safe; losing the old content is not.
+    public func replacePreservingPrevious(_ expected: WorkspaceSnapshot, with candidate: WorkspaceSnapshot) throws {
+        guard let loaded = try load(id: expected.workspaceID), !loaded.recoveredFromPrevious,
+              loaded.snapshot == expected, expected.isActive, candidate.isActive,
+              candidate.workspaceID == expected.workspaceID,
+              candidate.anchor.noteID == expected.anchor.noteID,
+              candidate.anchor.sessionID == expected.anchor.sessionID,
+              candidate.revision == expected.revision + 1,
+              candidate.messages == expected.messages, candidate.conversationID == expected.conversationID,
+              candidate.composerText == expected.composerText else { throw SnapshotStoreError.staleRevision }
+        var preserved = WorkspaceSnapshot(anchor: expected.anchor, revision: expected.revision,
+            text: expected.text, richTextArchive: expected.richTextArchive, messages: expected.messages,
+            conversationID: expected.conversationID, composerText: expected.composerText)
+        preserved.boundaryProtection = expected.boundaryProtection
+        preserved.setAsideAt = Date(); preserved.preservedFromWorkspaceID = expected.workspaceID
+        try save(preserved)
+        try save(candidate)
+    }
 }
