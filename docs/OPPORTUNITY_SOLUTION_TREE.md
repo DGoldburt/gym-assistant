@@ -41,22 +41,42 @@ one persistent scratchpad for a session, with free-form conversation beside it.
 The coach edits useful ideas into the scratchpad. Apple Notes remains the recorded
 program destination, with the scratchpad as a bounded working copy.
 
-### Solutions and experiments
+### Sub-opportunity: resume programming without losing unfinished thinking
 
-- **Next candidate, selected design:** resume one scratchpad for an associated
+This belongs to contextual assisted programming, not a separate product direction.
+The coach needs visible working context and recoverable rationale without maintaining
+every old scratchpad as an active editing claim on Notes.
+
+- **Now, approved in PLAN 013:** resume the scratchpad, expose current Notes
+  differences, and offer explicit replacement of scratchpad text only for a verified
+  session region. Preserve conversation and recoverable prior content. Changed Notes
+  alone does not prove the scratchpad obsolete.
+- **Now, approved in PLAN 013:** provide quiet **Previous planning…** access to
+  read-only scratchpads/conversations. Show reliable session associations separately
+  from uncertain **Other planning for this note**. Setting work aside releases active
+  ownership without erasing historical evidence. Batch association repair is deferred.
+- **Now, approved in PLAN 013:** carry a clearly trailing Parking Lot into each new
+  scratchpad so the coach sees existing ideas. Otherwise include an empty heading;
+  do not merge ambiguous sections. The coach consolidates manually after pasting.
+- **Later:** retrieve relevant unfinished ideas and rationale for another session,
+  without interpreting them as commitments, rejections or learned preferences.
+
+### Other solutions and experiments
+
+- **Now, approved in PLAN 013:** resume one scratchpad for an associated
   session, read its current text before each follow-up, and supply the associated
   program note as context. Enter this workspace from the existing autocomplete
   shortcut without changing autocomplete's ordinary interaction. See
   [the selected interaction direction](design/SESSION_SCRATCHPAD.md).
-- **Next candidate, selected design:** let the coach manually edit the scratchpad
+- **Now, approved in PLAN 013:** let the coach manually edit the scratchpad
   in response to conversational suggestions. Show minimal, truthful distinction
   between wording with a confirmed library match and wording without one. Keep
   the existing coaching profile discoverable and read-only.
-- **Next candidate, accepted adapter direction:** capture one Notes document
+- **Now, accepted adapter direction:** capture one Notes document
   identity for read-only context under [ADR 005](decisions/005-read-only-notes-context.md),
   flag external changes, and use a reviewed manual handoff back to Notes. Session
   association, rich-text fidelity, and recovery remain open in the
-  [implementation proposal](exec-plans/PLAN-013-session-scratchpad.md).
+  [implementation plan](exec-plans/PLAN-013-session-scratchpad.md).
 - **Later:** use approved program structure, programming history, client context,
   and an explicit coaching profile as additional evidence. Preference learning,
   unsolicited suggestions, and broader cycle reasoning remain separate candidates.
@@ -65,7 +85,7 @@ Including an idea in the scratchpad does not confirm an alias, create an exercis
 establish a global preference, or make an unused suggestion permanently unwanted.
 OpenAI API use and transmission of note/profile information were approved for this
 design. Credential handling, retention settings, model and spend choices, and
-optional web access still need decisions before real implementation.
+optional web access still need decisions before live provider integration.
 
 ## Opportunity: maintain a trustworthy exercise library without interrupting work
 
@@ -88,6 +108,12 @@ unmatched wording accumulates without a quick review path.
 - **Later:** evaluate extractor quality against Task A boundary decisions and review
   Task C outcome clusters—especially deferred observations—without treating an
   identity disposition as automatic extraction ground truth.
+- **Later model-enhanced candidate:** extract candidate exercise wording from pasted
+  workouts, completed programs, or instructional videos. Show each candidate beside
+  its source passage or video location and likely existing-library matches, then
+  stage it in the same resumable identity-review flow. The model may prepare and
+  rank evidence, but may not confirm aliases, create exercises, or merge identities.
+  Video extraction still depends on the separate instructional-segment design below.
 - **Now, implementation awaiting integration:** provide a small Edit Library
   workspace. Approved navigation reaches it from autocomplete alongside Add
   Exercises as peer routes without cross-navigation. Add Exercises starts with creation
@@ -186,20 +212,54 @@ programming, progression state, or training/load history.
   appropriate human judgment.
 - **Future:** associate clients, dates, exercises, sets, reps, loads, and notes with
   stable exercise IDs.
+- **Preferred next product-slice candidate after contextual assistance:** extract
+  possible session dates, exercise wording, prescriptions, and client links from
+  existing notes or photographed notebook pages. Keep source passages or image
+  regions and uncertainty visible for correction before creating history. Once
+  history is reviewed, summarize relevant prior work on request, distinguishing
+  recorded plans from work only presumed or confirmed to have occurred.
+
+Planning conversations/scratchpads, session text recorded in Notes, and performance
+annotations are distinct evidence. Extracted session history is a structured
+interpretation requiring review, not a synonym for the source text. Preserve source
+links and uncertainty as Notes evolves; an unused suggestion is not necessarily a
+rejection, nor is a prescription proof of performance. Historical association must
+not require an obsolete scratchpad to retain an active editing claim.
 
 Client performance history and load recommendations remain outside the initial
 product scope until explicitly approved.
+
+## Relationship between the extraction candidates
+
+Library and history extraction both turn unstructured source material into
+reviewable, provenance-linked candidates. They may reuse source capture, model
+evaluation, and evidence-display patterns. They have different destinations:
+exercise observations go to identity review; proposed sessions and client links
+need a separate history-correction workflow. Confirming an exercise alias does not
+confirm a session date, client, prescription, or performance, and confirming a
+history record does not silently add an alias. Shared extraction machinery is a
+design hypothesis, not a reason to build a general ingestion platform now.
 
 ## Horizon summary
 
 The original **Now** and **Next** sequence led through new-exercise entry,
 autocomplete, and reusable identity review. Those numbered tutorial exercises are
-complete. The current capstone handoff concerns a bounded client-history slice;
-contextual program assistance is a **Next candidate** undergoing separate design
-and capability checks. Promoting it to an active implementation slice requires an
-explicit sequencing decision and success criteria. **Later** retains completed-
+complete. Contextual program assistance is now approved for bounded offline
+implementation under PLAN 013; live API use and rollout retain their explicit gates.
+The separate bounded client-history workstream is unchanged. **Later** retains completed-
 program extraction, library hygiene, intent-based retrieval, blocks, programming
 tendencies, contextual pairing, and progression relationships.
+
+The coach's preferred following slice is history extraction and review; this advances
+its discovery priority from the original Future horizon. Model-enhanced library
+extraction is an adjacent candidate without a committed order relative to history.
+Load-aware assistance remains Future. This is a horizon preference, not approval of
+history implementation, client-history schema, image processing, or load recommendations.
+Each needs its own success criteria and evidence before entering the active slice.
+
+Reconciled with local `learner/main` at b5d9916 on 2026-10-15: preserve its newer
+library/history extraction directions alongside this branch's contextual-assistance
+opportunity. Do not restore the older completed-tutorial horizon as current work.
 
 Ideas may be added to this tree without changing active success criteria. Each idea
 must remain an opportunity or candidate solution until the user explicitly moves

@@ -35,7 +35,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 ## Progress
 
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
-- [ ] Resolve multi-session association recovery: when several saved sessions cannot be located, individual confirmation cannot establish absence of another unknown owner. Proposed review each, then apply non-overlapping associations together; alternative is require Notes correction first. No batch recovery implemented pending coach decision. Single-session association entry also remains unconnected.
+- [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
+- [x] (2026-10-15) Implement parking-lot carry-forward with unchanged semantic idea formatting, empty-heading fallback, creation messaging and coach documentation. Add three regressions and update old skeleton/paste fixtures for the explicitly changed product contract. All five stages pass (226 tests/36 suites). Native visual/manual-consolidation acceptance is not yet performed.
+- [ ] Implement lifecycle/replacement and Previous planning access per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
@@ -113,6 +115,13 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Parking-lot carry-forward exposed a headings-only creation assumption: rebuilding
+each paragraph would flatten idea formatting. Acceptance now copies the verified
+source attributed-text suffix directly. Archive round-trip comparison must use
+semantic paragraph/list/mark evidence rather than NSTextList object equality.
+Existing exact-insertion fixtures needed the newly approved empty Parking Lot
+heading; association safety checks were retained rather than loosened.
 
 Recovery entry, 2026-10-15: malformed JSON can fail ownership-header discovery before
 the usual snapshot fallback returns its workspace ID. Discovery now reports a typed
@@ -337,6 +346,23 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Resume the existing scratchpad on invocation, even when Notes changed;
+  show the diff and offer **Replace scratchpad with current Notes** only for a
+  confidently verified region. Preserve conversation and a recoverable previous
+  scratchpad before replacement. Do not infer obsolescence or performance from edits.
+  Provide **Previous planning…** with read-only scratchpad/conversation; uncertain
+  records belong under **Other planning for this note**, retaining original labels
+  and activity dates. Explicitly setting aside releases active ownership but keeps
+  historical source evidence. New-session planning must not require batch repair.
+  Rationale: this is a planning companion, not a requirement to keep every past
+  scratchpad synchronized with a historical session. Historical evidence and active
+  editing ownership are separate. Date/Author: 2026-10-15 / coach approval.
+- Decision: New sessions carry a clearly trailing Parking Lot with rich idea content;
+  absent or ambiguous sections yield an empty Parking Lot heading. The rest remains
+  headings-only. Copy includes it and the coach manually consolidates in Notes.
+  Rationale: ideas must be visible to the coach, not merely available to the model.
+  This supersedes earlier skeleton exclusion. Date/Author: 2026-10-15 / coach approval.
 
 - Decision: Implement the described explicit backup preview/restore in the entry
   window. Preserve damaged bytes in a unique `.recovery` file, retain the validated
@@ -606,6 +632,16 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 lifecycle revision increment: reconciled OST content against local
+learner/main b5d9916 without merging either branch or disturbing client-history.
+Approved parking-lot carry-forward is implemented and all five verification stages
+pass (226 tests/36 suites). Updated session creation and insertion fixtures preserve
+their prior safety assertions under the new content contract. Native layout and
+manual Notes consolidation remain unverified. The broader lifecycle, durable
+set-aside/replacement preservation and Previous planning UI are approved but not
+implemented; existing saved-owner registration is still in force. Continue with
+the follow-up milestone rather than implementing batch association repair.
 
 2026-10-15 backup recovery: the entry window now offers a real read-only backup
 preview and explicit restore instead of only an unavailable message. Native isolated
@@ -899,7 +935,8 @@ high-confidence boundary evidence, combined with text and surrounding structure;
 exact Session spelling is not a prerequisite. Lower-level Warmup/week headings
 remain nested when structure supports it. A trailing Parking Lot stays in the
 final scratchpad as attached idea context even if styled as a peer heading; it
-does not create a session or seed a new-session skeleton. The text-only prototype
+does not create a session. Its ideas now carry into the new-session skeleton under
+the approved trailing-section rule; otherwise use an empty Parking Lot heading. The text-only prototype
 does not implement these corrected rules. If peer session labels are duplicated,
 show the conflicting headings and ask the coach to correct them in Notes. Do not
 build fuzzy content relocation to hide a numbering mistake or rewrite Notes for them.
@@ -1221,6 +1258,29 @@ distinctions; conversation cannot upgrade confirmation or change the profile.
 
 ## Plan of Work
 
+### Approved lifecycle follow-up — implement before offline acceptance
+
+First carry the trailing Parking Lot through SessionSkeleton and new-session entry,
+including semantic text/list/bold preservation and preview messaging. Then separate
+active ownership from historical evidence in WorkspaceSnapshotStore and the shared
+SessionNoteContext registry without changing old files eagerly: old snapshots remain
+active by default. Setting aside must preserve the complete current saved state before
+releasing ownership; failed saves must leave ownership unchanged. Add Previous
+planning access through SessionWorkspaceWindows and the entry/window UI, displaying
+read-only content and conversation. Unknown session links must appear at note level,
+not be guessed from matching labels. Keep existing scratchpads resumable when Notes
+changes; offer explicit replacement only after a fresh verified region read and
+durable preservation of the pre-replacement scratchpad. Preserve conversation and
+reject stale confirmation, unsupported archives, or failed preservation. Never write
+Notes. Do not implement batch repair or extracted history in this workstream.
+
+Verify reopen, failure preservation, uncertain associations, released versus active
+ownership, and inability of old records to silently claim new session regions. Test
+replacement with intervening Notes edits and unsaved coach edits. Native acceptance
+must demonstrate Previous planning, read-only retrieval/copy, set-aside/new-session
+entry, and explicit replacement without losing prior text or conversation. Run
+scripts/verify from this worktree; package tests alone do not establish native UX.
+
 
 ### Milestone 1 — Prove association and rich handoff before dependent work
 
@@ -1241,7 +1301,7 @@ unambiguous updates work, unclear association pauses dependent operations withou
 losing text. Test the range preview for unstructured sessions. Add hierarchy-aware
 fixtures with higher-level session/lower-level warmup headings, misspelled session
 titles, and trailing peer-level Parking Lot inclusion. Test keyboard boundary
-adjustment, skeleton exclusion and preservation of edits on scope changes before
+adjustment, parking-lot carry-forward and preservation of edits on scope changes before
 claiming these corrected rules work. The existing 39 passes remain evidence for
 the narrower prototype, not the new rules. Record evidence before
 completing PLAN 012's outstanding session-association item.
@@ -1956,3 +2016,11 @@ Revision note, 2026-10-15, backup recovery: implement and test explicit preview 
 backup-preserving restoration, including stale files and injected failures. Record
 native synthetic evidence and the unresolved multi-session association decision;
 do not mark all recovery complete.
+
+Revision note, 2026-10-15, lifecycle approval: defer batch association repair,
+distinguish active ownership from historical evidence, and record explicit verified
+Notes replacement and Previous planning as remaining work. Reconcile the latest
+local learner/main OST additions without deleting this branch's contextual opportunity.
+Implement parking-lot carry-forward with rich preservation and empty-heading fallback;
+five stages pass with 226 tests. No Notes edits, live API calls, branch merge, or
+completed lifecycle/native-acceptance claim.

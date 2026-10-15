@@ -13,7 +13,7 @@ private actor InsertionReader: NotesContextReading {
 
 @Suite("Inserted session association", .serialized) @MainActor struct InsertedSessionAssociationTests {
     private let original = "<div><h2>Session 1</h2></div><div>A1 Row</div><div><h3>Warmup</h3></div>"
-    private let addition = "<div><h2>Session 2</h2></div><div><h3>Warmup</h3></div>"
+    private let addition = "<div><h2>Session 2</h2></div><div><h3>Warmup</h3></div><div><h2>Parking Lot</h2></div>"
     private func descendants(_ view: NSView) -> [NSView] { [view] + view.subviews.flatMap(descendants) }
     private func eventually(_ condition: () -> Bool) async throws {
         for _ in 0..<100 {

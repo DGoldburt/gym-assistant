@@ -72,7 +72,7 @@ public enum SessionEntryError: Error, Equatable {
         return .proposal(NewSessionProposal(skeleton: try SessionSkeleton(previous: previous, existingHeadings: headings), source: document))
     }
 
-    /// Explicit acceptance of the displayed headings-only proposal. A full read
+    /// Explicit acceptance of session headings plus carried parking-lot ideas. A full read
     /// revalidates it, then lookup/save occur without suspension so simultaneous
     /// accepts in this app cannot create competing unrecorded scratchpads.
     public func acceptNewSession(_ proposal: NewSessionProposal) async throws -> UnrecordedSession {
@@ -83,12 +83,24 @@ public enum SessionEntryError: Error, Equatable {
         if let existing = try unrecorded(in: noteID, context: context, note: document.snapshot) { return existing }
         guard document.paragraphs == proposal.source.paragraphs else { throw SessionEntryError.skeletonSourceChanged }
         let rich = NSMutableAttributedString(string: "")
-        for paragraph in proposal.skeleton.evidence.paragraphs {
+        let carriedCount = proposal.skeleton.carriedParkingLotParagraphCount
+        for paragraph in proposal.skeleton.evidence.paragraphs.dropLast(carriedCount) {
             let style = NSMutableParagraphStyle(); style.headerLevel = paragraph.headingLevel
             rich.append(NSAttributedString(string: paragraph.text, attributes: [
                 .paragraphStyle: style,
                 .font: NSFont.boldSystemFont(ofSize: paragraph.headingLevel == 2 ? 22 : 18)
             ]))
+        }
+        if carriedCount > 0 {
+            guard let sourceRich = context.richText, let candidate = document.candidates().last else {
+                throw WorkspaceError.staleAssociation
+            }
+            let length = proposal.skeleton.evidence.paragraphs.suffix(carriedCount)
+                .reduce(0) { $0 + $1.text.utf16.count }
+            let range = NSRange(location: NSMaxRange(candidate.range.nsRange) - length, length: length)
+            guard range.location >= candidate.range.location,
+                  NSMaxRange(range) <= sourceRich.length else { throw WorkspaceError.staleAssociation }
+            rich.append(sourceRich.attributedSubstring(from: range))
         }
         var snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: noteID,
             recordedHeading: proposal.skeleton.evidence.paragraphs.first?.label ?? SessionSkeleton.placeholderHeading,

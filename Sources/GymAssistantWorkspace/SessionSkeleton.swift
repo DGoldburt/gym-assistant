@@ -39,6 +39,7 @@ public struct SessionSkeleton: Equatable, Sendable {
     }
     public let evidence: SessionSourceEvidence
     public let headingsNeedingReview: [HeadingForReview]
+    public let carriedParkingLotParagraphCount: Int
 
     public init(previous: SessionSourceEvidence, newHeading: String) throws {
         let heading = newHeading.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -51,8 +52,7 @@ public struct SessionSkeleton: Equatable, Sendable {
         var unresolvedParentLevel: Int?
         for (index, paragraph) in previous.paragraphs.enumerated().dropFirst() {
             let label = paragraph.label
-            // Parking Lot is attached context, including any headings nested
-            // beneath it, not structure for the next session.
+            // Attached ideas are carried separately, never interpreted as session structure.
             if label.lowercased() == "parking lot" { break }
             guard paragraph.headingLevel > 0 else { continue }
             if let level = unresolvedParentLevel {
@@ -70,6 +70,22 @@ public struct SessionSkeleton: Equatable, Sendable {
             // Rebuild semantic paragraphs instead of carrying old inline marks,
             // links, lists or invisible prescription-bearing attributes forward.
             paragraphs.append(ProgramParagraph(text: label + "\n", headingLevel: paragraph.headingLevel))
+        }
+        let parkingLots = previous.paragraphs.indices.filter {
+            previous.paragraphs[$0].label.lowercased() == "parking lot"
+        }
+        if parkingLots.count == 1, let start = parkingLots.first,
+           previous.paragraphs[start].headingLevel > 0,
+           previous.paragraphs.dropFirst(start + 1).allSatisfy({
+               $0.headingLevel == 0 || $0.headingLevel > previous.paragraphs[start].headingLevel
+           }) {
+            // Preserve idea text and formatting, unlike the headings-only session body.
+            // A following peer heading means this is not a clearly trailing parking lot.
+            paragraphs.append(contentsOf: previous.paragraphs[start...])
+            carriedParkingLotParagraphCount = previous.paragraphs.count - start
+        } else {
+            paragraphs.append(ProgramParagraph(text: "Parking Lot\n", headingLevel: outerLevel))
+            carriedParkingLotParagraphCount = 0
         }
         evidence = SessionSourceEvidence(paragraphs: paragraphs)
         headingsNeedingReview = review

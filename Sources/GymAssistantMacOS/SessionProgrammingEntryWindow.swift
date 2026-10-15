@@ -47,7 +47,7 @@ import GymAssistantWorkspace
         skeleton.target = self; skeleton.action = #selector(openNewSession)
         skeleton.keyEquivalent = "n"; skeleton.keyEquivalentModifierMask = [.command]
         skeleton.identifier = .init("program-entry-new")
-        skeleton.toolTip = "New session (Command-N). Resume unfinished unrecorded work, or preview a headings-only skeleton."
+        skeleton.toolTip = "New session (Command-N). Resume unfinished work, or preview session headings and parking-lot ideas."
         window.contentView?.addSubview(skeleton)
         access.frame = NSRect(x: 20, y: 20, width: 190, height: 30)
         access.target = self; access.action = #selector(allowAccess)
@@ -168,7 +168,7 @@ import GymAssistantWorkspace
     private func showProposal(_ proposal: SessionWorkspaceEntry.NewSessionProposal) {
         self.proposal = proposal
         let root = NSView(frame: NSRect(x: 0, y: 0, width: 530, height: 520))
-        let title = NSTextField(wrappingLabelWithString: "New session — headings only. No exercises, doses, dates or results are copied. You can edit the scratchpad after creating it.")
+        let title = NSTextField(wrappingLabelWithString: "New session — session headings plus trailing Parking Lot ideas, when clearly identified. Previous session exercises, doses, dates and results are not copied. Consolidate the Parking Lot manually in Notes after pasting.")
         title.frame = NSRect(x: 20, y: 445, width: 490, height: 55); root.addSubview(title)
         let scroll = NSScrollView(frame: NSRect(x: 20, y: 125, width: 490, height: 310))
         scroll.hasVerticalScroller = true

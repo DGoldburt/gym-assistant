@@ -81,7 +81,7 @@ private actor PermissionEntryReader: NotesContextReading {
         try button("program-entry-new").performClick(nil)
         try await eventually { view("session-skeleton-preview") != nil }
         let preview = try #require(view("session-skeleton-preview") as? NSTextView)
-        #expect(preview.string == "Session 2\n" && !preview.isEditable)
+        #expect(preview.string == "Session 2\nParking Lot\n" && !preview.isEditable)
         #expect(try store.storedAnchors().isEmpty)
         try button("session-skeleton-cancel").performClick(nil)
         #expect(view("program-entry-new") != nil && presented.isEmpty)
@@ -91,7 +91,7 @@ private actor PermissionEntryReader: NotesContextReading {
         try button("session-skeleton-create").performClick(nil)
         try await eventually { presented.count == 1 }
         #expect(presented[0].snapshot.anchor.isUnrecorded)
-        #expect(presented[0].snapshot.text == "Session 2\n")
+        #expect(presented[0].snapshot.text == "Session 2\nParking Lot\n")
         try button("program-entry-new").performClick(nil)
         try await eventually { presented.count == 2 }
         #expect(presented[0] === presented[1])

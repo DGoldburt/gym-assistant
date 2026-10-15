@@ -479,6 +479,19 @@ This supports retaining Notes as the initial workspace while keeping the resolve
 
 ## Contextual program assistance direction — capability work in progress
 
+New-session creation carries a clearly trailing Parking Lot as idea context while
+keeping the previous session body headings-only. The skeleton reports the carried
+paragraph count; acceptance revalidates the source and copies that suffix directly
+from the imported attributed Notes text, preserving bullet and inline formatting.
+Missing/ambiguous sections yield an empty heading. Consolidation is manual in Notes.
+
+Approved lifecycle follow-up (not yet implemented): separate active editing claims
+from historical source associations; resume saved scratchpads with explicit verified
+Notes replacement and recoverable prior content. Previous planning is read-only,
+with uncertain associations grouped at note level. Batch association repair is
+deferred. Existing saved-owner registration remains unchanged until this follow-up;
+do not treat it as implemented archival or extracted session history.
+
 Offline implementation has begun under PLAN 013 in the feature worktree; it is not
 installed; live Notes composition is implemented but not natively accepted. `GymAssistantWorkspace` owns typed snapshots,
 context assembly, evidence-tagged profile inputs and a one-request gate without

@@ -51,6 +51,23 @@ status must not depend on color alone. Exact visual styling remains to be tested
 
 ## One active scratchpad per training session
 
+Approved lifecycle revision, 2026-10-15 (implementation pending): invocation resumes
+the saved scratchpad rather than switching to Notes or creating a new session.
+When Notes changed, expose the diff and offer **Replace scratchpad with current
+Notes** only for a confidently verified region. Preserve the conversation and a
+recoverable prior scratchpad before replacement. Unknown association requires
+targeted location review, never a guessed replacement. Changed Notes alone is not
+evidence of obsolescence or performance.
+
+**Previous planning…** offers read-only scratchpads and their conversations, with
+original labels and activity dates. Reliable associations appear with their session;
+uncertain ones appear under **Other planning for this note**. Selecting/copying
+old rationale into current work is manual. Explicitly setting work aside releases
+active editing ownership but retains historical evidence. Batch association repair
+is deferred; starting another session must not require repairing every old record.
+These rules supersede permanent ownership assumptions below, not preservation of
+saved work. Existing code still retains saved owners until this revision is implemented.
+
 Ownership rule approved by the user:
 
 - Keep one persistent scratchpad draft for an associated note/session, shared by its
@@ -99,8 +116,12 @@ Ambiguous classification/association still needs unobtrusive confirmation.
 Parking Lot exception approved by the coach: include a trailing Parking Lot and
 its ideas in the final session's scratchpad. It is attached non-session context,
 not another workspace or a forced end boundary, even if styled as a peer heading.
-Keep it available to assistance; exclude it from the new-session headings-only
-skeleton. This supersedes the side-conversation suggestion to cut it off.
+Keep it available to assistance. Updated approval, 2026-10-15: carry the clearly
+trailing Parking Lot, including idea content and formatting, into each new scratchpad.
+Otherwise add an empty Parking Lot heading rather than merge or guess among ambiguous
+sections. Session content remains headings-only. Copy includes the Parking Lot; the
+coach manually consolidates it into the note-level Parking Lot after pasting.
+This supersedes the earlier skeleton exclusion and requires no automatic Notes writes.
 
 The coach can always adjust either boundary, even when detection is confident.
 Leading UI proposal: small top/bottom markings showing offsets in the source note,
@@ -165,14 +186,15 @@ Selection in Notes may help identify the session but must not narrow the scratch
 to a fragment. "Latest" may mean last in note order rather than most recently edited;
 when structure is ambiguous, show the proposed session before starting.
 
-Approved new-session skeleton: **headings only** from the previous session. Do not
+Approved new-session skeleton: **session headings plus carried Parking Lot ideas**.
+Only the prior session body is headings-only. Do not
 prompt for its name: increment the number or single letter after Session, dropping
 the previous suffix/date. If the sequence is ambiguous (for example Z rollover,
 mixed labels, or a proposed label already present), insert the editable placeholder
 `Session [number or letter]`. Do not guess a sequence or use the placeholder as a
 confirmed Notes identity. This naming choice must not block entry.
 
-Do not carry forward exercise selections, prescriptions, warmup content, loads, dates,
+Outside the carried Parking Lot, do not carry forward exercise selections, prescriptions, warmup content, loads, dates,
 test outcomes, symptoms, or observations. Preserve the existing heading structure;
 do not invent a mandatory A/B or conditioning format. Habitual warmup content waits
 for reusable library-block insertion, not duplication in this slice.

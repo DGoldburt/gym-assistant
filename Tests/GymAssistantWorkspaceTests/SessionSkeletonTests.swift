@@ -10,7 +10,7 @@ import Testing
             let source = SessionSourceEvidence(paragraphs: [.init(text: previous + "\n", headingLevel: 2),
                                                            .init(text: "Warmup\n", headingLevel: 3)])
             let skeleton = try SessionSkeleton(previous: source)
-            #expect(skeleton.evidence.text == expected + "\nWarmup\n")
+            #expect(skeleton.evidence.text == expected + "\nWarmup\nParking Lot\n")
         }
     }
 
@@ -27,12 +27,12 @@ import Testing
                 == SessionSkeleton.placeholderHeading)
         let source = SessionSourceEvidence(paragraphs: [.init(text: "Session Z\n", headingLevel: 2)])
         let skeleton = try SessionSkeleton(previous: source)
-        #expect(skeleton.evidence.text == "Session [number or letter]\n")
+        #expect(skeleton.evidence.text == "Session [number or letter]\nParking Lot\n")
         // A temporary label is editable text, not a new authoritative Notes identity.
         #expect(ProgramDocument.sessionLabel(skeleton.evidence.paragraphs[0].label) == nil)
     }
 
-    @Test func excludesExerciseDoseDateAndParkingLotContent() throws {
+    @Test func excludesExerciseDoseDateButCarriesTrailingParkingLot() throws {
         let previous = SessionSourceEvidence(paragraphs: [
             .init(text: "Session 18 — 14 Oct\n", headingLevel: 2),
             .init(text: "Warmup\n", headingLevel: 3),
@@ -47,10 +47,10 @@ import Testing
             .init(text: "Bike intervals next time\n")
         ])
         let skeleton = try SessionSkeleton(previous: previous, newHeading: "Session 19")
-        #expect(skeleton.evidence.text == "Session 19\nWarmup\nA1\n")
+        #expect(skeleton.evidence.text == "Session 19\nWarmup\nA1\nParking Lot\nConditioning\nBike intervals next time\n")
         #expect(skeleton.headingsNeedingReview.map(\.paragraph.label) == ["B1 Overhead press", "14 Oct results"])
         #expect(skeleton.headingsNeedingReview.map(\.sourceParagraphIndex) == [5, 6])
-        #expect(skeleton.evidence.paragraphs.map(\.headingLevel) == [2, 3, 3])
+        #expect(skeleton.evidence.paragraphs.map(\.headingLevel) == [2, 3, 3, 2, 3, 0])
     }
 
     @Test func retainsAllWeeksAsOneLetteredStructureWithoutPrescriptionsOrMarks() throws {
@@ -66,7 +66,7 @@ import Testing
             .init(text: "A1 Row 3 x 12\n")
         ])
         let skeleton = try SessionSkeleton(previous: previous, newHeading: "Session B")
-        #expect(skeleton.evidence.text == "Session B\nWeek 1\nWarmup\nWeek 2\nWarmup\nWeek 3\n")
+        #expect(skeleton.evidence.text == "Session B\nWeek 1\nWarmup\nWeek 2\nWarmup\nWeek 3\nParking Lot\n")
         #expect(skeleton.evidence.paragraphs.allSatisfy { $0.marks.isEmpty && $0.listStyle == nil })
         #expect(skeleton.headingsNeedingReview.isEmpty)
     }
@@ -83,7 +83,7 @@ import Testing
         let skeleton = try SessionSkeleton(previous: previous, newHeading: "Session 2")
         // A and Block B are children of the unclassified peer heading; do not
         // silently promote them after omitting their parent.
-        #expect(skeleton.evidence.text == "Session 2\n")
+        #expect(skeleton.evidence.text == "Session 2\nParking Lot\n")
         #expect(skeleton.headingsNeedingReview.count == 4)
         for invalid in ["", "New session", "Session 2\nA1 Row"] {
             #expect(throws: WorkspaceError.invalidSnapshot) { try SessionSkeleton(previous: previous, newHeading: invalid) }
@@ -91,5 +91,31 @@ import Testing
         #expect(throws: WorkspaceError.invalidSnapshot) {
             try SessionSkeleton(previous: .init(paragraphs: []), newHeading: "Session 2")
         }
+    }
+
+    @Test func ambiguousOrNonTrailingParkingLotsDoNotCopyIdeas() throws {
+        let heading = ProgramParagraph(text: "Session 1\n", headingLevel: 2)
+        let parking = ProgramParagraph(text: "Parking Lot\n", headingLevel: 2)
+        let idea = ProgramParagraph(text: "Try a clean\n")
+        for tail in [[parking, idea, parking, idea],
+                     [parking, idea, ProgramParagraph(text: "Results\n", headingLevel: 2)],
+                     [ProgramParagraph(text: "Parking Lot\n"), idea]] {
+            let source = SessionSourceEvidence(paragraphs: [heading] + tail)
+            let skeleton = try SessionSkeleton(previous: source)
+            #expect(skeleton.evidence.text == "Session 2\nParking Lot\n")
+        }
+    }
+
+    @Test func parkingLotRetainsRichIdeaEvidenceWithoutMutatingSource() throws {
+        let idea = ProgramParagraph(text: "Try a clean\n", marks: [
+            .init(range: .init(location: 0, length: 3), kind: .bold)
+        ])
+        let source = SessionSourceEvidence(paragraphs: [
+            .init(text: "Session 1\n", headingLevel: 2),
+            .init(text: "Parking Lot\n", headingLevel: 2), idea
+        ])
+        let skeleton = try SessionSkeleton(previous: source)
+        #expect(skeleton.evidence.paragraphs.last == idea)
+        #expect(source.paragraphs.first?.label == "Session 1")
     }
 }

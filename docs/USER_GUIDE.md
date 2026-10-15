@@ -23,11 +23,15 @@ boundary entry remain unfinished. Do not treat this as the completed product sli
 
 Choose **New session** (Command-N in the programming entry window). Existing
 unrecorded work reopens instead of creating another copy. Otherwise, review the
-headings-only preview and choose **Create scratchpad** or **Cancel**. Nothing is
+session-headings and Parking Lot preview and choose **Create scratchpad** or **Cancel**. Nothing is
 saved merely by previewing. The session number or letter increments automatically;
 an ambiguous label becomes `Session [number or letter]`, which you can edit later.
 Uncertain headings are listed as **Not copied**; old exercises, doses and results
-are not carried forward. If Notes changes during preview, cancel and prepare again.
+are not carried forward from the previous session. A clearly trailing Parking Lot
+is copied with its existing ideas and formatting; otherwise an empty Parking Lot
+heading is added. Copy includes this section: manually consolidate it into the
+note-level Parking Lot after pasting. No automatic merge or deletion occurs.
+If Notes changes during preview, cancel and prepare again.
 
 The scratchpad stays unrecorded until its Notes association is verified. When a
 match needs review, choose **Find session in Notes…** (Command-Shift-F, also in Edit). The scratchpad becomes

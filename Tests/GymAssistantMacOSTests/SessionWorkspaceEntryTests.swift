@@ -31,7 +31,7 @@ private actor EntryReader: NotesContextReading {
         let entry = SessionWorkspaceEntry(store: store, reader: reader)
         let id = try await entry.captureNote()
         guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id) else { Issue.record("Expected proposal"); return }
-        #expect(proposal.skeleton.evidence.text == "Session B\nWeek 1\nWeek 2\n")
+        #expect(proposal.skeleton.evidence.text == "Session B\nWeek 1\nWeek 2\nParking Lot\n")
         #expect(try store.storedAnchors().isEmpty)
         let first = Task { try await entry.acceptNewSession(proposal) }
         let second = Task { try await entry.acceptNewSession(proposal) }
@@ -57,11 +57,39 @@ private actor EntryReader: NotesContextReading {
         let id = try await entry.captureNote()
         await reader.replace("<div><h2>Session Z</h2></div><div><h3>A1 Row</h3></div><div>3x5</div>")
         guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id) else { Issue.record("Expected proposal"); return }
-        #expect(proposal.skeleton.evidence.text == "Session [number or letter]\n")
+        #expect(proposal.skeleton.evidence.text == "Session [number or letter]\nParking Lot\n")
         #expect(proposal.skeleton.headingsNeedingReview.map(\.paragraph.label) == ["A1 Row"])
         await reader.replace("<div><h2>Session Z</h2></div><div><h3>A1 Press</h3></div><div>3x5</div>")
         await #expect(throws: SessionEntryError.skeletonSourceChanged) { _ = try await entry.acceptNewSession(proposal) }
         #expect(try store.storedAnchors().isEmpty)
+    }
+
+    @Test func carriedParkingLotKeepsNotesRichTextThroughCreationAndReopen() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        await reader.replace("<div><h2>Session 1</h2></div><div>Old prescription</div><div><h2>Parking Lot</h2></div><ul><li>Try <b>cleans</b></li></ul>")
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let id = try await entry.captureNote()
+        guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id) else {
+            Issue.record("Expected proposal"); return
+        }
+        #expect(proposal.skeleton.carriedParkingLotParagraphCount == 2)
+        let created = try await entry.acceptNewSession(proposal)
+        let rich = try RichTextArchive.decode(created.snapshot.richTextArchive)
+        let source = try #require(created.context.richText)
+        let sourceRange = (source.string as NSString).range(of: "Parking Lot\n")
+        let copiedRange = (rich.string as NSString).range(of: "Parking Lot\n")
+        let copied = rich.attributedSubstring(from: NSRange(location: copiedRange.location,
+            length: rich.length - copiedRange.location))
+        let expected = source.attributedSubstring(from: NSRange(location: sourceRange.location,
+            length: source.length - sourceRange.location))
+        // Decoded NSTextList instances need not be object-equal. Compare the
+        // complete semantic evidence, including bullet style and bold ranges.
+        let copiedDocument = try ProgramDocumentReader.document(snapshot: .init(id: id, text: copied.string), richText: copied)
+        let expectedDocument = try ProgramDocumentReader.document(snapshot: .init(id: id, text: expected.string), richText: expected)
+        #expect(copiedDocument.paragraphs == expectedDocument.paragraphs)
+        #expect(!rich.string.contains("Old prescription"))
+        #expect(try store.load(id: created.snapshot.workspaceID)?.snapshot == created.snapshot)
     }
 
     @Test func multipleUnrecordedSessionsRequireExplicitChoiceRatherThanInventingAnother() async throws {
