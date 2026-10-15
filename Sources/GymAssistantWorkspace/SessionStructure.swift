@@ -113,7 +113,7 @@ public struct SessionAssociationRegistry: Sendable {
     private var previousParagraphs: [ProgramParagraph]?
 
     public init(noteID: NoteID, anchors: [SessionAnchor]) throws {
-        guard anchors.allSatisfy({ $0.noteID == noteID }),
+        guard anchors.allSatisfy({ $0.noteID == noteID && !$0.isUnrecorded }),
               Set(anchors.map(\.sessionID)).count == anchors.count else { throw SessionAssociationError.duplicateIdentity }
         self.noteID = noteID
         self.anchors = Dictionary(uniqueKeysWithValues: anchors.map { ($0.sessionID, $0) })
@@ -125,7 +125,7 @@ public struct SessionAssociationRegistry: Sendable {
     /// losing existing manual confirmations. Unlocated saved owners are not free
     /// space: resolve them before creating another workspace in this note.
     public mutating func register(_ anchor: SessionAnchor, range: SourceRange, in document: ProgramDocument) throws {
-        guard document.snapshot.id == noteID, anchor.noteID == noteID,
+        guard document.snapshot.id == noteID, anchor.noteID == noteID, !anchor.isUnrecorded,
               observationID == document.snapshot.observationID else { throw SessionAssociationError.stale }
         guard anchors[anchor.sessionID] == nil else { throw SessionAssociationError.duplicateIdentity }
         guard unresolved.isEmpty, duplicateLabels.isEmpty else { throw SessionAssociationError.unresolvedOwnership }

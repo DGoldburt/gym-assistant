@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Add explicit unrecorded session state, schema-2 snapshots with read-only schema-1 compatibility, and context-as-addition. Five regressions cover legacy bytes/backups, downgrade rejection, no recorded-region ownership, identity and context limits. All five verification stages pass (198 tests/32 suites). Creation/resume UI and post-paste association remain pending; the existing recorded-session controller explicitly refuses an unrecorded snapshot.
+
 - [x] (2026-10-14) Coach resolves naming: increment the number or letter after Session; use an editable placeholder on ambiguity and never prompt. Implement automatic skeleton labels, omission of old date/suffix, overflow/rollover/mixed-label fallback, and collision avoidance. Placeholder remains ordinary editable content, not a verified Notes identity. Creation/persistence/UI wiring remains pending.
 
 - [x] (2026-10-14) Add a Foundation headings-only skeleton proposal with three regressions: remove old outer date/label via caller-supplied heading, retain all lettered-session weeks, exclude body exercises/doses/observations/Parking Lot and inline attributes, and hold ambiguous headings plus descendants for review. New-session heading defaults are awaiting coach choice; no new-session creation, persistence, or automatic post-paste association is claimed.
@@ -91,6 +93,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Unrecorded continuation, 2026-10-14: an optional new anchor field alone would let an
+older reader silently interpret a new session as a recorded Notes region. Use a new
+snapshot schema for new files; accept legacy files without rewriting them. Header
+scanning also validates that unrecorded snapshots claim no baseline, source range or
+boundary protection before excluding them from recorded ownership.
 
 Skeleton continuation, 2026-10-14: omitting an ambiguous parent while copying its
 recognized child headings silently changes structure. Treat those descendants as
@@ -242,6 +250,14 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: New snapshots use schema 2; schema 1 remains readable without eager
+  migration. Missing recording state in a legacy anchor means recorded. Unrecorded
+  anchors have no Notes baseline or range, and their heading is only an initial
+  label hint. Save refuses schema downgrade and recorded-to-unrecorded conversion.
+  Rationale: Prevent old readers or recorded-section code from treating a new
+  scratchpad as a replacement. Explicit upgrades preserve the previous file.
+  Date/Author: 2026-10-14, Codex implementation of the approved addition contract.
 
 - Decision: Increment the number or single letter after Session automatically.
   On ambiguity use `Session [number or letter]`; never ask a naming question or
@@ -421,6 +437,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 
 ## Outcomes & Retrospective
 
+Unrecorded continuation, 2026-10-14: the persistence and request foundations now
+distinguish additions from replacements. Full verification passes (198 tests/32
+suites). No real snapshots were migrated and no Notes, clipboard or provider call
+was used. The recorded controller rejects the new state until its UI path is
+implemented; new-session entry, durable UI resume and post-paste association are
+still outstanding. Package tests do not establish native behavior.
+
 Skeleton continuation, 2026-10-14: heading-only proposal generation is implemented
 and covered by three synthetic tests. All five verification stages pass with 191
 tests across 30 suites. Recognized structural names and bare block,
@@ -428,8 +451,9 @@ slot and week headings can carry forward; unfamiliar/content-bearing or ambiguou
 hierarchy remains separate review data. This is deliberately not a complete
 new-session workflow. The heading-default choice is now resolved and implemented:
 increment number/letter, otherwise placeholder, never prompt. Pending work includes
-preview/review UI, explicit unrecorded identity and context-as-addition, durable
-resume, and conservative post-paste association without replacing the last session.
+preview/review UI, durable UI resume, and conservative post-paste association without
+replacing the last session. Explicit unrecorded identity and context-as-addition are
+now implemented in the foundation, as recorded above.
 
 Service-entry continuation, 2026-10-14: the feature branch now connects chooser
 Command-P to independent captured-note latest-session entry. The Service pasteboard
@@ -1602,3 +1626,8 @@ number-or-letter increment with editable placeholder on ambiguity, replacing the
 pending naming question. All five verification stages pass: 193 tests across 30
 suites. No creation UI or recorded-session identity is inferred
 from the placeholder.
+
+Revision note, 2026-10-14, unrecorded foundation: implement schema-2 persistence,
+legacy read compatibility and explicit addition context with five regressions.
+No actual snapshot migration or new-session UI is claimed. Preserve old bytes and
+backups and refuse recorded ownership for an unrecorded addition.

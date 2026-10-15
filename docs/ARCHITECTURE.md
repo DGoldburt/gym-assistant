@@ -546,8 +546,15 @@ session with an automatically incremented number/letter or editable ambiguity
 placeholder, never a naming prompt. It preserves recognized nested structure,
 separates ambiguous headings (including descendants of ambiguous parents) for
 review, excludes attached Parking Lot content, and never copies body prescriptions
-or old inline attributes. It does not yet create/persist an unrecorded workspace;
-new-session UI and later Notes association remain unfinished.
+or old inline attributes. Schema-2 snapshots can persist explicit unrecorded
+sessions without a Notes baseline, source range or boundary protection. Schema-1
+files remain readable without rewriting; an explicit upgrade preserves the previous
+file and save refuses downgrade. Missing legacy recording state means recorded.
+Unrecorded anchors do not reserve recorded Notes regions. Their heading is an
+initial label hint, not proof of identity. `ProgramContextAssembler` appends their
+scratchpad separately to the unchanged whole note and marks the request as an
+unrecorded addition. New-session UI and later Notes association remain unfinished;
+the recorded-session controller currently refuses unrecorded snapshots.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time

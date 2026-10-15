@@ -22,6 +22,7 @@ public struct StoredWorkspaceAnchor: Decodable {
     public let schemaVersion: Int
     public let workspaceID: WorkspaceID
     public let anchor: SessionAnchor
+    public let boundaryProtection: BoundaryEditProtection?
 }
 
 /// Store only local workspace snapshots. It has no Notes or provider dependency.
@@ -55,7 +56,10 @@ public struct StoredWorkspaceAnchor: Decodable {
             let current = currentURL(for: id)
             let source = fileManager.fileExists(atPath: current.path) ? current : previousURL(for: id)
             let value = try JSONDecoder().decode(StoredWorkspaceAnchor.self, from: Data(contentsOf: source))
-            guard value.schemaVersion == WorkspaceSnapshot.currentSchema else { throw WorkspaceError.unsupportedSchema(value.schemaVersion) }
+            guard WorkspaceSnapshot.supportsSchema(value.schemaVersion) else { throw WorkspaceError.unsupportedSchema(value.schemaVersion) }
+            guard !value.anchor.isUnrecorded || (value.schemaVersion >= 2 && value.anchor.baselineText.isEmpty
+                && value.anchor.sourceEvidence == nil && value.boundaryProtection == nil)
+            else { throw WorkspaceError.invalidSnapshot }
             guard value.workspaceID == id, !value.anchor.noteID.rawValue.isEmpty else { throw SnapshotStoreError.identityMismatch }
             return value
         }
@@ -103,6 +107,8 @@ public struct StoredWorkspaceAnchor: Decodable {
             let old = try validated(raw, id: snapshot.workspaceID)
             guard old.anchor.noteID == snapshot.anchor.noteID, old.anchor.sessionID == snapshot.anchor.sessionID
             else { throw SnapshotStoreError.identityMismatch }
+            guard snapshot.schemaVersion >= old.schemaVersion,
+                  old.anchor.isUnrecorded || !snapshot.anchor.isUnrecorded else { throw SnapshotStoreError.identityMismatch }
             guard snapshot.revision >= old.revision else { throw SnapshotStoreError.staleRevision }
             existing = raw
         }

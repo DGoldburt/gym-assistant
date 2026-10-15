@@ -51,17 +51,23 @@ public struct NoteSnapshot: Equatable, Sendable {
     }
 }
 
+public enum SessionRecordingState: String, Codable, Sendable { case recorded, unrecorded }
+
 public struct SessionAnchor: Codable, Equatable, Sendable {
     public let sessionID: SessionID
     public let noteID: NoteID
     public var recordedHeading: String
     public var baselineText: String
     public var sourceEvidence: SessionSourceEvidence?
+    /// Absent in schema-1 files, where every anchor described a recorded region.
+    public var recordingState: SessionRecordingState?
+    public var isUnrecorded: Bool { recordingState == .unrecorded }
     public init(sessionID: SessionID = SessionID(), noteID: NoteID, recordedHeading: String, baselineText: String,
-                sourceEvidence: SessionSourceEvidence? = nil) {
+                sourceEvidence: SessionSourceEvidence? = nil, recordingState: SessionRecordingState = .recorded) {
         self.sessionID = sessionID; self.noteID = noteID
         self.recordedHeading = recordedHeading; self.baselineText = baselineText
         self.sourceEvidence = sourceEvidence
+        self.recordingState = recordingState
     }
 }
 
@@ -96,7 +102,8 @@ public struct ConversationMessage: Codable, Equatable, Sendable {
 }
 
 public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
-    public static let currentSchema = 1
+    public static let currentSchema = 2
+    public static func supportsSchema(_ version: Int) -> Bool { (1...currentSchema).contains(version) }
     public var schemaVersion: Int
     public let workspaceID: WorkspaceID
     public var anchor: SessionAnchor
@@ -116,11 +123,16 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
         self.composerText = composerText
     }
     public func validate() throws {
-        guard schemaVersion == Self.currentSchema else { throw WorkspaceError.unsupportedSchema(schemaVersion) }
+        guard Self.supportsSchema(schemaVersion) else { throw WorkspaceError.unsupportedSchema(schemaVersion) }
         guard revision >= 0, !anchor.noteID.rawValue.isEmpty, !richTextArchive.isEmpty,
               Set(messages.map(\.id)).count == messages.count,
               messages.allSatisfy({ $0.scratchpadRevision >= 0 && $0.scratchpadRevision <= revision })
         else { throw WorkspaceError.invalidSnapshot }
+        if anchor.isUnrecorded {
+            // No invented recorded range or baseline for a session not in Notes.
+            guard schemaVersion >= 2, anchor.baselineText.isEmpty,
+                  anchor.sourceEvidence == nil, boundaryProtection == nil else { throw WorkspaceError.invalidSnapshot }
+        }
         if let boundaryProtection, !boundaryProtection.isValid(currentLength: (text as NSString).length) {
             throw WorkspaceError.invalidSnapshot
         }

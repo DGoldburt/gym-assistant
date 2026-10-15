@@ -34,6 +34,7 @@ public struct ProgrammingRequest: Equatable, Sendable {
     public let question: String
     public let noteContext: String
     public let scratchpad: String
+    public let sessionRecordingState: SessionRecordingState
     public let conversation: [ConversationMessage]
     public let profile: CoachingProfile
 }
@@ -55,11 +56,28 @@ public enum ProgramContextAssembler {
                                 question: String, maximumContextBytes: Int) throws -> ProgrammingRequest {
         try workspace.validate()
         guard !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw WorkspaceError.emptyQuestion }
-        guard note.id == workspace.anchor.noteID, association.noteID == note.id,
+        guard !workspace.anchor.isUnrecorded, note.id == workspace.anchor.noteID, association.noteID == note.id,
               association.sessionID == workspace.anchor.sessionID, association.observationID == note.observationID
         else { throw WorkspaceError.staleAssociation }
         guard association.range.isParagraphAligned(in: note.text) else { throw WorkspaceError.invalidRange }
         let context = (note.text as NSString).replacingCharacters(in: association.range.nsRange, with: workspace.text)
+        return try request(note: note, workspace: workspace, profile: profile, question: question,
+                           context: context, maximumContextBytes: maximumContextBytes)
+    }
+
+    public static func assembleUnrecorded(note: NoteSnapshot, workspace: WorkspaceSnapshot,
+                                         profile: CoachingProfile, question: String,
+                                         maximumContextBytes: Int) throws -> ProgrammingRequest {
+        try workspace.validate()
+        guard !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw WorkspaceError.emptyQuestion }
+        guard workspace.anchor.isUnrecorded, workspace.anchor.noteID == note.id else { throw WorkspaceError.staleAssociation }
+        let context = note.text + "\n\n[Unrecorded scratchpad session — addition, not yet in Notes]\n" + workspace.text
+        return try request(note: note, workspace: workspace, profile: profile, question: question,
+                           context: context, maximumContextBytes: maximumContextBytes)
+    }
+
+    private static func request(note: NoteSnapshot, workspace: WorkspaceSnapshot, profile: CoachingProfile,
+                                question: String, context: String, maximumContextBytes: Int) throws -> ProgrammingRequest {
         let conversation = workspace.messages.filter { $0.conversationID == workspace.conversationID }
         let profileBytes = try JSONEncoder().encode(profile.entries).count
         // Local byte budget is explicit; model-specific token limits belong to the adapter.
@@ -69,6 +87,7 @@ public enum ProgramContextAssembler {
         return ProgrammingRequest(id: UUID(), workspaceID: workspace.workspaceID, sessionID: workspace.anchor.sessionID,
             conversationID: workspace.conversationID, noteID: note.id, observationID: note.observationID,
             revision: workspace.revision, question: question, noteContext: context, scratchpad: workspace.text,
+            sessionRecordingState: workspace.anchor.isUnrecorded ? .unrecorded : .recorded,
             conversation: conversation, profile: profile)
     }
 }
@@ -95,7 +114,8 @@ public struct FakeProgrammingAssistant: ProgrammingAssistant {
     public func reply(to request: ProgrammingRequest) async throws -> ProgrammingResponse {
         try await Task.sleep(for: delay)
         try Task.checkCancellation()
+        let mode = request.sessionRecordingState == .unrecorded ? "the unrecorded session added separately" : "the associated session replaced by your scratchpad"
         return ProgrammingResponse(requestID: request.id,
-            text: "Offline test reply — not exercise advice.\nI received scratchpad revision \(request.revision) and the whole synthetic note with this session replaced by your scratchpad.\nQuestion: \(request.question)\n\nKeep refining the scratchpad; the next question will use its latest text.")
+            text: "Offline test reply — not exercise advice.\nI received scratchpad revision \(request.revision) and the supplied Notes context with \(mode).\nQuestion: \(request.question)\n\nKeep refining the scratchpad; the next question will use its latest text.")
     }
 }

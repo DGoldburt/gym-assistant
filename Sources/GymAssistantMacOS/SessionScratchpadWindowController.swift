@@ -55,6 +55,9 @@ import GymAssistantWorkspace
         self.pasteboard = pasteboard
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
+        // The recorded-session controller path must never fabricate a Notes
+        // range for an unrecorded addition. Its UI integration is separate work.
+        guard !snapshot.anchor.isUnrecorded else { throw WorkspaceError.staleAssociation }
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
         if let noteContext {
             guard try noteContext.association(for: snapshot.anchor.sessionID) == association,
