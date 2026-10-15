@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Connect New Session/Command-N to existing-work resume or a non-writing headings-only preview. List uncertain omitted headings; Create rechecks Notes, Cancel creates nothing, and ambiguous labels remain editable placeholders without prompts. Add two injected-presentation tests for preview/cancel/create/reuse and placeholder/omissions/stale-source refusal. Update coach-facing instructions. Native UI/shortcut acceptance and installed rollout remain pending.
+
 - [x] (2026-10-15) Coach approves read-only scratchpad during association and a left-side text-only diff against selected Notes content. Implement embedded right-side Notes browser, heading search, unique-heading suggestion, keyboard/drag selection, occupied-owner explanation, Cancel and explicit identity-only confirmation. Changed Notes clears selection before reconfirmation. Add “Not pasted yet” origin refresh. Two synthetic tests cover selection/diff, cancel, freshness, content preservation, occupancy and unrecorded continuation. All five stages pass (210 tests/33 suites); native visual/keyboard acceptance and New Session entry remain pending.
 
 - [x] (2026-10-15) Wire verified insertion promotion into live controller refresh without replacing editor content or undo history. Preserve conservative protection through pre-association formatting undo; ambiguous changes pause chat/comparison and retain the question. Block latest-entry creation of a competing owner while pending work exists. Two controller regressions cover promotion/redo and ambiguity/entry. All five verification stages pass (208 tests/33 suites); confirmation and New Session presentation remain outstanding.
@@ -103,6 +105,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+New-session presentation, 2026-10-15: assigning a new content view can resize it to
+the old window's bounds before the next statement. Set the preview's explicit
+content size rather than reading back its already-adjusted frame. Inject window
+presentation in entry tests so verifying creation/reuse does not show test windows
+or install menus in the coach's desktop session.
 
 Association controls, 2026-10-15: the selected Notes content may intentionally
 differ from the scratchpad. Confirm identity and establish the Notes reference
@@ -292,6 +300,14 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Expose New Session as Command-N in the independent programming entry
+  window. Resume existing unrecorded work first; otherwise display the headings-only
+  preview in that same window with Create/Cancel and explicitly listed omissions.
+  No naming question, extra preview window or implicit file creation.
+  Rationale: Connect the approved low-friction entry and existing safe preparation
+  contract without adding another workflow or carrying prescriptions forward.
+  Date/Author: 2026-10-15, Codex implementation of approved entry scope.
 
 - Decision: During association, make the scratchpad read-only and replace the
   conversation pane with the read-only Notes browser. Reuse the left text-only diff
@@ -521,6 +537,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+New-session presentation, 2026-10-15: the formerly disabled entry is connected on
+the development branch. Two new tests demonstrate preview/cancel without writes,
+one-workspace creation/resume, placeholder naming, visible omissions and refusal of
+a changed-source preview. The user guide now describes this development flow and
+association review. Native keyboard/visual acceptance, recovery entry, provider/profile
+work and installed rollout remain separate unfinished work.
+All five deterministic verification stages pass: 212 tests across 33 suites.
 
 Association controls, 2026-10-15: the embedded browser and identity-only transaction
 are connected to unrecorded scratchpad windows. The existing diff now follows the
@@ -1797,3 +1821,9 @@ read-only scratchpad plus existing left-side text diff/right Notes browser. Add
 identity-only confirmation and explicit unrecorded continuation with fresh-read and
 ownership checks. All five stages pass (210 tests/33 suites); native acceptance and
 New Session entry presentation remain outstanding.
+
+Revision note, 2026-10-15, New Session entry: enable the development entry button
+and Command-N, reusing safe preparation/acceptance and existing unrecorded windows.
+Add a single-window preview with omissions and fresh-read rejection; update the
+user guide. This supersedes earlier disabled-button notes, not native acceptance or
+installed rollout gates.

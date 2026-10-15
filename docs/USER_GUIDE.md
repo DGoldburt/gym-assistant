@@ -16,8 +16,32 @@ select the intended note in Notes and explicitly choose **Use currently selected
 Notes note**. Granting permission does not silently capture a new selection.
 
 This development route uses a clearly labeled local test assistant, not OpenAI,
-and has no coaching profile loaded. New-session skeletons and entry recovery
-controls are not connected yet. Do not treat this as the completed product slice.
+and has no coaching profile loaded. Damaged-file recovery and uncertain initial
+boundary entry remain unfinished. Do not treat this as the completed product slice.
+
+### Start or resume a new session
+
+Choose **New session** (Command-N in the programming entry window). Existing
+unrecorded work reopens instead of creating another copy. Otherwise, review the
+headings-only preview and choose **Create scratchpad** or **Cancel**. Nothing is
+saved merely by previewing. The session number or letter increments automatically;
+an ambiguous label becomes `Session [number or letter]`, which you can edit later.
+Uncertain headings are listed as **Not copied**; old exercises, doses and results
+are not carried forward. If Notes changes during preview, cancel and prepare again.
+
+The scratchpad stays unrecorded until its Notes association is verified. When a
+match needs review, choose **Find session in Notes…**. The scratchpad becomes
+read-only and the Notes browser temporarily replaces the conversation. Find a
+heading, then use Shift–Arrow or drag to select the session paragraphs. The left
+**Compare with source** toggle shows text-only differences for that selection—not
+formatting differences. **Associate selected session** connects identity without
+replacing either version. Cancel returns to editing. Notes changes require a new
+selection; a region owned by another workspace cannot be selected for association.
+
+Choose **Not pasted yet** only if the scratchpad is still an addition, not a session
+already in Notes. This refreshes context without changing scratchpad content.
+These development interactions have automated tests but still need native keyboard
+and visual acceptance; they are not installed by these changes.
 
 ## Paste formatted Markdown into Apple Notes
 

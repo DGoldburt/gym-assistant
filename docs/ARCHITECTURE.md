@@ -553,7 +553,7 @@ file and save refuses downgrade. Missing legacy recording state means recorded.
 Unrecorded anchors do not reserve recorded Notes regions. Their heading is an
 initial label hint, not proof of identity. `ProgramContextAssembler` appends their
 scratchpad separately to the unchanged whole note and marks the request as an
-unrecorded addition. New-session entry UI and later Notes association remain unfinished.
+unrecorded addition. Development entry now exposes New Session and its skeleton preview.
 The scratchpad controller now accepts an unrecorded snapshot only with no Notes
 association. It creates no boundary protection, disables recorded-boundary actions,
 assembles addition context after a fresh read, and compares against an empty source.
@@ -565,9 +565,11 @@ or a non-writing skeleton proposal including omitted-heading review data.
 `acceptNewSession` rereads Notes, rejects a changed source, checks again for pending
 work and saves without suspension between lookup and creation. Multiple pending
 workspaces require explicit resolution rather than choosing one silently. These
-entry operations and unrecorded windows have synthetic coverage but are not yet
-exposed by the programming entry UI. Post-paste association and ambiguity handling
-must be connected before enabling New Session.
+entry operations and unrecorded windows have synthetic coverage and are exposed by
+the programming entry UI. Command-N resumes unfinished unrecorded work or displays
+a non-writing headings-only preview with omissions explicitly listed. Create checks
+freshness again; Cancel creates nothing. Naming never prompts. The entry window's
+generation/cancellation guards cover preview acceptance and reopening.
 New unrecorded snapshots now retain whole-note semantic origin evidence separately
 from the empty session baseline. `UnrecordedSessionAssociation` verifies only one
 exact session insertion whose removal restores that origin. It compares visible
@@ -592,7 +594,8 @@ regions are blocked; the transaction revalidates ownership after a fresh read.
 Explicit confirmation records identity/reference evidence without replacing either
 version and marks edit correspondence uncertain. Cancel restores the conversation
 and editor. “Not pasted yet” refreshes origin evidence while retaining the unrecorded
-addition. New Session entry presentation and native acceptance remain unfinished.
+addition. New Session entry presentation is connected on the development branch;
+native acceptance and installed rollout remain unfinished.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time
