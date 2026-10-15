@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-14) Wire the live-context boundary browser and apply path to shared full reads and atomic ownership persistence. Add asynchronous boundary-only undo/redo preflight; preserve rejected actions, isolate typing groups, cancel checks on close/quit, and keep ordinary undo immediate. Four added regressions exercise live apply/undo/redo, changed Notes, newly occupied regions, cancellation, menu labels and grouping. All five verification stages pass: 187 tests/28 suites. Native Notes/shortcut entry acceptance and unresolved-association recovery remain pending.
+
 - [x] (2026-10-14) Add boundary commit validation/persistence before ownership publication, with a latched recovery requirement after uncertain local saves. Three regressions cover protected preview/adjacent and overlapping owners, stale observations/revisions, unchanged confirmed baseline, successful ownership persistence and failure after file promotion. Synthetic boundary selection now previews protected shrink before Apply. Live controller commit/undo and Service shortcut wiring remain incomplete.
 
 - [x] (2026-10-14) Add captured-identity latest-session entry preparation and app-owned window registry. Five injected-reader regressions cover lettered weeks, selection changes, simultaneous/repeated entry, closed-window reuse, renumbered relocation, duplicate/unknown/changed regions and damaged-current recovery refusal. Preserve scratchpad and baseline on verified relocation; mark old edit coordinates uncertain. Service entry UI, explicit recovery/boundary UI and native integration remain outstanding.
@@ -83,6 +85,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Live boundary continuation, 2026-10-14: Cocoa's undo stack advances synchronously,
+whereas Notes validation must be asynchronous. Starting a read inside the undo
+callback would consume the action before detecting stale or occupied targets.
+Add a boundary-only preflight manager that validates/persists first, then advances
+the stack without another suspension. Isolate boundary groups from typing so later
+text actions cannot hide their preflight, and expose friendly menu labels rather
+than internal correlation keys. Tests include default event grouping.
 
 Boundary continuation, 2026-10-14: snapshot saving can report a failure after the
 candidate has already reached the current file. Keeping only the old in-memory
@@ -213,6 +223,13 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Temporarily block scratchpad edits during boundary undo/redo validation,
+  without blocking composer typing or adding Notes reads to ordinary text undo.
+  Rationale: The asynchronous check must not apply a before-image over edits made
+  while it waits; rejected checks must retain the existing undo/redo action. This
+  implements the approved fresh, atomic undo requirement without a new workflow.
+  Date/Author: 2026-10-14, Codex live-boundary implementation.
 
 - Decision: Treat unacknowledged workspace persistence as an ownership recovery
   condition, not a Notes freshness failure. Keep the editor available and prevent
@@ -368,6 +385,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Live-boundary continuation, 2026-10-14: the optional live-context controller now
+opens the read-only browser with current neighboring owners, rechecks on apply,
+and persists before installing the new text/range. Boundary undo/redo revalidates
+Notes and ownership before consuming its action; tests reject externally changed
+Notes and a newly occupied expansion. Four added tests and all five verification
+stages pass (187 tests/28 suites). Native acceptance has not run. Service entry,
+new-session skeleton, unresolved association/recovery UI, real profile and library
+decoration remain outstanding; no paid API or installed Service changes occurred.
 
 Boundary continuation, 2026-10-14: candidate commits now preserve the confirmed
 baseline and validate durable identity/revision before publishing ownership. The
@@ -1500,3 +1526,9 @@ Revision note, 2026-10-14, boundary transactions: implement and test the persist
 and ownership commit boundary, including failure after promotion, and add immediate
 protected-selection preview to the existing synthetic browser. Keep live editing
 disabled pending freshness-aware undo/redo integration; no native acceptance claim.
+
+Revision note, 2026-10-14, live boundary wiring: connect preview/apply and safe
+undo/redo to shared Notes validation and the persisted ownership transaction.
+Supersede the preceding implementation-disabled note for optional live-context
+windows only. The default development launch remains frozen/synthetic and Service
+entry is still unconnected; native acceptance is not implied by package tests.

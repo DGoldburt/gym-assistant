@@ -44,6 +44,7 @@ The following timings are proposals to verify, not measured performance promises
 | Copy icon or explicit whole-copy shortcut | Publish handoff concurrently with shared body/id/date validation | Warn about external edits or unavailable checking; 400ms target, 750ms verification wait, then continue with app-only late warnings. Never claim safe paste or reconciliation. |
 | Ordinary Command-C, including editor select-all, partial text or chat selection | Copy selected content immediately; no synchronous Notes check | Preserve standard copy behavior; whole selection is still Notes-unverified. |
 | Open the diff toggle | Shared freshness check; update comparison or label cached Notes last-known while pending/unavailable | No separate Check Notes action or model call. Monitoring continues independently. |
+| Open or apply the boundary browser; undo/redo a boundary change | Shared full body/id/date validation, independent of equal metadata dates | Compare against the preview's structured source, check current ownership, and persist before changing editor/range together. Failed undo/redo checks retain the action. Ordinary text undo does not read Notes. |
 | Manual paste/edit in Notes | Discovered by normal automatic refresh | Verify against the correctly associated session; copying alone is not evidence. |
 | Hide/close the last visible workspace for a note, sleep, or quit | Suspend timer reads; flush local scratchpads; quit cancels requests | Keep workspace identities/baselines. Resume with a full read. No idle reading of every stored note. |
 
@@ -271,6 +272,17 @@ not permission to overlap a workspace that subsequently occupied it. Expansion
 preview is not acceptance of unrelated edits to existing content or its baseline.
 Neither operation writes Notes. Hypothesis, not established evidence: coaches
 normally adjust boundaries before editing, making protected-region limits low cost.
+
+Implementation continuation, 2026-10-14: the optional live-context controller now
+uses full validation for browser opening, apply and boundary undo/redo. During an
+undo/redo preflight the scratchpad editor is temporarily noneditable; the composer
+remains available. Close/quit cancels the pending check. Cocoa's undo stack advances
+only after validation and successful persistence, with no intervening suspension.
+The current implementation conservatively refuses a boundary operation when any
+structured Notes content differs from its preview, rather than relocating endpoints
+through that change. Reopen the browser against the fresh source when association
+is still valid; unresolved association still requires the pending recovery UI.
+Injected-reader tests establish these bounded paths, not native UI acceptance.
 
 Fixtures must assert exact ranges for numbered and lettered/multiweek sessions,
 descriptive suffixes, unsupported labels/manual ranges, incidental Session text,

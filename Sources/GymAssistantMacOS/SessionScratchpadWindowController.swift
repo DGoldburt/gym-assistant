@@ -40,6 +40,9 @@ import GymAssistantWorkspace
     private let checkedCopy = CheckedScratchpadCopy()
     private var comparisonTask: Task<Void, Never>?
     private var comparisonGeneration = UUID()
+    private var boundaryTask: Task<Void, Never>?
+    private var committingBoundary = false
+    private var preparedBoundaryRestore: WorkspaceSnapshot?
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation, profile: CoachingProfile,
@@ -79,6 +82,17 @@ import GymAssistantWorkspace
         window.delegate = self
         snapshotDidRestore()
         configure(rich: rich)
+        if noteContext != nil {
+            let undo = ValidatedBoundaryUndoManager()
+            undo.didChangeChecking = { [weak self] checking in
+                self?.editor.isEditable = !checking
+                if checking { self?.status.stringValue = "Checking Notes before boundary undo/redo…" }
+            }
+            undo.didFail = { [weak self] _ in
+                self?.status.stringValue = "Boundary undo/redo unchanged. Notes, ownership, or local storage needs review."
+            }
+            editor.boundaryUndoManager = undo
+        }
         if snapshot.boundaryProtection == nil {
             self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: self.association.range)
             // Older saved scratchpads have no edit correspondence. Preserve them;
@@ -101,7 +115,9 @@ import GymAssistantWorkspace
         return menu
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
-        if item.action == #selector(formatScratchpad(_:)) { return window?.firstResponder === editor && !showingDiff }
+        if item.action == #selector(formatScratchpad(_:)) {
+            return window?.firstResponder === editor && !showingDiff && editor.isEditable
+        }
         return true
     }
     private struct FormattingState {
@@ -250,6 +266,7 @@ import GymAssistantWorkspace
     }
 
     private func sourceChanged() {
+        guard !committingBoundary else { return }
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
         if let fresh = try? noteContext.association(for: snapshot.anchor.sessionID) {
@@ -297,8 +314,30 @@ import GymAssistantWorkspace
     }
 
     @objc public func adjustBoundary() {
-        guard noteContext == nil else {
-            status.stringValue = "Live Notes boundary review is not connected yet. Existing scratchpad is preserved."; return
+        guard editor.boundaryUndoManager?.checking != true, boundaryTask == nil else { return }
+        if let noteContext {
+            boundaryTask = Task { [weak self] in
+                guard let self else { return }
+                defer { self.boundaryTask = nil }
+                do {
+                    let document = try await noteContext.refresh(for: .boundary)
+                    let current = try noteContext.association(for: self.snapshot.anchor.sessionID)
+                    guard let rich = noteContext.richText else { throw WorkspaceError.staleAssociation }
+                    let owners = noteContext.registry.mappings.values.filter { $0.sessionID != current.sessionID }.map {
+                        SessionBoundaryBrowser.Owner(label: noteContext.registry.anchor(for: $0.sessionID)?.recordedHeading ?? "Saved session", range: $0.range)
+                    }
+                    self.boundaryBrowser = SessionBoundaryBrowser(document: document, richText: rich, selected: current.range,
+                        owners: owners, preview: { [weak self] range in
+                            guard let self, let protection = self.snapshot.boundaryProtection else { throw BoundaryChangeError.uncertainCorrespondence }
+                            _ = try protection.preview(range, in: document.snapshot.text)
+                        }, apply: { [weak self] range in
+                            guard let self else { throw WorkspaceError.staleAssociation }
+                            try await self.applyLiveBoundary(range, preview: document, expectedRange: current.range)
+                        })
+                    self.boundaryBrowser?.show()
+                } catch { self.status.stringValue = "Boundary unavailable. Notes association or local recovery needs review; scratchpad preserved." }
+            }
+            return
         }
         do {
             let rich = NSAttributedString(string: note.text, attributes: [.font: NSFont.systemFont(ofSize: 15)])
@@ -316,6 +355,16 @@ import GymAssistantWorkspace
                 })
             boundaryBrowser?.show()
         } catch { status.stringValue = "Boundary unavailable: \(error)" }
+    }
+
+    func applyLiveBoundary(_ range: SourceRange, preview: ProgramDocument, expectedRange: SourceRange) async throws {
+        guard let noteContext, editor.boundaryUndoManager?.checking != true else { throw WorkspaceError.staleAssociation }
+        let fresh = try await noteContext.refresh(for: .boundary)
+        try Task.checkCancellation()
+        guard editor.boundaryUndoManager?.checking != true,
+              fresh.paragraphs == preview.paragraphs, association.range == expectedRange,
+              let rich = noteContext.richText else { throw WorkspaceError.staleAssociation }
+        try applyBoundary(range, document: fresh, source: rich)
     }
 
     @objc public func showProgrammingPreferences() {
@@ -336,6 +385,20 @@ import GymAssistantWorkspace
         if change.removePrefix > 0 { rich.deleteCharacters(in: NSRange(location: 0, length: change.removePrefix)) }
         if let prefix = change.prepend { rich.insert(source.attributedSubstring(from: prefix.nsRange), at: 0) }
         if let suffix = change.append { rich.append(source.attributedSubstring(from: suffix.nsRange)) }
+        if noteContext != nil {
+            let previous = BoundaryState(rich: before, association: previousAssociation,
+                anchor: previousAnchor, protection: previousProtection, document: document)
+            var candidate = snapshot
+            candidate.anchor.sourceEvidence = try document.evidence(in: range)
+            candidate.boundaryProtection = protection
+            try persistBoundary(&candidate, rich: rich, range: range, document: document)
+            editor.breakUndoCoalescing()
+            editor.boundaryUndoManager?.beginBoundaryGroup()
+            registerLiveBoundaryUndo(previous)
+            editor.boundaryUndoManager?.endBoundaryGroup()
+            installBoundary(candidate, rich: rich, range: range, document: document)
+            return
+        }
         editor.undoManager?.registerUndo(withTarget: self) { target in
             target.restoreBoundary(rich: before, association: previousAssociation, anchor: previousAnchor, protection: previousProtection)
         }
@@ -349,6 +412,61 @@ import GymAssistantWorkspace
         editor.undoManager?.enableUndoRegistration()
         snapshot.revision += 1
         saveNow(); refreshTranscript()
+    }
+
+    private struct BoundaryState {
+        let rich: NSAttributedString
+        let association: SessionAssociation
+        let anchor: SessionAnchor
+        let protection: BoundaryEditProtection?
+        let document: ProgramDocument
+    }
+
+    private func persistBoundary(_ candidate: inout WorkspaceSnapshot, rich: NSAttributedString,
+                                 range: SourceRange, document: ProgramDocument) throws {
+        guard let noteContext else { throw WorkspaceError.staleAssociation }
+        candidate.text = rich.string; candidate.richTextArchive = try RichTextArchive.encode(rich)
+        candidate.composerText = composer.string; candidate.revision = snapshot.revision + 1
+        committingBoundary = true
+        defer { committingBoundary = false }
+        try noteContext.commitBoundary(candidate, range: range, observation: document.snapshot.observationID, store: store)
+    }
+
+    private func installBoundary(_ candidate: WorkspaceSnapshot, rich: NSAttributedString,
+                                 range: SourceRange, document: ProgramDocument) {
+        saveTask?.cancel()
+        snapshot = candidate; savedRevision = candidate.revision; note = document.snapshot
+        association = SessionAssociation(sessionID: snapshot.anchor.sessionID, noteID: note.id,
+            observationID: note.observationID, range: range)
+        editor.undoManager?.disableUndoRegistration()
+        editor.textStorage?.setAttributedString(rich)
+        editor.undoManager?.enableUndoRegistration()
+        refreshTranscript(); sourceChanged()
+    }
+
+    private func registerLiveBoundaryUndo(_ target: BoundaryState) {
+        guard let undo = editor.boundaryUndoManager else { return }
+        undo.registerUndo(withTarget: self) { controller in
+            guard let candidate = controller.preparedBoundaryRestore,
+                  let document = controller.noteContext?.sourceDocument else { return }
+            let reverse = BoundaryState(rich: NSAttributedString(attributedString: controller.editor.attributedString()),
+                association: controller.association, anchor: controller.snapshot.anchor,
+                protection: controller.snapshot.boundaryProtection, document: document)
+            controller.preparedBoundaryRestore = nil
+            controller.registerLiveBoundaryUndo(reverse)
+            controller.installBoundary(candidate, rich: target.rich, range: target.association.range, document: document)
+        }
+        undo.nameBoundaryAction { [weak self] in
+            guard let self, let context = self.noteContext else { throw WorkspaceError.staleAssociation }
+            let document = try await context.refresh(for: .boundary)
+            try Task.checkCancellation()
+            guard document.paragraphs == target.document.paragraphs else { throw WorkspaceError.staleAssociation }
+            var candidate = self.snapshot
+            candidate.anchor = target.anchor; candidate.boundaryProtection = target.protection
+            candidate.anchor.sourceEvidence = try document.evidence(in: target.association.range)
+            try self.persistBoundary(&candidate, rich: target.rich, range: target.association.range, document: document)
+            self.preparedBoundaryRestore = candidate
+        }
     }
 
     private func restoreBoundary(rich: NSAttributedString, association previous: SessionAssociation,
@@ -544,6 +662,7 @@ import GymAssistantWorkspace
             + comparison
     }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
+        editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         stop(); saveTask?.cancel(); return saveNow()
     }
     public func windowWillClose(_ notification: Notification) {
@@ -551,5 +670,8 @@ import GymAssistantWorkspace
         comparisonTask?.cancel()
         if let noteContext { Task { await noteContext.setVisible(false, workspace: snapshot.workspaceID) } }
     }
-    public func flushAndStop() -> Bool { checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow() }
+    public func flushAndStop() -> Bool {
+        editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
+        checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow()
+    }
 }

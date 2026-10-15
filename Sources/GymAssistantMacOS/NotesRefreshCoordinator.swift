@@ -5,7 +5,7 @@ import GymAssistantWorkspace
 /// A batch includes only requests received before its read starts. Requests that
 /// arrive during a native read wait for a later read, never its older observation.
 public actor NotesRefreshCoordinator {
-    public enum Reason: Sendable { case resume, chat, comparison, checkedCopy }
+    public enum Reason: Sendable { case resume, chat, comparison, checkedCopy, boundary }
     private let reader: any NotesContextReading
     private var state: NotesObservationState
     private var pending: [CheckedContinuation<NoteSnapshot, any Error>] = []

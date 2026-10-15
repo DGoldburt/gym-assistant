@@ -509,7 +509,13 @@ identity, increased revision, unchanged confirmed baseline and non-overlapping
 ownership before saving/publishing the candidate. A save failure latches ownership
 unavailability until durable owners are reloaded: failure may occur after file
 promotion, so a successful Notes refresh alone cannot make ownership safe again.
-This transaction is tested but live controller/undo wiring is still pending.
+The live-context controller now uses that transaction for boundary apply/undo/redo.
+`ValidatedBoundaryUndoManager` awaits a fresh read and candidate persistence before
+advancing Cocoa's undo stack. Failed checks retain the action; ordinary text undo
+does not read Notes. The editor is briefly noneditable during boundary preflight,
+while the composer remains available. Close/quit cancels pending checks. Named
+boundary groups remain separate from typing, with human-readable menu labels.
+This wiring has injected-reader tests, not native Notes acceptance.
 `SessionWorkspaceEntry` captures selection once, refreshes by captured identity,
 chooses the last region in note order, and loads its saved owner rather than creating
 a competing scratchpad. Duplicate headings, unknown boundaries, unresolved ownership
@@ -519,7 +525,7 @@ closed windows, and aggregates quit-time saves. These app-composition components
 are covered with injected-reader tests but are not yet connected to Service UI.
 A verified relocation after renumbering preserves scratchpad/baseline and resets
 old absolute edit coordinates conservatively; it does not discard coach edits.
-Native entry and live boundary command integration remain incomplete. Foundation session
+Native entry and native boundary acceptance remain incomplete. Foundation session
 structure compares supported body/formatting evidence, never mutable labels alone.
 The semantic Notes importer rejects unsupported HTML instead of rendering web
 resources or silently dropping formatting. Boundary edit protection retains

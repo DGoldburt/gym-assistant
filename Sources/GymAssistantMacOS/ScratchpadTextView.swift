@@ -1,6 +1,8 @@
 import AppKit
 
 @MainActor final class ScratchpadTextView: NSTextView {
+    var boundaryUndoManager: ValidatedBoundaryUndoManager?
+    override var undoManager: UndoManager? { boundaryUndoManager ?? super.undoManager }
     var returnToBody: (() -> Void)?
     override func insertNewline(_ sender: Any?) {
         let selected = selectedRange()

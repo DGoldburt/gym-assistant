@@ -4,15 +4,89 @@ import GymAssistantWorkspace
 @testable import GymAssistantMacOS
 
 private actor BoundaryReader: NotesContextReading {
+    var changed = false
+    func change() { changed = true }
     func captureSelectedNote() async throws -> NoteSnapshot { try await read(id: NoteID("boundary-fixture")) }
     func read(id: NoteID) async throws -> NoteSnapshot {
-        NoteSnapshot(id: id, text: "", html: "<div><h2>Session 1</h2></div><div>A1 Row</div><div>Ideas</div><div><h2>Session 2</h2></div><div>A1 Squat</div>")
+        NoteSnapshot(id: id, text: "", html: "<div><h2>Session 1</h2></div><div>A1 Row</div><div>\(changed ? "Changed ideas" : "Ideas")</div><div><h2>Session 2</h2></div><div>A1 Squat</div>")
     }
     func metadata(id: NoteID) async throws -> NoteMetadata { NoteMetadata(id: id, modifiedAt: .distantPast) }
 }
 
 @Suite("Atomic session boundary commits") @MainActor struct SessionBoundaryCommitTests {
     private func descendants(_ view: NSView) -> [NSView] { [view] + view.subviews.flatMap(descendants) }
+
+    private func finish(_ undo: ValidatedBoundaryUndoManager) async throws {
+        for _ in 0..<100 {
+            if !undo.checking { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(!undo.checking)
+    }
+
+    @Test func liveBoundaryUndoRedoRevalidatesOwnershipBeforeAdvancingStack() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("live-boundary-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root)
+        let reader = BoundaryReader()
+        let context = try SessionNoteContext(noteID: NoteID("boundary-fixture"), anchors: [], reader: reader)
+        let document = try await context.refresh(for: .resume)
+        let initialRange = SourceRange(location: 0, length: document.ranges[2].location)
+        let original = try context.createWorkspace(range: initialRange, observation: document.snapshot.observationID, store: store)
+        let controller = try SessionScratchpadWindowController(snapshot: original, store: store, note: document.snapshot,
+            association: context.association(for: original.anchor.sessionID), profile: CoachingProfile(version: "empty", entries: []), noteContext: context)
+        let views = descendants(try #require(controller.window?.contentView))
+        let editor = try #require(views.first { $0.identifier?.rawValue == "scratchpad-editor" } as? ScratchpadTextView)
+        let undo = try #require(editor.boundaryUndoManager)
+        // Exercise the same default event-grouping behavior as the live editor.
+        let expanded = document.candidates()[0].range
+        try await controller.applyLiveBoundary(expanded, preview: document, expectedRange: initialRange)
+        #expect(controller.snapshot.text.hasSuffix("Ideas\n"))
+        #expect(undo.undoActionName == "Adjust session boundary")
+        undo.undo()
+        #expect(!editor.isEditable)
+        try await finish(undo)
+        #expect(editor.isEditable)
+        #expect(controller.snapshot.text == original.text)
+        #expect(controller.snapshot.boundaryProtection?.sourceRange == initialRange)
+        #expect(undo.canRedo)
+        undo.redo(); try await finish(undo)
+        #expect(controller.snapshot.text.hasSuffix("Ideas\n"))
+        #expect(try store.load(id: original.workspaceID)?.snapshot == controller.snapshot)
+        undo.undo(); try await finish(undo)
+        let fresh = try #require(context.sourceDocument)
+        _ = try context.createWorkspace(range: fresh.ranges[2], observation: fresh.snapshot.observationID, store: store)
+        let before = controller.snapshot
+        undo.redo(); try await finish(undo)
+        #expect(controller.snapshot == before)
+        #expect(undo.canRedo) // Rejected preflight must not consume the action.
+        #expect(try context.association(for: original.anchor.sessionID).range == initialRange)
+        #expect(try store.load(id: original.workspaceID)?.snapshot == before)
+    }
+
+    @Test func liveBoundaryUndoRejectsChangedNotesAndKeepsAction() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("stale-boundary-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = BoundaryReader()
+        let context = try SessionNoteContext(noteID: NoteID("boundary-fixture"), anchors: [], reader: reader)
+        let document = try await context.refresh(for: .resume)
+        let initialRange = SourceRange(location: 0, length: document.ranges[2].location)
+        let original = try context.createWorkspace(range: initialRange, observation: document.snapshot.observationID, store: store)
+        let controller = try SessionScratchpadWindowController(snapshot: original, store: store, note: document.snapshot,
+            association: context.association(for: original.anchor.sessionID), profile: CoachingProfile(version: "empty", entries: []), noteContext: context)
+        let views = descendants(try #require(controller.window?.contentView))
+        let editor = try #require(views.first { $0.identifier?.rawValue == "scratchpad-editor" } as? ScratchpadTextView)
+        let undo = try #require(editor.boundaryUndoManager)
+        undo.groupsByEvent = false
+        try await controller.applyLiveBoundary(document.candidates()[0].range, preview: document, expectedRange: initialRange)
+        let before = controller.snapshot
+        await reader.change()
+        undo.undo(); try await finish(undo)
+        #expect(controller.snapshot == before)
+        #expect(undo.canUndo)
+        #expect(editor.isEditable)
+        #expect(try store.load(id: original.workspaceID)?.snapshot == before)
+    }
 
     @Test func browserPreviewsProtectedShrinkAndNeighborOwnershipWithoutApplying() async throws {
         let (document, rich) = try ProgramDocumentReader.read(await BoundaryReader().captureSelectedNote())
