@@ -1,6 +1,27 @@
 import Foundation
 
 public enum SessionComparison {
+    /// Handoff-only equivalence. Never use this to rewrite persisted text, choose
+    /// a session identity, or advance its confirmed baseline without validation.
+    public static func handoffEquivalent(_ before: SessionSourceEvidence, _ after: SessionSourceEvidence) -> Bool {
+        handoffParagraphs(before) == handoffParagraphs(after)
+    }
+
+    public static func handoffText(before: SessionSourceEvidence, after: SessionSourceEvidence) -> String {
+        text(before: handoffParagraphs(before).map(\.text).joined(),
+             after: handoffParagraphs(after).map(\.text).joined())
+    }
+
+    private static func handoffParagraphs(_ evidence: SessionSourceEvidence) -> [ProgramParagraph] {
+        var paragraphs = evidence.paragraphs
+        while let last = paragraphs.last, last.headingLevel == 0,
+              last.listStyle?.isEmpty != false,
+              ["\n", "\r\n", "\r"].contains(last.text) {
+            paragraphs.removeLast()
+        }
+        return paragraphs
+    }
+
     /// One bounded changed hunk, avoiding stacked full copies in the comparison pane.
     public static func text(before: String, after: String) -> String {
         guard before != after else { return "No text differences." }

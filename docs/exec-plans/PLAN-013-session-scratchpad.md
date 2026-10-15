@@ -47,7 +47,7 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Connect a read-only boundary browser to the synthetic development window. Native Command-Shift-B, Shift-Down expansion, Command-Return, undo, reopen and blocked shrink observed. Fix a native undo aliasing defect with independent attributed-string snapshots; regression verifies undo/redo text, formatting, range and save. This does not establish live Notes ownership/freshness integration.
 - [x] (2026-10-14) Add per-note context pooling with closed-workspace header discovery, monotonic observation delivery, optional fresh-context chat integration, and read-only preference inspection. Private profile packaging, live boundary/checked-copy/diff wiring, skeleton, decoration and Service entry remain open.
 - [x] (2026-10-14) Add creation-time workspace ownership to the shared context: validate a current explicit region, reject overlap/unlocated saved owners, persist before publishing ownership, retain existing manual mappings, and restore closed ownership from store headers. Two new integration regressions cover stale choices, overlap, reopen and failed persistence; ten focused association/context tests pass. Native entry/window registry and live boundary editing remain unconnected.
-- [ ] Resolve native terminal-blank handling before declaring exact handoff/reconciliation: the final authored scratchpad had trailing empty paragraphs that Notes omitted on paste/export. Interior blank lines were retained. Ask whether comparison may ignore only empty paragraphs at the end of the copied session, while preserving them in the local scratchpad; do not silently normalize or advance a baseline.
+- [x] (2026-10-14) Coach accepts ignoring terminal empty body paragraphs in handoff comparison, preserving them in the scratchpad. Add structured comparison helpers and use them for live-context text comparison/verified baseline comparison. Interior blanks, empty headings/list items, whitespace-bearing lines and content/formatting differences remain significant. No session identity inference, baseline advancement or persisted-text rewrite. Two new regressions and controller regressions pass; full live reconciliation remains incomplete.
 - [x] (2026-10-14) Coach grants this development app's separate Notes Automation permission. Its explicit synthetic fixture test succeeds: captured-note read, import of 83 supported paragraphs/two session regions, metadata identity and captured-ID reread. No Notes write, body persistence, clipboard change or provider call. This proves the bounded native reader path, not full workspace integration or arbitrary formatting support.
 - [x] (2026-10-14) Wire optional live-context checked copy and comparison: one-time publication concurrent with verification, app-only timeout/late warnings, superseded-operation rejection, fresh comparison reads, and preserved scratchpad on unresolved association. Three copy concurrency regressions and a controller integration regression pass; full five-stage verification passes with 163 tests/23 suites. The default synthetic app still has no live context; native full-path timing and live workspace entry remain outstanding.
 - [ ] (2026-10-14) Native editor-generated Markdown preserves heading tiers at a paragraph boundary but adds blank lines between body paragraphs. Test pastes and the inserted paragraph were undone in the synthetic capability note. Compact-spacing control was blocked before execution because it would overwrite the general clipboard; request explicit approval before repeating that control. No formatting acceptance or clipboard workaround.
@@ -189,6 +189,13 @@ into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
 
+Accepted 2026-10-14: handoff comparison may ignore only empty body paragraphs at
+the end of the copied session, since native Notes omitted those paragraphs. Keep
+the local scratchpad unchanged. Interior blank paragraphs, empty headings/list items
+and whitespace-bearing lines remain significant. Apply the exception only when
+structured evidence distinguishes body from other paragraph kinds; do not use it
+to infer association or independently advance the confirmed baseline.
+
 Decision, 2026-10-14, coach-approved side conversation: include a small Format menu
 and discoverable local keyboard shortcuts for Heading, Subheading, Body, Bold and
 Bulleted list in the first slice, without a permanent toolbar. Rationale: preserving
@@ -322,6 +329,12 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Terminal-blank follow-up, 2026-10-14: the coach approved the narrow comparison
+exception. Implementation preserves stored scratchpad content and significant
+interior/structured differences. All five verification stages pass, with 175 tests
+in 25 suites. No new native UI test was run for this comparison-only increment;
+full live association/reconciliation and the remaining PLAN 013 work are not complete.
 
 Continuation, 2026-10-14: the approved formatting controls are implemented and have
 bounded native keyboard/reopen/paste evidence; visible list continuation and unsafe
@@ -1416,3 +1429,8 @@ reopened ownership, overlap/staleness checks and failed-save atomicity. No new
 workspace entry UI or installed Service integration is claimed. Native terminal
 empty-paragraph differences remain a separate handoff acceptance question; only
 the list-to-body separator exception is currently approved.
+
+Revision note, 2026-10-14, terminal-blank acceptance: record coach approval and add
+tested structured comparison without destructive normalization. Use the bounded
+exception in live-context comparison/checked-copy baseline checks; absence of a
+verified association still blocks those checks. No full reconciliation claim.

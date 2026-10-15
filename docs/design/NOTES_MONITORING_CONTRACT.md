@@ -307,6 +307,11 @@ Automatic reconciliation requires a reliable session association and equal text
 and supported formatting. A successful read is not a successful reconciliation;
 neither a copy event nor a manual heading correction is one. Update the confirmed
 baseline only on a verified match or a separately explicit baseline decision.
+Accepted terminal-blank exception (2026-10-14): structured handoff comparison may
+ignore empty body paragraphs only at the end of the copied session. Keep those
+paragraphs in the scratchpad; interior blanks and empty headings/list items remain
+significant. This does not establish session identity, forgive other differences,
+or by itself permit a baseline update.
 The diff defaults to latest observed Notes versus the scratchpad; retain baseline
 history internally for warnings. Unsupported/paste-normalized formatting remains
 not verified. Cached unavailable context always has a last-known label/time.

@@ -465,11 +465,12 @@ import GymAssistantWorkspace
                 let document = try await context.refresh(for: .checkedCopy)
                 let association = try context.association(for: anchor.sessionID)
                 let latest = try document.evidence(in: association.range)
-                guard latest.text == anchor.baselineText else { return .conflict }
                 // Legacy or manually reassociated evidence is not necessarily
                 // the confirmed formatting baseline. Do not claim agreement.
-                guard let baseline = anchor.sourceEvidence, baseline.text == anchor.baselineText else { return .unavailable }
-                return latest == baseline ? .unchanged : .conflict
+                guard let baseline = anchor.sourceEvidence, baseline.text == anchor.baselineText else {
+                    return latest.text == anchor.baselineText ? .unavailable : .conflict
+                }
+                return SessionComparison.handoffEquivalent(latest, baseline) ? .unchanged : .conflict
             } catch { return .unavailable }
         }, update: { [weak self] state in
             guard let self else { return }
@@ -516,9 +517,14 @@ import GymAssistantWorkspace
             return
         }
         let title = noteContext == nil ? "Frozen synthetic source — NOT live Notes" : "Latest observed Notes"
+        var comparison = SessionComparison.text(before: (note.text as NSString).substring(with: association.range.nsRange), after: snapshot.text)
+        if let source = noteContext?.sourceDocument, let before = try? source.evidence(in: association.range),
+           let current = try? ProgramDocumentReader.document(snapshot: NoteSnapshot(id: note.id, text: editor.string), richText: editor.attributedString()) {
+            comparison = SessionComparison.handoffText(before: before, after: SessionSourceEvidence(paragraphs: current.paragraphs))
+        }
         diff.string = "\(title) vs scratchpad r\(snapshot.revision)\n"
-            + "Text-only comparison; formatting agreement not verified.\n\n"
-            + SessionComparison.text(before: (note.text as NSString).substring(with: association.range.nsRange), after: snapshot.text)
+            + "Text-only comparison; formatting agreement not verified. Terminal empty body paragraphs are ignored when structured Notes context is available.\n\n"
+            + comparison
     }
     public func windowShouldClose(_ sender: NSWindow) -> Bool {
         stop(); saveTask?.cancel(); return saveNow()
