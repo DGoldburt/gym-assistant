@@ -33,6 +33,11 @@ import GymAssistantWorkspace
     deinit { listener?.cancel() }
     public func subscribe(workspace: WorkspaceID, update: @escaping @MainActor () -> Void) { subscribers[workspace] = update }
     public func unsubscribe(workspace: WorkspaceID) { subscribers.removeValue(forKey: workspace) }
+    public func releaseSetAside(_ snapshot: WorkspaceSnapshot) {
+        guard !snapshot.isActive, snapshot.anchor.noteID == noteID else { return }
+        registry.release(snapshot.anchor.sessionID)
+        publish()
+    }
     private func publish() { for subscriber in subscribers.values { subscriber() } }
 
     public func setVisible(_ value: Bool, workspace: WorkspaceID) async {

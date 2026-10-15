@@ -24,8 +24,8 @@ boundary entry remain unfinished. Do not treat this as the completed product sli
 Choose **Previous planning…** from the programming entry window or scratchpad
 (Command-Shift-H). Select a record at the top to view its scratchpad and conversation
 side by side, both read-only. Unsent questions are shown separately. Select a passage
-and use Command-C, then return to your scratchpad and paste it where useful, including
-the Parking Lot. Command-W closes the reference window.
+and use Command-C, then paste it directly into Notes where useful. Pasting into a
+scratchpad is also available, but is not required. Command-W closes the reference window.
 
 Verified session locations are labeled with their current heading. Unlocated records
 appear under **Other planning for this note**, with their original heading retained;
@@ -35,8 +35,20 @@ saved file's modification time, not a claimed session/performance date. An open 
 is captured when the browser opens; reopen the browser to see subsequent edits.
 
 This first browser exposes existing local workspace records, not imported ChatGPT
-history or a complete revision timeline. Set-aside and replacement controls are still
-under development. Browsing does not save, repair associations, or write Notes.
+history or a complete revision timeline. Browsing does not save, repair associations,
+or write Notes. Explicit replacement from Notes is still under development.
+
+Choose **Set aside…** on a planning record when you no longer want it to remain an
+active scratchpad. Review the confirmation: it stops any current reply, preserves the
+text, conversation and unsent message, and closes that editor. Cancel does nothing.
+The retained record remains read-only in Previous planning but no longer reserves a
+Notes region or resumes as unfinished work. Close the browser to return to program
+entry. This does not delete content or write Notes; there is no reactivation control
+in this slice. Copy any useful material directly into Notes.
+
+If the record changed after opening the browser, reopen Previous planning and review
+it again. If saving fails, do not assume set-aside succeeded. Existing files remain
+preserved; the app does not release its in-memory editing claim on an unconfirmed save.
 
 ### Start or resume a new session
 

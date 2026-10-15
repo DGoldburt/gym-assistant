@@ -121,6 +121,11 @@ public struct SessionAssociationRegistry: Sendable {
 
     public func anchor(for id: SessionID) -> SessionAnchor? { anchors[id] }
 
+    /// Release only this active claim; historical evidence remains in its snapshot.
+    public mutating func release(_ id: SessionID) {
+        anchors.removeValue(forKey: id); mappings.removeValue(forKey: id); unresolved.remove(id)
+    }
+
     /// Reserve a newly created workspace without rebuilding the registry and
     /// losing existing manual confirmations. Unlocated saved owners are not free
     /// space: resolve them before creating another workspace in this note.

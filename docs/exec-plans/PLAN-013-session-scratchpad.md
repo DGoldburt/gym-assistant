@@ -38,7 +38,10 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
 - [x] (2026-10-15) Implement parking-lot carry-forward with unchanged semantic idea formatting, empty-heading fallback, creation messaging and coach documentation. Add three regressions and update old skeleton/paste fixtures for the explicitly changed product contract. All five stages pass (226 tests/36 suites). Native visual/manual-consolidation acceptance is not yet performed.
 - [x] (2026-10-15) Implement read-only Previous planning from entry and scratchpad (Command-Shift-H), including conversation/unsent text, verified versus uncertain grouping, live-editor capture without saving, and isolated association inspection. Three regressions cover preservation, offline/unlocated references, damaged-file refusal, read-only UI and menu routing. All five stages pass (229 tests/37 suites). Synthetic native opening, keyboard selection between uncertain/verified records and Command-W return observed. User manual retrieval/copy test is next; no complete revision timeline or set-aside claim.
-- [ ] Implement remaining lifecycle/replacement and durable set-aside per the approved follow-up milestone after the manual Previous planning test. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
+- [x] (2026-10-15) Coach accepts Previous planning interaction, clarifying that copied ideas normally go directly into Notes. Update helper text and guide; no new transfer mechanism or Notes-write permission implied.
+- [x] (2026-10-15) Implement explicit set-aside: schema-3 optional lifecycle date, preservation-first store operation, immutable historical content, release only after save acknowledgement, stale-preview refusal and retirement of retained editors. Older files remain active without eager migration. All five stages pass (233 tests/37 suites); four additional regressions cover released ownership, old-schema/fault preservation, stale previews and unrecorded work. Native synthetic Cancel/confirm/retained content and return to entry observed.
+- [ ] Coach manual set-aside test: Session 18 is open in the isolated fixture; set it aside via Previous planning, confirm editor closes and contents remain, then continue from entry without reviving it. Native parking-lot handoff/real Notes and broader lifecycle acceptance remain separate.
+- [ ] Implement remaining explicit verified Notes replacement and orphaned-workspace resumption per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Single-session association entry remains unconnected. Native parking-lot preview/handoff acceptance remains open.
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
@@ -116,6 +119,13 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Historical references cannot use active-owner exclusivity: two preserved planning
+records may legitimately refer to the same unique Notes session. Reference labeling
+now independently checks each anchor against current source candidates, still
+refusing ambiguous/duplicate content locations. This does not reserve regions.
+Setting aside an editor also needs to reveal the existing entry window beneath the
+reference browser; otherwise closing the only editor strands navigation.
 
 Read-only reference windows must own menu routing: otherwise Format or Copy for
 Notes can still target the scratchpad behind the browser. Previous planning and
@@ -353,6 +363,17 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Implement explicit set-aside with optional schema-3 setAsideAt. Old
+  schema-1/2 snapshots remain active without eager rewrite. Preserve the full saved
+  snapshot and backup before releasing active ownership. Refuse stale previews and
+  all changes/reactivation to a set-aside record from an old editor. Confirmation
+  explicitly stops pending assistance and closes the editor, retaining interrupted
+  conversation and unsent text. Historical references may share a uniquely verified
+  Notes region; they are not competing active owners. No reactivation/delete command.
+  Rationale: preserve useful planning without allowing abandoned editing claims to
+  block future work or old windows to overwrite history. Date/Author: 2026-10-15 / Codex,
+  implementing the coach-approved lifecycle contract.
 
 - Decision: Resume the existing scratchpad on invocation, even when Notes changed;
   show the diff and offer **Replace scratchpad with current Notes** only for a
@@ -639,6 +660,17 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 set-aside increment: recorded and unrecorded work can explicitly leave
+active editing while retaining full text, conversation, unsent message and source
+evidence. Old files read without migration; set-aside writes schema 3 and preserves
+the previous snapshot. Stale editors cannot reactivate or overwrite history. Existing
+and reopened ownership excludes set-aside records; unrecorded resume ignores them.
+All five stages pass (233 tests/37 suites). Native synthetic Cancel, confirmation,
+retained content, disabled repeat action and return to entry observed. Left synthetic
+Session 18 open for the coach's open-editor set-aside test. Explicit Notes replacement
+and unresolved-session resumption remain unimplemented. No real Notes/clipboard/API
+use, deletion, installation, push or merge.
 
 2026-10-15 Previous planning increment: existing local workspace records and retained
 editor captures are viewable side by side with conversations, including unsent text.
@@ -1474,17 +1506,27 @@ labeled synthetic note, never overwrite a real program to demonstrate acceptance
 
 ## Validation and Acceptance
 
+Set-aside manual test uses the same isolated `--synthetic-entry --synthetic-planning`
+fixture. Open latest Session 18, then Previous planning (Command-Shift-H), select its
+record and choose Set aside. Cancel first if desired; then confirm and verify the
+editor closes while text, conversation and unsent message remain in the browser.
+Close the browser (Command-W) to reach entry. Starting another session must not
+revive the set-aside scratchpad; reopening Previous planning must still expose it.
+An idea can be copied directly into Notes rather than staged in another scratchpad.
+Do not treat this fixture test as a real Notes or replacement acceptance pass.
+
 Previous planning manual test: build with `bash app/scratchpad-development/build.sh`,
 then launch that emitted bundle with `--synthetic-entry --synthetic-planning`.
 Each launch creates a fresh temporary synthetic store, never accesses real Notes,
 and seeds Session 18 with a trailing rich Parking Lot plus an unlocated Session 17
 with an older idea and conversation. From entry, Command-Shift-H opens the read-only
 browser. Confirm Session 17 is grouped as Other planning for this note and Session
-18 is verified; inspect both panes and copy an idea. Close with Command-W, create a
-new session with Command-N, and confirm the Parking Lot appears in the preview and
-preserves its bullet/bold in the created editor. Paste the copied idea there. Reopen
-Previous planning from that scratchpad and confirm the source record remains
-unchanged. Judge whether recovering rationale and returning to programming feels
+18 is verified; inspect both panes and copy an idea for direct reuse in Notes.
+Close with Command-W, create a new session with Command-N, and confirm the Parking
+Lot appears in the preview and preserves its bullet/bold in the created editor.
+Pasting an old idea into that scratchpad is optional, not the expected workflow.
+Reopen Previous planning and confirm the source record remains unchanged.
+Judge whether recovering rationale and returning to programming feels
 lightweight; passing package checks does not establish this usability result.
 
 
@@ -2062,3 +2104,9 @@ testable read-only retrieval UI before durable set-aside/replacement so the coac
 judge the interaction now. Preserve source association uncertainty and current editor
 content without writes. Full verification passes; native keyboard navigation observed.
 Stop at the explicitly authorized manual UI test, not an ordinary plan milestone.
+
+Revision note, 2026-10-15, set-aside: record accepted reference-browser feedback and
+favor direct reuse in Notes. Implement explicit preservation-first lifecycle state,
+exclude it from active ownership/resume, and prevent stale-editor writes. Separate
+historical labeling from ownership exclusivity. Full verification and bounded native
+fixture checks pass; stop for the requested manual open-editor lifecycle test.

@@ -83,6 +83,7 @@ import GymAssistantWorkspace
         self.exerciseLookup = exerciseLookup
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
+        guard snapshot.isActive else { throw SnapshotStoreError.unsafeExistingFile }
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
         guard snapshot.anchor.noteID == note.id else { throw WorkspaceError.staleAssociation }
         if let association {
@@ -349,6 +350,7 @@ import GymAssistantWorkspace
         window?.minSize = NSSize(width: 1000, height: 650)
     }
     public func show() {
+        guard snapshot.isActive else { return }
         showWindow(nil); window?.makeKeyAndOrderFront(nil)
         window?.makeFirstResponder(editor)
         NSApp.activate(ignoringOtherApps: true)
@@ -712,6 +714,7 @@ import GymAssistantWorkspace
         snapshot.revision += 1; saveNow(); refreshTranscript()
     }
     @discardableResult private func saveNow() -> Bool {
+        guard snapshot.isActive else { return true }
         do {
             snapshot.text = editor.string
             snapshot.richTextArchive = try RichTextArchive.encode(editor.attributedString())
@@ -728,6 +731,7 @@ import GymAssistantWorkspace
     }
     @objc private func send() { submit() }
     private func submit() {
+        guard snapshot.isActive else { return }
         guard associationPane == nil else { return }
         guard gate.active == nil, !preparingRequest else { status.stringValue = "Reply in progress — Stop or wait; follow-up stays here."; return }
         let question = composer.string
@@ -959,5 +963,17 @@ import GymAssistantWorkspace
         endAssociationReview()
         editor.boundaryUndoManager?.cancelCheck(); boundaryTask?.cancel(); boundaryBrowser?.close()
         checkedCopy.cancel(); stop(); saveTask?.cancel(); return saveNow()
+    }
+    /// Called only after the complete snapshot has been durably set aside.
+    public func retire(with preserved: WorkspaceSnapshot) {
+        guard !preserved.isActive, preserved.workspaceID == snapshot.workspaceID else { return }
+        snapshot = preserved
+        planningTask?.cancel(); comparisonTask?.cancel(); saveTask?.cancel()
+        noteContext?.unsubscribe(workspace: snapshot.workspaceID)
+        if let noteContext { Task { await noteContext.setVisible(false, workspace: preserved.workspaceID) } }
+        editor.isEditable = false; composer.isEditable = false
+        sendButton.isEnabled = false; stopButton.isEnabled = false
+        onActivate = nil; onPreviousPlanning = nil
+        window?.delegate = nil; window?.close()
     }
 }

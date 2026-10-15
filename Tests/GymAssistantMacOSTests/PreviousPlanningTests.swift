@@ -96,4 +96,94 @@ private actor PlanningReader: NotesContextReading {
         #expect(try Data(contentsOf: url) == damaged)
         controller.window?.close()
     }
+
+    @Test func setAsidePreservesContentReleasesClaimAndCannotBeReactivatedByOldEditor() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("planning-aside-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = PlanningReader()
+        let windows = SessionWorkspaceWindows(store: store, reader: reader,
+            profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let id = NoteID("planning-fixture")
+        let controller = try await windows.latest(in: id)
+        let original = try controller.planningReferenceSnapshot()
+        let preserved = try windows.setAside(original)
+        #expect(!preserved.isActive && preserved.schemaVersion == 3)
+        #expect(preserved.text == original.text && preserved.richTextArchive == original.richTextArchive)
+        #expect(preserved.messages == original.messages && preserved.anchor == original.anchor)
+        #expect(!windows.showMostRecent())
+        #expect(throws: SnapshotStoreError.unsafeExistingFile) { try store.save(original) }
+        let next = try await windows.latest(in: id)
+        #expect(next.snapshot.workspaceID != original.workspaceID)
+        let reopened = try SessionNoteContextPool(store: store, reader: reader).context(for: id)
+        _ = try await reopened.refresh(for: .resume)
+        #expect(reopened.registry.anchor(for: original.anchor.sessionID) == nil)
+        #expect(reopened.registry.anchor(for: next.snapshot.anchor.sessionID) != nil)
+        let history = try await windows.planningReferences(in: id)
+        #expect(history.count == 2)
+        #expect(history.allSatisfy { $0.verifiedHeading == "Session 4" })
+        #expect(try store.load(id: original.workspaceID)?.snapshot == preserved)
+        next.window?.close()
+    }
+
+    @Test func staleReferenceCannotSetAsideAnEditedScratchpad() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("planning-stale-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = PlanningReader()
+        let windows = SessionWorkspaceWindows(store: store, reader: reader,
+            profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let controller = try await windows.latest(in: NoteID("planning-fixture"))
+        let original = try controller.planningReferenceSnapshot()
+        let composer = try #require(descendants(controller.window!.contentView!).first {
+            $0.identifier?.rawValue == "chat-composer"
+        } as? NSTextView)
+        composer.string = "An idea entered after opening history"
+        #expect(throws: SnapshotStoreError.staleRevision) { _ = try windows.setAside(original) }
+        #expect(controller.snapshot.isActive && composer.string.contains("after opening"))
+        controller.window?.close()
+    }
+
+    @Test func setAsideUnrecordedWorkDoesNotResumeItWhenStartingAnotherSession() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("aside-unrecorded-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = PlanningReader()
+        let windows = SessionWorkspaceWindows(store: store, reader: reader,
+            profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let id = NoteID("planning-fixture")
+        guard case .proposal(let proposal) = try await windows.prepareNewSession(in: id) else {
+            Issue.record("Expected new proposal"); return
+        }
+        let controller = try await windows.acceptNewSession(proposal)
+        let preserved = try windows.setAside(controller.planningReferenceSnapshot())
+        guard case .proposal = try await windows.prepareNewSession(in: id) else {
+            Issue.record("Set-aside work must not resume as active"); return
+        }
+        #expect(try store.load(id: preserved.workspaceID)?.snapshot == preserved)
+        #expect(try await windows.planningReferences(in: id).first?.snapshot.isActive == false)
+    }
+
+    @Test func oldSchemaReadsWithoutMigrationAndSetAsideFailuresPreserveBothSlots() throws {
+        enum Injected: Error { case failure }
+        for phase in [SnapshotSavePhase.backedUp, .promoted] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent("aside-fault-" + UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            var fail = false
+            let store = WorkspaceSnapshotStore(directory: root, fault: { if fail && $0 == phase { throw Injected.failure } })
+            var old = WorkspaceSnapshot(anchor: .init(noteID: .init("fixture"), recordedHeading: "Session 1", baselineText: "old"),
+                text: "old", richTextArchive: try RichTextArchive.encode(NSAttributedString(string: "old")))
+            old.schemaVersion = 2
+            try store.save(old)
+            let bytes = try Data(contentsOf: store.currentURL(for: old.workspaceID))
+            #expect(try store.load(id: old.workspaceID)?.snapshot.isActive == true)
+            #expect(try Data(contentsOf: store.currentURL(for: old.workspaceID)) == bytes)
+            fail = true
+            #expect(throws: Injected.failure) { _ = try store.setAside(old) }
+            #expect(try Data(contentsOf: store.previousURL(for: old.workspaceID)) == bytes)
+            let retained = try #require(store.load(id: old.workspaceID)?.snapshot)
+            #expect(retained.text == old.text && retained.richTextArchive == old.richTextArchive)
+            if phase == .promoted {
+                #expect(!retained.isActive)
+                #expect(throws: SnapshotStoreError.unsafeExistingFile) { try store.save(old) }
+            } else { #expect(retained == old) }
+        }
+    }
 }

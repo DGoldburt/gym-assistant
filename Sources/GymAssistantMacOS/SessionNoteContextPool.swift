@@ -12,9 +12,12 @@ import GymAssistantWorkspace
     }
     public func context(for noteID: NoteID) throws -> SessionNoteContext {
         if let existing = contexts[noteID] { return existing }
-        let owners = try store.storedAnchors().filter { $0.anchor.noteID == noteID && !$0.anchor.isUnrecorded }
+        let owners = try store.storedAnchors().filter { $0.isActive && $0.anchor.noteID == noteID && !$0.anchor.isUnrecorded }
         let context = try SessionNoteContext(noteID: noteID, anchors: owners.map(\.anchor), reader: reader)
         contexts[noteID] = context
         return context
+    }
+    public func releaseSetAside(_ snapshot: WorkspaceSnapshot) {
+        contexts[snapshot.anchor.noteID]?.releaseSetAside(snapshot)
     }
 }

@@ -492,13 +492,20 @@ ownership, trigger insertion promotion, or repair associations. Failed Notes rea
 leave local records accessible as unverified. Damaged snapshots are not silently
 replaced by backups. The native reference window is read-only and uses its own
 Copy/Select All menu routing, not the underlying scratchpad's mutation commands.
-No new history schema, revision archive or automatic preference learning is added.
+No extracted-history schema, revision archive or automatic preference learning is added.
 
-Remaining approved lifecycle follow-up: separate active editing claims
-from historical source associations; resume saved scratchpads with explicit verified
+Schema 3 adds an optional setAsideAt date. Schema 1/2 records stay active without
+eager rewrite; explicit set-aside upgrades only its selected record. Persist the
+complete snapshot through validated backup/promotion/reopen before releasing the
+registry claim and retiring its controller. Failed saves retain the in-memory claim;
+an uncertain post-promotion failure requires reopen/recovery. Set-aside records are
+immutable to stale editors and excluded from active ownership and unrecorded resume,
+but retain source evidence and appear in Previous planning. No deletion or automatic
+reactivation occurs. The older app must reject schema 3 rather than ignore this state.
+
+Remaining approved lifecycle follow-up: resume saved scratchpads with explicit verified
 Notes replacement and recoverable prior content. Batch association repair is
-deferred. Existing saved-owner registration remains unchanged until this follow-up;
-do not treat it as implemented archival or extracted session history.
+deferred. Historical evidence is not an extracted session/performance record.
 
 Offline implementation has begun under PLAN 013 in the feature worktree; it is not
 installed; live Notes composition is implemented but not natively accepted. `GymAssistantWorkspace` owns typed snapshots,

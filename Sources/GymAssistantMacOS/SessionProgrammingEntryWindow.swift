@@ -33,6 +33,7 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 530, height: 250),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         super.init(window: window)
+        workspaces.onWorkspaceSetAside = { [weak self] in self?.showExisting() }
         window.title = "Program session"; window.isReleasedWhenClosed = false; window.delegate = self
         let detail = NSTextField(wrappingLabelWithString: modeDescription)
         detail.frame = NSRect(x: 20, y: 192, width: 490, height: 40)

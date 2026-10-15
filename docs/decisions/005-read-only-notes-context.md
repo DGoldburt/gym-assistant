@@ -144,3 +144,19 @@ cross-app pasteboard operation. The already-published program copy remains
 available; a warning in Gym Assistant cannot stop a paste that already happened
 or guarantee the coach sees it while in Notes. Checked-copy timing and truthful
 not-verified status are unchanged.
+
+## Planning lifecycle clarification, 2026-10-15
+
+The coach approved separating active editing ownership from retained planning
+evidence. Explicitly setting aside a scratchpad preserves its full content,
+conversation and original source evidence but releases its active claim and closes
+its editor. Schema 3 records an optional set-aside date; older snapshots remain
+active without eager migration. Persist and validate before releasing ownership,
+retain the previous snapshot, and reject stale-editor overwrites/reactivation.
+Historical references may share one uniquely verified session region without
+competing for ownership; uncertain locations remain labeled at note level.
+
+Previous planning is a reference browser whose primary reuse path is ordinary
+copy/paste directly into Notes. Neither browsing nor set-aside writes Notes.
+Batch association repair is deferred. Explicit verified Notes-to-scratchpad
+replacement with prior-content preservation remains approved but not implemented.

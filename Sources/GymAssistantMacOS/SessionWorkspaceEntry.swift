@@ -28,6 +28,7 @@ public enum SessionEntryError: Error, Equatable {
         try Task.checkCancellation()
         return captured.id
     }
+    public func releaseSetAside(_ snapshot: WorkspaceSnapshot) { pool.releaseSetAside(snapshot) }
 
     public struct PreparedSession {
         public let snapshot: WorkspaceSnapshot
@@ -112,7 +113,7 @@ public enum SessionEntryError: Error, Equatable {
     }
 
     private func unrecorded(in noteID: NoteID, context: SessionNoteContext, note: NoteSnapshot) throws -> UnrecordedSession? {
-        let headers = try store.storedAnchors().filter { $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }
+        let headers = try store.storedAnchors().filter { $0.isActive && $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }
         guard headers.count <= 1 else { throw SessionEntryError.multipleUnrecordedWorkspaces }
         guard let header = headers.first else { return nil }
         guard let loaded = try store.load(id: header.workspaceID) else { throw SessionEntryError.unresolvedSavedWorkspace }
@@ -143,7 +144,7 @@ public enum SessionEntryError: Error, Equatable {
                 throw SessionEntryError.boundaryReviewRequired
             }
             let headers = try store.storedAnchors().filter {
-                $0.anchor.noteID == noteID && $0.anchor.sessionID == owner.sessionID
+                $0.isActive && $0.anchor.noteID == noteID && $0.anchor.sessionID == owner.sessionID
             }
             guard headers.count == 1, let header = headers.first,
                   let loaded = try store.load(id: header.workspaceID) else {
@@ -156,7 +157,7 @@ public enum SessionEntryError: Error, Equatable {
         } else {
             // An unrecorded scratchpad may be the session just pasted. Do not
             // create a competing recorded owner before its association is resolved.
-            if try store.storedAnchors().contains(where: { $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }) {
+            if try store.storedAnchors().contains(where: { $0.isActive && $0.anchor.noteID == noteID && $0.anchor.isUnrecorded }) {
                 throw SessionEntryError.unresolvedSavedWorkspace
             }
             guard context.registry.unresolved.isEmpty else {

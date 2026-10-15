@@ -109,7 +109,7 @@ public struct ConversationMessage: Codable, Equatable, Sendable {
 }
 
 public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
-    public static let currentSchema = 2
+    public static let currentSchema = 3
     public static func supportsSchema(_ version: Int) -> Bool { (1...currentSchema).contains(version) }
     public var schemaVersion: Int
     public let workspaceID: WorkspaceID
@@ -121,6 +121,9 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
     public var conversationID: ConversationID
     public var composerText: String
     public var boundaryProtection: BoundaryEditProtection?
+    /// Absent in older snapshots: those remain active until explicitly set aside.
+    public var setAsideAt: Date?
+    public var isActive: Bool { setAsideAt == nil }
     public init(workspaceID: WorkspaceID = WorkspaceID(), anchor: SessionAnchor, revision: Int = 0,
                 text: String, richTextArchive: Data, messages: [ConversationMessage] = [],
                 conversationID: ConversationID = ConversationID(), composerText: String = "") {
@@ -131,6 +134,7 @@ public struct WorkspaceSnapshot: Codable, Equatable, Sendable {
     }
     public func validate() throws {
         guard Self.supportsSchema(schemaVersion) else { throw WorkspaceError.unsupportedSchema(schemaVersion) }
+        guard setAsideAt == nil || schemaVersion >= 3 else { throw WorkspaceError.invalidSnapshot }
         guard revision >= 0, !anchor.noteID.rawValue.isEmpty, !richTextArchive.isEmpty,
               Set(messages.map(\.id)).count == messages.count,
               messages.allSatisfy({ $0.scratchpadRevision >= 0 && $0.scratchpadRevision <= revision })

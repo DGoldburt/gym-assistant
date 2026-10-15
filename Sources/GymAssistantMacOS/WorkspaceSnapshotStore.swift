@@ -32,6 +32,8 @@ public struct StoredWorkspaceAnchor: Decodable {
     public let workspaceID: WorkspaceID
     public let anchor: SessionAnchor
     public let boundaryProtection: BoundaryEditProtection?
+    public let setAsideAt: Date?
+    public var isActive: Bool { setAsideAt == nil }
 }
 
 /// Store only local workspace snapshots. It has no Notes or provider dependency.
@@ -68,6 +70,7 @@ public struct StoredWorkspaceAnchor: Decodable {
             do { value = try JSONDecoder().decode(StoredWorkspaceAnchor.self, from: Data(contentsOf: source)) }
             catch { throw SnapshotStoreError.recoveryRequired(id) }
             guard WorkspaceSnapshot.supportsSchema(value.schemaVersion) else { throw WorkspaceError.unsupportedSchema(value.schemaVersion) }
+            guard value.setAsideAt == nil || value.schemaVersion >= 3 else { throw WorkspaceError.invalidSnapshot }
             guard !value.anchor.isUnrecorded || (value.schemaVersion >= 2 && value.anchor.baselineText.isEmpty
                 && value.anchor.sourceEvidence == nil && value.boundaryProtection == nil)
             else { throw WorkspaceError.invalidSnapshot }
@@ -167,6 +170,8 @@ public struct StoredWorkspaceAnchor: Decodable {
         if fileManager.fileExists(atPath: current.path) {
             let raw = try Data(contentsOf: current)
             let old = try validated(raw, id: snapshot.workspaceID)
+            // A retained or stale editor must never reactivate or overwrite history.
+            guard old.isActive || old == snapshot else { throw SnapshotStoreError.unsafeExistingFile }
             guard old.anchor.noteID == snapshot.anchor.noteID, old.anchor.sessionID == snapshot.anchor.sessionID
             else { throw SnapshotStoreError.identityMismatch }
             guard snapshot.schemaVersion >= old.schemaVersion,
@@ -192,5 +197,15 @@ public struct StoredWorkspaceAnchor: Decodable {
         }
         try fault?(.reopened)
         // Only returning successfully acknowledges this revision.
+    }
+
+    public func setAside(_ expected: WorkspaceSnapshot) throws -> WorkspaceSnapshot {
+        guard let loaded = try load(id: expected.workspaceID), !loaded.recoveredFromPrevious,
+              loaded.snapshot == expected, expected.isActive else { throw SnapshotStoreError.staleRevision }
+        var preserved = expected
+        preserved.schemaVersion = WorkspaceSnapshot.currentSchema
+        preserved.setAsideAt = Date(); preserved.revision += 1
+        try save(preserved)
+        return preserved
     }
 }

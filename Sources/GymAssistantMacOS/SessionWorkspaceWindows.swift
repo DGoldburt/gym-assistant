@@ -13,6 +13,7 @@ import GymAssistantWorkspace
     private var controllers: [WorkspaceID: SessionScratchpadWindowController] = [:]
     private var mostRecent: WorkspaceID?
     private var planningWindow: PreviousPlanningWindow?
+    public var onWorkspaceSetAside: (() -> Void)?
 
     /// Isolated evidence read: browsing must not register owners, promote an
     /// insertion, interrupt a request, save an editor or rewrite old snapshots.
@@ -31,10 +32,13 @@ import GymAssistantWorkspace
         try Task.checkCancellation()
         // Capture retained editors after the read, including still-unsaved typing.
         snapshots = try snapshots.map { try controllers[$0.workspaceID]?.planningReferenceSnapshot() ?? $0 }
-        var registry = try SessionAssociationRegistry(noteID: noteID,
-            anchors: snapshots.filter { !$0.anchor.isUnrecorded }.map(\.anchor))
-        if let document { try registry.observe(document) }
         return try snapshots.map { snapshot in
+            // Historical references do not compete for ownership. Multiple old
+            // records may refer to one unique current region; ambiguous source
+            // regions still remain unverified by the existing evidence matcher.
+            var registry = try SessionAssociationRegistry(noteID: noteID,
+                anchors: snapshot.anchor.isUnrecorded ? [] : [snapshot.anchor])
+            if let document { try registry.observe(document) }
             let attributes = try FileManager.default.attributesOfItem(atPath: store.currentURL(for: snapshot.workspaceID).path)
             let heading: String?
             if let document, let mapping = registry.mappings[snapshot.anchor.sessionID] {
@@ -51,8 +55,30 @@ import GymAssistantWorkspace
     public func showPreviousPlanning(in noteID: NoteID) async throws {
         let records = try await planningReferences(in: noteID)
         try Task.checkCancellation()
-        let window = try PreviousPlanningWindow(records: records)
+        let window = try PreviousPlanningWindow(records: records, setAside: { [weak self] expected in
+            guard let self else { throw SnapshotStoreError.unavailable }
+            return try self.setAside(expected)
+        })
         planningWindow?.close(); planningWindow = window; window.show()
+    }
+
+    public func setAside(_ expected: WorkspaceSnapshot) throws -> WorkspaceSnapshot {
+        guard expected.isActive else { throw SnapshotStoreError.staleRevision }
+        let controller = controllers[expected.workspaceID]
+        let saved: WorkspaceSnapshot
+        if let controller {
+            // Require the content the coach actually reviewed, not a newer editor.
+            guard try controller.planningReferenceSnapshot() == expected else { throw SnapshotStoreError.staleRevision }
+            guard controller.flushAndStop() else { throw SnapshotStoreError.unavailable }
+            saved = controller.snapshot
+        } else { saved = expected }
+        let preserved = try store.setAside(saved)
+        controller?.retire(with: preserved)
+        entry.releaseSetAside(preserved)
+        controllers.removeValue(forKey: expected.workspaceID)
+        if mostRecent == expected.workspaceID { mostRecent = nil }
+        onWorkspaceSetAside?()
+        return preserved
     }
 
     private func connectPlanning(_ controller: SessionScratchpadWindowController) {
