@@ -500,6 +500,11 @@ reads; the default synthetic entry and installed Service do not yet use it. The 
 coordinator per captured NoteID, explicitly validate on resume, and supply aggregate
 visibility. `SessionNoteContext` consumes ordered observations and shares parsed
 structure and set-level association across saved sessions. Foundation session
+registration reserves a newly created workspace's range without rebuilding existing
+manual mappings. The shared context validates a candidate registry, persists the
+workspace, then publishes ownership; failed saves cannot reserve phantom regions.
+Unresolved saved owners block new creation rather than being treated as vacant.
+Native entry and live boundary command integration remain incomplete. Foundation session
 structure compares supported body/formatting evidence, never mutable labels alone.
 The semantic Notes importer rejects unsupported HTML instead of rendering web
 resources or silently dropping formatting. Boundary edit protection retains

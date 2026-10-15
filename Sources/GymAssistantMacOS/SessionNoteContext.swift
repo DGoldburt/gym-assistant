@@ -78,6 +78,26 @@ import GymAssistantWorkspace
         return anchor
     }
 
+    /// Called after the entry flow's fresh read and explicit region choice.
+    /// Validation and persistence precede publication of ownership; failed saves
+    /// cannot leave a phantom owner in the shared context.
+    public func createWorkspace(range: SourceRange, observation: UUID, store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
+        guard failure == nil, let document = sourceDocument, let richText,
+              document.snapshot.observationID == observation else { throw WorkspaceError.staleAssociation }
+        let evidence = try document.evidence(in: range)
+        let anchor = SessionAnchor(noteID: noteID, recordedHeading: evidence.paragraphs.first?.label ?? "Session",
+            baselineText: evidence.text, sourceEvidence: evidence)
+        var candidateRegistry = registry
+        try candidateRegistry.register(anchor, range: range, in: document)
+        let rich = richText.attributedSubstring(from: range.nsRange)
+        var snapshot = WorkspaceSnapshot(anchor: anchor, text: rich.string, richTextArchive: try RichTextArchive.encode(rich))
+        snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: range)
+        try store.save(snapshot)
+        registry = candidateRegistry
+        publish()
+        return snapshot
+    }
+
     private func accept(_ snapshot: NoteSnapshot) {
         if sourceDocument?.snapshot.observationID == snapshot.observationID { failure = nil; return }
         do {

@@ -12,6 +12,54 @@ private actor ContextReader: NotesContextReading {
 }
 
 @Suite("Shared Notes session context") @MainActor struct SessionNoteContextTests {
+    @Test func newlyCreatedWorkspaceOwnsItsRangeImmediatelyAndAfterReopen() async throws {
+        let reader = ContextReader()
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("new-session-owner-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root)
+        let pool = SessionNoteContextPool(store: store, reader: reader)
+        let context = try pool.context(for: NoteID("fixture"))
+        let document = try await context.refresh(for: .resume)
+        let range = document.candidates()[0].range
+        let created = try context.createWorkspace(range: range, observation: document.snapshot.observationID, store: store)
+        #expect(try context.association(for: created.anchor.sessionID).range == range)
+        #expect(try store.load(id: created.workspaceID)?.snapshot == created)
+        #expect(throws: SessionAssociationError.occupied) {
+            try context.createWorkspace(range: range, observation: document.snapshot.observationID, store: store)
+        }
+        let next = try await context.refresh(for: .comparison)
+        #expect(try context.association(for: created.anchor.sessionID).observationID == next.snapshot.observationID)
+        #expect(throws: WorkspaceError.staleAssociation) {
+            try context.createWorkspace(range: next.candidates()[1].range, observation: document.snapshot.observationID, store: store)
+        }
+        let reopenedPool = SessionNoteContextPool(store: store, reader: reader)
+        let reopened = try reopenedPool.context(for: NoteID("fixture"))
+        _ = try await reopened.refresh(for: .resume)
+        #expect(try reopened.association(for: created.anchor.sessionID).range == range)
+    }
+
+    @Test func failedPersistenceDoesNotReserveRangeAndUnknownOwnersAreNotVacant() async throws {
+        let reader = ContextReader()
+        let context = try SessionNoteContext(noteID: NoteID("fixture"), anchors: [], reader: reader)
+        let document = try await context.refresh(for: .resume)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("failed-session-owner-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let file = root.appendingPathComponent("not-a-directory")
+        try Data([1]).write(to: file)
+        #expect(throws: (any Error).self) {
+            try context.createWorkspace(range: document.candidates()[0].range, observation: document.snapshot.observationID,
+                store: WorkspaceSnapshotStore(directory: file))
+        }
+        #expect(context.registry.mappings.isEmpty)
+        let legacy = SessionAnchor(noteID: NoteID("fixture"), recordedHeading: "Unlocated session", baselineText: "Older text")
+        let ambiguous = try SessionNoteContext(noteID: NoteID("fixture"), anchors: [legacy], reader: reader)
+        let current = try await ambiguous.refresh(for: .resume)
+        #expect(throws: SessionAssociationError.unresolvedOwnership) {
+            try ambiguous.createWorkspace(range: current.candidates()[1].range, observation: current.snapshot.observationID,
+                store: WorkspaceSnapshotStore(directory: root.appendingPathComponent("valid")))
+        }
+    }
     @Test func poolSharesMonitorAndLoadsClosedWorkspaceOwners() async throws {
         let reader = ContextReader()
         let document = try ProgramDocumentReader.read(await reader.read(id: NoteID("fixture"))).0

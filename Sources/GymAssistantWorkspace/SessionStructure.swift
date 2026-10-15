@@ -99,7 +99,7 @@ public struct ProgramDocument: Sendable {
     }
 }
 
-public enum SessionAssociationError: Error, Equatable { case stale, unknownSession, occupied, duplicateIdentity }
+public enum SessionAssociationError: Error, Equatable { case stale, unknownSession, occupied, duplicateIdentity, unresolvedOwnership }
 
 /// All saved anchors participate, including closed workspaces. Mapping never edits
 /// scratchpads or advances confirmed content baselines.
@@ -120,6 +120,24 @@ public struct SessionAssociationRegistry: Sendable {
     }
 
     public func anchor(for id: SessionID) -> SessionAnchor? { anchors[id] }
+
+    /// Reserve a newly created workspace without rebuilding the registry and
+    /// losing existing manual confirmations. Unlocated saved owners are not free
+    /// space: resolve them before creating another workspace in this note.
+    public mutating func register(_ anchor: SessionAnchor, range: SourceRange, in document: ProgramDocument) throws {
+        guard document.snapshot.id == noteID, anchor.noteID == noteID,
+              observationID == document.snapshot.observationID else { throw SessionAssociationError.stale }
+        guard anchors[anchor.sessionID] == nil else { throw SessionAssociationError.duplicateIdentity }
+        guard unresolved.isEmpty, duplicateLabels.isEmpty else { throw SessionAssociationError.unresolvedOwnership }
+        let evidence = try document.evidence(in: range)
+        guard anchor.sourceEvidence == evidence, anchor.baselineText == evidence.text else { throw SessionAssociationError.stale }
+        guard !mappings.values.contains(where: { NSIntersectionRange($0.range.nsRange, range.nsRange).length > 0 }) else {
+            throw SessionAssociationError.occupied
+        }
+        anchors[anchor.sessionID] = anchor
+        mappings[anchor.sessionID] = SessionAssociation(sessionID: anchor.sessionID, noteID: noteID,
+            observationID: document.snapshot.observationID, range: range)
+    }
 
     public mutating func observe(_ document: ProgramDocument) throws {
         guard document.snapshot.id == noteID else { throw SessionAssociationError.stale }
