@@ -568,6 +568,17 @@ workspaces require explicit resolution rather than choosing one silently. These
 entry operations and unrecorded windows have synthetic coverage but are not yet
 exposed by the programming entry UI. Post-paste association and ambiguity handling
 must be connected before enabling New Session.
+New unrecorded snapshots now retain whole-note semantic origin evidence separately
+from the empty session baseline. `UnrecordedSessionAssociation` verifies only one
+exact session insertion whose removal restores that origin. It compares visible
+formatting while ignoring inline marks on paragraph terminators only; it does not
+apply the handoff-only trailing-blank exception to identity. Missing origin,
+duplicate labels, other Notes changes or changed session content require review.
+`SessionNoteContext.associateInsertedSession` requires the saved snapshot and current
+observation, validates unoccupied ownership, persists the recorded transition and
+then publishes ownership. IDs, editor content and conversation stay unchanged; the
+previous snapshot remains the recovery copy. This transaction has synthetic tests
+but is not yet invoked automatically by the controller/entry UI.
 `ScratchpadTextView` supplies visible list continuation through normal text edits.
 Export refuses invisible-marker list states rather than silently changing apparent
 body text into bullets. `CheckedScratchpadCopy` separates one-time

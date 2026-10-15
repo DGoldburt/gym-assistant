@@ -101,6 +101,38 @@ import GymAssistantWorkspace
         return snapshot
     }
 
+    /// Promote only a fully saved, exactly inserted addition. Persist first, then
+    /// publish ownership. Failure leaves the existing editor and identity intact.
+    public func associateInsertedSession(_ snapshot: WorkspaceSnapshot, observation: UUID,
+                                         store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
+        guard failure == nil, let document = sourceDocument,
+              document.snapshot.observationID == observation,
+              snapshot.anchor.isUnrecorded, snapshot.anchor.noteID == noteID,
+              let saved = try store.load(id: snapshot.workspaceID), !saved.recoveredFromPrevious,
+              saved.snapshot == snapshot else { throw WorkspaceError.staleAssociation }
+        let rich = try RichTextArchive.decode(snapshot.richTextArchive)
+        let scratchpad = try ProgramDocumentReader.document(snapshot: NoteSnapshot(id: noteID, text: snapshot.text), richText: rich)
+        guard case .verified(let range) = UnrecordedSessionAssociation.evaluate(anchor: snapshot.anchor,
+            scratchpad: SessionSourceEvidence(paragraphs: scratchpad.paragraphs), document: document) else {
+            throw WorkspaceError.staleAssociation
+        }
+        let evidence = try document.evidence(in: range)
+        var candidate = snapshot
+        candidate.anchor.recordingState = .recorded
+        candidate.anchor.recordedHeading = evidence.paragraphs.first?.label ?? snapshot.anchor.recordedHeading
+        candidate.anchor.baselineText = evidence.text
+        candidate.anchor.sourceEvidence = evidence
+        candidate.anchor.unrecordedOrigin = nil
+        candidate.boundaryProtection = BoundaryEditProtection(sourceRange: range)
+        candidate.revision += 1
+        var proposedRegistry = registry
+        try proposedRegistry.register(candidate.anchor, range: range, in: document)
+        try persist(candidate, store: store)
+        registry = proposedRegistry
+        publish()
+        return candidate
+    }
+
     /// Commit the controller's complete proposed edit only against the exact
     /// observation it previewed. Never advance the confirmed Notes baseline.
     public func commitBoundary(_ snapshot: WorkspaceSnapshot, range: SourceRange,

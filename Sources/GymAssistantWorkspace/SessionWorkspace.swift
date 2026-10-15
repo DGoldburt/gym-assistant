@@ -59,6 +59,9 @@ public struct SessionAnchor: Codable, Equatable, Sendable {
     public var recordedHeading: String
     public var baselineText: String
     public var sourceEvidence: SessionSourceEvidence?
+    /// Whole-note semantic evidence at new-session creation, not a session baseline.
+    /// Missing on older snapshots: automatic post-paste association is unavailable.
+    public var unrecordedOrigin: SessionSourceEvidence?
     /// Absent in schema-1 files, where every anchor described a recorded region.
     public var recordingState: SessionRecordingState?
     public var isUnrecorded: Bool { recordingState == .unrecorded }

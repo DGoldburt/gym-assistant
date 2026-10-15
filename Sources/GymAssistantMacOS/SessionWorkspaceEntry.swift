@@ -90,10 +90,11 @@ public enum SessionEntryError: Error, Equatable {
                 .font: NSFont.boldSystemFont(ofSize: paragraph.headingLevel == 2 ? 22 : 18)
             ]))
         }
-        let snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: noteID,
+        var snapshot = WorkspaceSnapshot(anchor: SessionAnchor(noteID: noteID,
             recordedHeading: proposal.skeleton.evidence.paragraphs.first?.label ?? SessionSkeleton.placeholderHeading,
             baselineText: "", recordingState: .unrecorded), text: rich.string,
             richTextArchive: try RichTextArchive.encode(rich))
+        snapshot.anchor.unrecordedOrigin = SessionSourceEvidence(paragraphs: document.paragraphs)
         try store.save(snapshot)
         return UnrecordedSession(snapshot: snapshot, context: context, note: document.snapshot)
     }

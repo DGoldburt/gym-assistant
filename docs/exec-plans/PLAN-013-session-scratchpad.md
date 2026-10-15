@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Add conservative post-paste insertion evaluation and persisted ownership transition. Capture semantic whole-note origin on new-session creation; require one exact insertion into otherwise unchanged content, preserve IDs/content/conversation and previous snapshot, reject stale/unsaved/occupied/ambiguous cases. Three new synthetic tests cover these paths. Automatic controller/entry invocation and confirmation UI remain outstanding; New Session is still disabled.
+
 - [x] (2026-10-15) Connect unrecorded snapshots to the scratchpad controller/window registry with an explicitly absent Notes association, no invented boundary protection, addition-aware chat/comparison, conservative unverified copy, and retained-window reuse. Two new synthetic tests exercise these paths and reject fabricated associations. Programming-entry New Session remains disabled pending post-paste association/ambiguity handling and proposal presentation; native acceptance remains outstanding.
 
 - [x] (2026-10-14) Implement new-session entry preparation/acceptance: preview without writes, resume existing unrecorded work, retain uncertain-heading review data, fresh source validation before creation and no suspension between duplicate check and save. Three added entry tests cover concurrency, reopen, heading styles, changed source and multiple pending workspaces. UI connection and post-paste association remain outstanding.
@@ -97,6 +99,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Post-paste transaction, 2026-10-15: AppKit may include a heading's terminating
+newline in a bold run while Notes leaves that newline unstyled. Clip inline marks
+to visible paragraph text for insertion matching only; retain all text and visible
+formatting and do not rewrite saved evidence. A heading-only success fixture also
+exposed the existing registry's deliberate refusal to relocate empty-body sessions
+after reopening. Keep that safeguard; the successful-reopen fixture now includes a
+Warmup structural heading rather than expecting label-only identity.
 
 Unrecorded windows, 2026-10-15: existing boundary initialization assumed every
 scratchpad owned a recorded range. Make that association explicitly optional and
@@ -265,6 +275,16 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Begin automatic insertion verification with exact single-insertion
+  evidence against the note at creation. Store that semantic origin separately from
+  the session baseline; older unrecorded snapshots without it require review. Other
+  Notes changes, duplicate candidates or mismatched content/visible formatting do
+  not auto-associate. Ignore styling on paragraph terminators, not actual content.
+  Rationale: A heading match or content found somewhere in Notes cannot show that
+  this workspace was pasted. The conservative transaction must persist ownership
+  before publishing it, preserving local identity and the previous snapshot.
+  Date/Author: 2026-10-15, Codex implementation of approved post-paste verification.
 
 - Decision: Unrecorded windows have no `SessionAssociation` and no boundary edit
   protection. Recorded-boundary commands are unavailable; comparison is an addition
@@ -466,6 +486,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Post-paste transaction, 2026-10-15: the new evaluator and atomic association method
+are implemented with synthetic tests. No actual Notes or saved client workspaces
+were accessed. New snapshots hold origin evidence; existing snapshots are not
+rewritten on read. Automatic monitoring/entry invocation, ambiguous-case confirmation
+and interaction with pre-association undo remain integration work. New Session
+remains disabled until those paths are safe; no native acceptance is claimed.
+All five deterministic verification stages pass: 206 tests across 33 suites.
 
 Unrecorded windows, 2026-10-15: the editor now persists and reuses an unrecorded
 scratchpad without inventing a Notes range. Injected-reader/native-controller tests
@@ -1688,3 +1716,9 @@ Revision note, 2026-10-15, unrecorded windows: connect the controller and window
 registry to absent Notes associations, addition-aware chat/comparison and safe
 unverified copy. This supersedes the earlier controller-refuses-unrecorded note;
 it does not enable the programming entry button or claim post-paste reconciliation.
+
+Revision note, 2026-10-15, post-paste transaction: implement conservative exact
+insertion evidence and durable ownership promotion with identity/backup preservation.
+Retain ambiguous cases for review, including missing origin evidence. Tests exposed
+newline styling and empty-body relocation limits; address the former narrowly and
+preserve the latter. Automatic UI invocation is not yet connected.
