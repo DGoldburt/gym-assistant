@@ -14,6 +14,7 @@ import GymAssistantWorkspace
     private var mostRecent: WorkspaceID?
     private var planningWindow: PreviousPlanningWindow?
     public var onWorkspaceSetAside: (() -> Void)?
+    public var onResumeWorkspace: ((SessionScratchpadWindowController) -> Void)?
 
     /// Isolated evidence read: browsing must not register owners, promote an
     /// insertion, interrupt a request, save an editor or rewrite old snapshots.
@@ -58,6 +59,11 @@ import GymAssistantWorkspace
         let window = try PreviousPlanningWindow(records: records, setAside: { [weak self] expected in
             guard let self else { throw SnapshotStoreError.unavailable }
             return try self.setAside(expected)
+        }, resume: { [weak self] id in
+            guard let self else { throw SnapshotStoreError.unavailable }
+            let controller = try await self.resume(id: id)
+            if let present = self.onResumeWorkspace { present(controller) }
+            else { controller.show() }
         })
         planningWindow?.close(); planningWindow = window; window.show()
     }
@@ -98,6 +104,17 @@ import GymAssistantWorkspace
     }
 
     public func captureNote() async throws -> NoteID { try await entry.captureNote() }
+
+    public func resume(id: WorkspaceID) async throws -> SessionScratchpadWindowController {
+        let prepared = try await entry.resume(id: id)
+        mostRecent = id
+        if let existing = controllers[id] { return existing }
+        let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
+            note: prepared.note, association: try? prepared.context.association(for: prepared.snapshot.anchor.sessionID),
+            profile: profile, assistant: assistant, noteContext: prepared.context, exerciseLookup: exerciseLookup)
+        controllers[id] = controller; connectPlanning(controller)
+        return controller
+    }
 
     public func recoveryPreview(id: WorkspaceID) throws -> WorkspaceRecoveryPreview {
         try store.recoveryPreview(id: id)

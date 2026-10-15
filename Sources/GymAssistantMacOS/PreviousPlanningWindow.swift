@@ -13,13 +13,17 @@ public struct PlanningReference {
     private var records: [PlanningReference]
     private let setAside: ((WorkspaceSnapshot) throws -> WorkspaceSnapshot)?
     private let setAsideButton = NSButton(title: "Set aside…", target: nil, action: nil)
+    private let resume: ((WorkspaceID) async throws -> Void)?
+    private let resumeButton = NSButton(title: "Continue scratchpad", target: nil, action: nil)
+    private var resumeTask: Task<Void, Never>?
     private let chooser = NSPopUpButton()
     private let detail = NSTextField(wrappingLabelWithString: "")
     private let scratchpad = NSTextView()
     private let conversation = NSTextView()
 
-    public init(records: [PlanningReference], setAside: ((WorkspaceSnapshot) throws -> WorkspaceSnapshot)? = nil) throws {
-        self.records = records; self.setAside = setAside
+    public init(records: [PlanningReference], setAside: ((WorkspaceSnapshot) throws -> WorkspaceSnapshot)? = nil,
+                resume: ((WorkspaceID) async throws -> Void)? = nil) throws {
+        self.records = records; self.setAside = setAside; self.resume = resume
         // Validate before constructing a window; never display a partially decoded record.
         for record in records { _ = try RichTextArchive.decode(record.snapshot.richTextArchive) }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 980, height: 620),
@@ -33,7 +37,9 @@ public struct PlanningReference {
         chooser.target = self; chooser.action = #selector(selectRecord)
         for (index, record) in records.enumerated() {
             let group = record.verifiedHeading.map { "Session: " + $0 } ?? "Other planning for this note"
-            chooser.addItem(withTitle: "\(index + 1). \(group) — originally \(record.snapshot.anchor.recordedHeading)")
+            let state = record.snapshot.isActive ? "active" :
+                (record.snapshot.preservedFromWorkspaceID == nil ? "set aside" : "before replacement")
+            chooser.addItem(withTitle: "\(index + 1). \(group) — originally \(record.snapshot.anchor.recordedHeading) · \(state) · r\(record.snapshot.revision)")
         }
         chooser.isEnabled = !records.isEmpty; root.addSubview(chooser)
         detail.frame = NSRect(x: 20, y: 493, width: 940, height: 65)
@@ -41,7 +47,11 @@ public struct PlanningReference {
         addText(scratchpad, title: "Scratchpad", id: "previous-planning-scratchpad", x: 20, root: root)
         addText(conversation, title: "Conversation", id: "previous-planning-conversation", x: 500, root: root)
         let help = NSTextField(wrappingLabelWithString: "Copy a useful passage directly into Notes. You can also paste into a scratchpad. Viewing changes neither version; setting aside preserves this record and ends active editing.")
-        help.frame = NSRect(x: 20, y: 15, width: 750, height: 40); root.addSubview(help)
+        help.frame = NSRect(x: 20, y: 15, width: 555, height: 40); root.addSubview(help)
+        resumeButton.frame = NSRect(x: 585, y: 20, width: 205, height: 28)
+        resumeButton.identifier = .init("previous-planning-resume")
+        resumeButton.target = self; resumeButton.action = #selector(continueScratchpad)
+        resumeButton.isHidden = resume == nil; root.addSubview(resumeButton)
         setAsideButton.frame = NSRect(x: 800, y: 20, width: 160, height: 28)
         setAsideButton.identifier = .init("previous-planning-set-aside")
         setAsideButton.target = self; setAsideButton.action = #selector(confirmSetAside)
@@ -65,10 +75,12 @@ public struct PlanningReference {
         guard records.indices.contains(chooser.indexOfSelectedItem) else {
             detail.stringValue = "No saved planning for this note yet."
             setAsideButton.isEnabled = false
+            resumeButton.isEnabled = false
             return
         }
         let record = records[chooser.indexOfSelectedItem]
         setAsideButton.isEnabled = record.snapshot.isActive
+        resumeButton.isEnabled = record.snapshot.isActive
         let date = record.savedAt?.formatted(date: .abbreviated, time: .shortened) ?? "unknown"
         detail.stringValue = "Original heading: \(record.snapshot.anchor.recordedHeading) · revision \(record.snapshot.revision) · Saved file modified: \(date)\n"
             + (record.includesOpenEditor ? "Includes the open editor as captured when this browser opened. " : "Saved local content. ")
@@ -89,6 +101,7 @@ public struct PlanningReference {
         scratchpad.scrollToBeginningOfDocument(nil); conversation.scrollToBeginningOfDocument(nil)
     }
     @objc private func confirmSetAside() {
+        guard resumeTask == nil else { return }
         guard let window, let setAside, records.indices.contains(chooser.indexOfSelectedItem) else { return }
         let index = chooser.indexOfSelectedItem, record = records[index]
         guard record.snapshot.isActive else { return }
@@ -106,6 +119,21 @@ public struct PlanningReference {
                 self.window?.makeKeyAndOrderFront(nil)
             } catch {
                 self.detail.stringValue = "Set-aside could not be confirmed. Reopen Previous planning to review current saved state. No content was deleted and Notes was not changed."
+            }
+        }
+    }
+    @objc private func continueScratchpad() {
+        guard resumeTask == nil, let resume, records.indices.contains(chooser.indexOfSelectedItem),
+              records[chooser.indexOfSelectedItem].snapshot.isActive else { return }
+        let id = records[chooser.indexOfSelectedItem].snapshot.workspaceID
+        chooser.isEnabled = false; resumeButton.isEnabled = false; setAsideButton.isEnabled = false
+        resumeTask = Task { [weak self] in
+            guard let self else { return }
+            defer { self.resumeTask = nil; self.chooser.isEnabled = true }
+            do { try await resume(id); self.close() }
+            catch {
+                self.selectRecord()
+                self.detail.stringValue = "Could not continue safely. Saved planning is unchanged. Check Notes access or reopen to review local recovery."
             }
         }
     }

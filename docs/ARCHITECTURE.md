@@ -511,9 +511,14 @@ explicit operation advances the original comparison baseline. Any uncertain pers
 failure latches the context and locks the editor until reopen; subsequent autosaves
 cannot overwrite the uncertain result. Historical references survive backup rotation.
 
-Remaining approved lifecycle follow-up: reopen unlocated saved scratchpads and offer
-targeted association before replacement. Batch association repair is
-deferred. Historical evidence is not an extracted session/performance record.
+Previous planning can explicitly resume an active workspace by ID, preserving any
+retained editor. Unlocated recorded work opens without inventing a Notes range.
+The association pane supports identity-only recorded repair: fresh preview, exact
+saved snapshot, no overlapping or other unresolved owners, persistence before
+publication, and unchanged original baseline/content/conversation. Opening an
+unchanged saved workspace does not rewrite its native archive or rotate backups.
+Batch association repair is deferred. Historical evidence is not an extracted
+session/performance record.
 
 Offline implementation has begun under PLAN 013 in the feature worktree; it is not
 installed; live Notes composition is implemented but not natively accepted. `GymAssistantWorkspace` owns typed snapshots,

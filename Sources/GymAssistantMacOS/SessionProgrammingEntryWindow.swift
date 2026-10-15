@@ -34,6 +34,7 @@ import GymAssistantWorkspace
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         super.init(window: window)
         workspaces.onWorkspaceSetAside = { [weak self] in self?.showExisting() }
+        workspaces.onResumeWorkspace = { [weak self] controller in self?.showWorkspace(controller) }
         window.title = "Program session"; window.isReleasedWhenClosed = false; window.delegate = self
         let detail = NSTextField(wrappingLabelWithString: modeDescription)
         detail.frame = NSRect(x: 20, y: 192, width: 490, height: 40)
@@ -314,7 +315,7 @@ import GymAssistantWorkspace
             recoveryID = id; previewBackup.isHidden = false; latest.isHidden = true; skeleton.isHidden = true
             status.stringValue = "A saved scratchpad could not be opened safely. Preview its last valid backup before deciding whether to restore. Existing files are preserved."
         case SessionEntryError.unresolvedSavedWorkspace:
-            status.stringValue = "Saved work needs association review. Choose New session to resume unrecorded work. Recorded-session association recovery is not connected yet; nothing has been replaced."
+            status.stringValue = "Saved work needs association review. Open Previous planning, choose the active scratchpad, then Continue scratchpad and Find session in Notes. Nothing has been replaced."
         case SessionEntryError.skeletonSourceChanged:
             status.stringValue = "Notes changed during preview. Cancel and choose New session again to review current headings. Nothing was created."
         case SessionEntryError.multipleUnrecordedWorkspaces:

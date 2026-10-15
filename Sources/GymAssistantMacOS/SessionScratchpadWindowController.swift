@@ -74,6 +74,10 @@ import GymAssistantWorkspace
     private var replacementTask: Task<Void, Never>?
     private var replacing = false
     private var replacementNeedsReopen = false
+    private var needsAssociationReview: Bool {
+        snapshot.anchor.isUnrecorded || (noteContext != nil &&
+            (try? noteContext?.association(for: snapshot.anchor.sessionID)) == nil)
+    }
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation?, profile: CoachingProfile,
@@ -122,7 +126,13 @@ import GymAssistantWorkspace
             self.association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
                                                   observationID: note.observationID, range: savedRange)
         }
-        guard snapshot.anchor.isUnrecorded || association != nil else { throw WorkspaceError.staleAssociation }
+        if !snapshot.anchor.isUnrecorded, association == nil {
+            guard let noteContext, noteContext.noteID == note.id,
+                  noteContext.registry.anchor(for: snapshot.anchor.sessionID) != nil,
+                  noteContext.sourceDocument?.snapshot.observationID == note.observationID else {
+                throw WorkspaceError.staleAssociation
+            }
+        }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -150,7 +160,12 @@ import GymAssistantWorkspace
         }
         refreshTranscript()
         updateAvailability()
-        saveNow()
+        // NSTextStorage fills missing font attributes on newlines. Merely
+        // opening unchanged saved work must not rotate backups or rewrite it.
+        if let loaded = try store.load(id: snapshot.workspaceID), !loaded.recoveredFromPrevious,
+           loaded.snapshot == self.snapshot {
+            savedRevision = self.snapshot.revision
+        } else { saveNow() }
         noteContext?.subscribe(workspace: snapshot.workspaceID) { [weak self] in self?.sourceChanged() }
     }
     public required init?(coder: NSCoder) { nil }
@@ -168,7 +183,7 @@ import GymAssistantWorkspace
         if replacing || replacementNeedsReopen { return false }
         if item.action == #selector(focusConversation) { return associationPane == nil }
         if item.action == #selector(findSessionInNotes) {
-            return snapshot.anchor.isUnrecorded && associationPane == nil && boundaryTask == nil
+            return needsAssociationReview && associationPane == nil && boundaryTask == nil
                 && gate.active == nil && !preparingRequest && noteContext != nil
         }
         if item.action == #selector(toggleDiff) { item.state = showingDiff ? .on : .off }
@@ -332,7 +347,7 @@ import GymAssistantWorkspace
         findSessionButton.frame = NSRect(x: 605, y: 630, width: 235, height: 28)
         findSessionButton.target = self; findSessionButton.action = #selector(findSessionInNotes)
         findSessionButton.autoresizingMask = [.minXMargin, .minYMargin]
-        findSessionButton.isHidden = !snapshot.anchor.isUnrecorded
+        findSessionButton.isHidden = !needsAssociationReview
         root.addSubview(findSessionButton)
         notPastedButton.frame = NSRect(x: 850, y: 630, width: 180, height: 28)
         notPastedButton.target = self; notPastedButton.action = #selector(confirmNotPasted)
@@ -422,8 +437,10 @@ import GymAssistantWorkspace
                 status.stringValue = "Notes changed — compare before pasting. Scratchpad preserved."
             }
         } else {
-            status.stringValue = noteContext.failure ?? "Session association needs review. Use Adjust Session Boundary."
+            association = nil
+            status.stringValue = noteContext.failure ?? "Session location needs review. Find session in Notes; scratchpad preserved."
         }
+        findSessionButton.isHidden = !needsAssociationReview
         if showingDiff { renderComparison() }
     }
     private func insertionState() throws -> UnrecordedSessionAssociation.Result {
@@ -438,13 +455,13 @@ import GymAssistantWorkspace
 
     private func associationOwners() -> [SessionBoundaryBrowser.Owner] {
         guard let noteContext else { return [] }
-        return noteContext.registry.mappings.values.map {
+        return noteContext.registry.mappings.values.filter { $0.sessionID != snapshot.anchor.sessionID }.map {
             .init(label: noteContext.registry.anchor(for: $0.sessionID)?.recordedHeading ?? "Saved workspace", range: $0.range)
         }
     }
     @objc public func findSessionInNotes() {
         guard !replacing, !replacementNeedsReopen else { return }
-        guard snapshot.anchor.isUnrecorded, associationPane == nil, boundaryTask == nil,
+        guard needsAssociationReview, associationPane == nil, boundaryTask == nil,
               gate.active == nil, !preparingRequest, let noteContext else { return }
         boundaryTask = Task { [weak self] in
             guard let self else { return }
@@ -452,7 +469,7 @@ import GymAssistantWorkspace
             do {
                 let document = try await noteContext.refresh(for: .comparison)
                 try Task.checkCancellation()
-                guard self.snapshot.anchor.isUnrecorded, let rich = noteContext.richText else { return }
+                guard self.needsAssociationReview, let rich = noteContext.richText else { return }
                 self.saveTask?.cancel()
                 guard self.saveNow() else { return }
                 let pane = SessionAssociationPane(frame: NSRect(x: 605, y: 54, width: 425,
@@ -471,8 +488,13 @@ import GymAssistantWorkspace
                     guard self.saveNow() else { throw WorkspaceError.invalidSnapshot }
                     self.committingBoundary = true
                     defer { self.committingBoundary = false }
-                    self.snapshot = try noteContext.confirmInsertedSession(self.snapshot, range: range,
-                        observation: fresh.snapshot.observationID, store: self.store)
+                    if self.snapshot.anchor.isUnrecorded {
+                        self.snapshot = try noteContext.confirmInsertedSession(self.snapshot, range: range,
+                            observation: fresh.snapshot.observationID, store: self.store)
+                    } else {
+                        self.snapshot = try noteContext.confirmRecordedSession(self.snapshot, range: range,
+                            observation: fresh.snapshot.observationID, store: self.store)
+                    }
                     self.savedRevision = self.snapshot.revision
                     self.association = try noteContext.association(for: self.snapshot.anchor.sessionID)
                     self.endAssociationReview()
@@ -488,7 +510,7 @@ import GymAssistantWorkspace
         associationPane?.stop(); associationPane?.removeFromSuperview(); associationPane = nil
         editor.isEditable = true
         conversationViews.forEach { $0.isHidden = false }
-        findSessionButton.isHidden = !snapshot.anchor.isUnrecorded; notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
+        findSessionButton.isHidden = !needsAssociationReview; notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
         updateAvailability()
         if showingDiff { renderComparison() }
         window?.makeFirstResponder(editor)

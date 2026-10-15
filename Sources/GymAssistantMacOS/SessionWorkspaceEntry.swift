@@ -30,6 +30,26 @@ public enum SessionEntryError: Error, Equatable {
     }
     public func releaseSetAside(_ snapshot: WorkspaceSnapshot) { pool.releaseSetAside(snapshot) }
 
+    /// An explicit record choice never substitutes current Notes for saved work.
+    public struct ResumedSession {
+        public let snapshot: WorkspaceSnapshot
+        public let context: SessionNoteContext
+        public let note: NoteSnapshot
+    }
+    public func resume(id: WorkspaceID) async throws -> ResumedSession {
+        guard let loaded = try store.load(id: id), loaded.snapshot.isActive else {
+            throw SessionEntryError.unresolvedSavedWorkspace
+        }
+        guard !loaded.recoveredFromPrevious else { throw SessionEntryError.recoveryRequired(id) }
+        let context = try pool.context(for: loaded.snapshot.anchor.noteID)
+        let document = try await context.refresh(for: .resume)
+        try Task.checkCancellation()
+        guard let current = try store.load(id: id), !current.recoveredFromPrevious, current.snapshot.isActive else {
+            throw SessionEntryError.unresolvedSavedWorkspace
+        }
+        return ResumedSession(snapshot: current.snapshot, context: context, note: document.snapshot)
+    }
+
     public struct PreparedSession {
         public let snapshot: WorkspaceSnapshot
         public let context: SessionNoteContext

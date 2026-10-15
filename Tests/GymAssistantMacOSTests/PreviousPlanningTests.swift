@@ -186,4 +186,36 @@ private actor PlanningReader: NotesContextReading {
             } else { #expect(retained == old) }
         }
     }
+
+    @Test func explicitResumeKeepsUnlocatedScratchpadAndOffersReadOnlyAssociationReview() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("resume-unlocated-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = PlanningReader()
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let prepared = try await entry.latest(in: .init("planning-fixture"))
+        let original = prepared.snapshot
+        await reader.replace("<div><h2>Session 5 — dated</h2></div><div>Changed work</div>")
+        let windows = SessionWorkspaceWindows(store: store, reader: reader,
+            profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let controller = try await windows.resume(id: original.workspaceID)
+        #expect(controller.snapshot.text == original.text)
+        #expect(controller.snapshot.anchor == original.anchor)
+        let reopened = try #require(store.load(id: original.workspaceID)?.snapshot)
+        #expect(reopened.text == original.text)
+        #expect(reopened.anchor == original.anchor)
+        #expect(reopened.revision == original.revision)
+        #expect(reopened.messages == original.messages && reopened.composerText == original.composerText)
+        #expect(reopened == original)
+        #expect(try RichTextArchive.decode(reopened.richTextArchive).isEqual(to: RichTextArchive.decode(original.richTextArchive)))
+        let views = descendants(try #require(controller.window?.contentView))
+        let find = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Find session in Notes…" })
+        let editor = try #require(views.first { $0.identifier?.rawValue == "scratchpad-editor" } as? NSTextView)
+        #expect(!find.isHidden && editor.isEditable)
+        controller.findSessionInNotes()
+        for _ in 0..<100 where editor.isEditable { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(!editor.isEditable)
+        #expect(editor.string == original.text)
+        #expect(try await windows.resume(id: original.workspaceID) === controller)
+        controller.window?.close()
+    }
 }

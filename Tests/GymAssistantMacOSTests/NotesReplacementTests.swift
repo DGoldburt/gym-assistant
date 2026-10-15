@@ -94,4 +94,46 @@ private actor ReplacementReader: NotesContextReading {
         #expect(context.failure != nil)
         await #expect(throws: WorkspaceError.staleAssociation) { _ = try await context.refresh(for: .resume) }
     }
+
+    @Test func recordedReassociationPreservesBaselineAndPlanningUntilExplicitReplacement() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("reassociate-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = ReplacementReader()
+        let (context, original) = try await setup(store, reader)
+        await reader.replace("<div><h2>Session 2 — performed</h2></div><div>A1 changed in session</div>")
+        let document = try await context.refresh(for: .comparison)
+        #expect(throws: WorkspaceError.staleAssociation) { _ = try context.association(for: original.anchor.sessionID) }
+        let mapped = try context.confirmRecordedSession(original, range: document.candidates()[0].range,
+            observation: document.snapshot.observationID, store: store)
+        #expect(mapped.text == original.text && mapped.richTextArchive == original.richTextArchive)
+        #expect(mapped.messages == original.messages && mapped.composerText == original.composerText)
+        #expect(mapped.anchor.baselineText == original.anchor.baselineText)
+        #expect(mapped.anchor.sourceEvidence?.text == document.snapshot.text)
+        let replaced = try context.replaceFromNotes(context.replacementPreview(mapped), current: mapped, store: store)
+        #expect(replaced.text == document.snapshot.text)
+        #expect(replaced.anchor.baselineText == document.snapshot.text)
+    }
+
+    @Test func recordedReassociationRefusesOccupiedAndUnresolvedOtherOwners() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("reassociate-owners-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root), reader = ReplacementReader()
+        let (context, original) = try await setup(store, reader)
+        await reader.replace("<div><h2>Session 1</h2></div><div>A1 Row</div><div><h2>Session 2</h2></div><div>A1 Press</div>")
+        let initial = try await context.refresh(for: .comparison)
+        let other = try context.createWorkspace(range: initial.candidates()[1].range,
+            observation: initial.snapshot.observationID, store: store)
+        #expect(throws: SessionAssociationError.occupied) {
+            _ = try context.confirmRecordedSession(original, range: initial.candidates()[1].range,
+                observation: initial.snapshot.observationID, store: store)
+        }
+        await reader.replace("<div><h2>Session 1</h2></div><div>A1 changed</div><div><h2>Session 2</h2></div><div>A1 changed too</div>")
+        let changed = try await context.refresh(for: .comparison)
+        #expect(throws: SessionAssociationError.unresolvedOwnership) {
+            _ = try context.confirmRecordedSession(original, range: changed.candidates()[0].range,
+                observation: changed.snapshot.observationID, store: store)
+        }
+        #expect(try store.load(id: original.workspaceID)?.snapshot == original)
+        #expect(try store.load(id: other.workspaceID)?.snapshot == other)
+    }
 }

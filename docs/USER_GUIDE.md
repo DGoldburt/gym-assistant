@@ -58,6 +58,16 @@ If the record changed after opening the browser, reopen Previous planning and re
 it again. If saving fails, do not assume set-aside succeeded. Existing files remain
 preserved; the app does not release its in-memory editing claim on an unconfirmed save.
 
+For an active record, **Continue scratchpad** reopens the saved editor, even when
+its session cannot currently be located. It does not substitute Notes content.
+Choose **Find session in Notes…** to review the read-only scratchpad beside Notes,
+select the intended paragraphs, and explicitly associate them. Comparison can show
+the selected content on the scratchpad side. Confirmation changes location evidence,
+not either version's content or the original comparison baseline. Occupied regions
+are unavailable. Other unresolved owners or duplicate headings must be resolved
+before association; batch recovery is not included. Set-aside and pre-replacement
+records remain read-only references, not competing editable scratchpads.
+
 ### Start or resume a new session
 
 Choose **New session** (Command-N in the programming entry window). Existing

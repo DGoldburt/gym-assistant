@@ -42,7 +42,7 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-15) Implement explicit set-aside: schema-3 optional lifecycle date, preservation-first store operation, immutable historical content, release only after save acknowledgement, stale-preview refusal and retirement of retained editors. Older files remain active without eager migration. All five stages pass (233 tests/37 suites); four additional regressions cover released ownership, old-schema/fault preservation, stale previews and unrecorded work. Native synthetic Cancel/confirm/retained content and return to entry observed.
 - [x] (2026-10-15) Coach explicitly marks the manual set-aside test passed: close the active editor, retain planning, and continue from entry without reviving the set-aside copy. Native parking-lot handoff/real Notes and broader lifecycle acceptance remain separate.
 - [x] (2026-10-15) Implement explicit verified Notes replacement with independent preserved prior content, conversation/composer continuity, fresh confirmation checks and uncertain-save editing lock. Three regressions cover preservation beyond backup rotation, stale/unlocated refusal and post-promotion failure. All five verification stages pass (236 tests/38 suites). Native replacement acceptance remains open.
-- [ ] Implement orphaned-workspace resumption and targeted recorded-session association per the approved follow-up milestone. Batch association recovery is deferred, not a prerequisite. Native parking-lot preview/handoff acceptance remains open.
+- [x] (2026-10-15) Implement explicit Continue scratchpad in Previous planning and targeted recorded-session association. Reopen saved content without rewriting unchanged files; preserve baseline/content/conversation on identity confirmation. Three added regressions cover resumption, baseline preservation, occupied/unresolved refusal. All five stages pass (239 tests/38 suites). Native synthetic orphan reopen, read-only association, occupied-region refusal, replacement and retrieval of preserved content observed. Batch recovery remains deferred; real Notes/manual handoff acceptance remains open.
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
 - [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
@@ -120,6 +120,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+2026-10-15: AppKit inserts default font attributes on unstyled newline characters
+when loading rich text into NSTextStorage. A reopen equality regression caught the
+unnecessary initial autosave rewriting a previously unchanged file. Reuse the saved
+revision when the loaded snapshot is identical; the original strict snapshot and
+decoded-rich-text checks now pass without weakening preservation expectations.
 
 Historical references cannot use active-owner exclusivity: two preserved planning
 records may legitimately refer to the same unique Notes session. Reference labeling
@@ -667,6 +673,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 resumption increment: active unlocated work can be deliberately reopened
+from Previous planning, reviewed against Notes, and reassociated without replacing
+either text. All five verification stages pass (239 tests/38 suites). In the isolated
+native fixture, Session 17 reopened unchanged, association made the scratchpad
+read-only, and Session 18's occupied range was refused. Session 18 replacement removed
+a synthetic added character while preserving it in a separately labeled read-only
+reference; conversation and unsent question remained. No real Notes, installed
+Service or paid API behavior is established by these checks.
 
 2026-10-15 replacement increment: explicit verified-region replacement now preserves
 prior content independently of backup rotation, retains conversation and unsent text,
@@ -2128,3 +2143,7 @@ Revision note, 2026-10-15, replacement: record the coach's manual set-aside pass
 and implement preservation-first explicit replacement. The coach now asks to commit
 at milestones and continue until a decision is needed; routine manual-test readiness
 no longer stops implementation. Native acceptance remains tracked separately.
+
+Revision note, 2026-10-15, targeted resumption: connect explicit active-record resume
+and identity-only recorded association, preserve files on unchanged reopen, and record
+deterministic plus synthetic native lifecycle evidence. Batch repair stays deferred.

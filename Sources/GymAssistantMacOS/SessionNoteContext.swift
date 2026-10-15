@@ -198,6 +198,34 @@ public enum NotesReplacementError: Error { case persistenceUncertain }
         return candidate
     }
 
+    /// Repair only the selected recorded workspace. Identity confirmation does
+    /// not accept Notes content or advance the original comparison baseline.
+    public func confirmRecordedSession(_ snapshot: WorkspaceSnapshot, range: SourceRange,
+                                       observation: UUID, store: WorkspaceSnapshotStore) throws -> WorkspaceSnapshot {
+        guard failure == nil, let document = sourceDocument,
+              document.snapshot.observationID == observation, snapshot.isActive,
+              !snapshot.anchor.isUnrecorded, snapshot.anchor.noteID == noteID,
+              let saved = try store.load(id: snapshot.workspaceID), !saved.recoveredFromPrevious,
+              saved.snapshot == snapshot else { throw WorkspaceError.staleAssociation }
+        let session = snapshot.anchor.sessionID
+        guard registry.duplicateLabels.isEmpty, registry.unresolved.subtracting([session]).isEmpty else {
+            throw SessionAssociationError.unresolvedOwnership
+        }
+        var proposed = registry
+        try proposed.confirm(sessionID: session, range: range, in: document)
+        guard let anchor = proposed.anchor(for: session), anchor.baselineText == snapshot.anchor.baselineText else {
+            throw WorkspaceError.staleAssociation
+        }
+        var candidate = snapshot
+        candidate.anchor = anchor
+        candidate.boundaryProtection = BoundaryEditProtection(sourceRange: range)
+        candidate.boundaryProtection?.markUncertain(currentLength: (candidate.text as NSString).length)
+        candidate.revision += 1
+        try persist(candidate, store: store)
+        registry = proposed; publish()
+        return candidate
+    }
+
     /// Commit the controller's complete proposed edit only against the exact
     /// observation it previewed. Never advance the confirmed Notes baseline.
     public func commitBoundary(_ snapshot: WorkspaceSnapshot, range: SourceRange,
