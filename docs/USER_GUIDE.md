@@ -49,6 +49,18 @@ synthetic content, including keyboard-only new-session creation, heading search,
 comparison and association. Broader keyboard selection and real Notes integration still
 need acceptance; they are not installed by these changes.
 
+## Exercise labels in replies
+
+Exercise names identified in assistant replies can have a subtle underline: solid
+means **In library**, dotted means **Not matched**. Hover to see the label; confirmed
+aliases also show their canonical name. Not matched means unresolved wording, not
+necessarily a new exercise. Undecorated text carries no library-status claim.
+For keyboard access, choose Edit → Focus Conversation (Command-Shift-M), then use
+Tab/Shift-Tab to move between decorated names and reveal their labels. Tab after
+the last name leaves the conversation. Names remain ordinary selectable text;
+there are no exercise action menus. This is implemented in the development build;
+real-provider mention identification is not yet connected.
+
 ## Paste formatted Markdown into Apple Notes
 
 The development scratchpad has a Format menu (not yet in the installed Service):

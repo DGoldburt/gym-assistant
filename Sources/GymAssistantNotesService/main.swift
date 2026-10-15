@@ -1909,7 +1909,14 @@ private final class ExerciseServiceProvider: NSObject {
                 .appendingPathComponent("GymAssistantScratchpadDevelopment", isDirectory: true)
                 .appendingPathComponent("ServiceWorkspaces", isDirectory: true)
             let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: notesReader,
-                profile: CoachingProfile(version: "development-empty", entries: []), assistant: FakeProgrammingAssistant())
+                profile: CoachingProfile(version: "development-empty", entries: []), assistant: FakeProgrammingAssistant(),
+                exerciseLookup: { [library] text in
+                    do {
+                        guard let name = try library.exactName(for: text) else { return .notMatched }
+                        guard let canonical = try library.preferredName(for: name.exerciseID) else { return .unavailable }
+                        return .inLibrary(canonicalName: canonical.text)
+                    } catch { return .unavailable }
+                })
             sessionWindows = windows
             programEntry = SessionProgrammingEntryWindow(workspaces: windows,
                 modeDescription: "Development preview: local test assistant, no API calls. Coaching profile is not loaded. Notes are read only; handoff is manual.",

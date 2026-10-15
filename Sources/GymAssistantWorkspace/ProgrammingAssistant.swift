@@ -41,7 +41,11 @@ public struct ProgrammingRequest: Equatable, Sendable {
 public struct ProgrammingResponse: Equatable, Sendable {
     public let requestID: UUID
     public let text: String
-    public init(requestID: UUID, text: String) { self.requestID = requestID; self.text = text }
+    public let exerciseMentions: [ExerciseMention]
+    public init(requestID: UUID, text: String, exerciseMentions: [ExerciseMention] = []) {
+        self.requestID = requestID; self.text = text
+        self.exerciseMentions = ExerciseMention.validated(exerciseMentions, in: text)
+    }
 }
 public enum AssistantFailure: Error, Equatable, Sendable {
     case cancelled, transport, provider, sizeLimit

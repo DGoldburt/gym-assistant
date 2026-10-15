@@ -2,6 +2,17 @@ import AppKit
 import GymAssistantWorkspace
 import GymAssistantMacOS
 
+private struct MentionFixtureAssistant: ProgrammingAssistant {
+    func reply(to request: ProgrammingRequest) async throws -> ProgrammingResponse {
+        let text = "Synthetic display test — not exercise advice.\nTry SL RDL or single-leg RDL with reach. Keep the rest unchanged."
+        let mentions = ["SL RDL", "single-leg RDL with reach"].map { name in
+            let range = (text as NSString).range(of: name)
+            return ExerciseMention(text: name, range: .init(location: range.location, length: range.length))
+        }
+        return ProgrammingResponse(requestID: request.id, text: text, exerciseMentions: mentions)
+    }
+}
+
 private actor SyntheticEntryReader: NotesContextReading {
     func captureSelectedNote() async throws -> NoteSnapshot { try await read(id: NoteID("synthetic-entry-note")) }
     func read(id: NoteID) async throws -> NoteSnapshot {
@@ -20,7 +31,12 @@ private actor SyntheticEntryReader: NotesContextReading {
         if CommandLine.arguments.contains("--synthetic-entry") {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
             let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: SyntheticEntryReader(),
-                profile: .init(version: "synthetic-empty", entries: []), assistant: FakeProgrammingAssistant())
+                profile: .init(version: "synthetic-empty", entries: []),
+                assistant: CommandLine.arguments.contains("--synthetic-mentions") ? MentionFixtureAssistant() : FakeProgrammingAssistant(),
+                exerciseLookup: { text in
+                    guard CommandLine.arguments.contains("--synthetic-mentions") else { return .unavailable }
+                    return text == "SL RDL" ? .inLibrary(canonicalName: "Single-leg Romanian deadlift") : .notMatched
+                })
             workspaces = windows
             entry = SessionProgrammingEntryWindow(workspaces: windows,
                 modeDescription: "Synthetic entry acceptance · temporary store · no Notes access · local test assistant",

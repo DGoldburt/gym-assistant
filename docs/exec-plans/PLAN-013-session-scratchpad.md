@@ -35,7 +35,7 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 ## Progress
 
 - [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
-- [ ] Resolve exercise-decoration wording with coach: proposed exact confirmed names/aliases as “In library,” other exercise mentions as “Not matched,” never implying new identity. No decoration code or library writes yet.
+- [x] (2026-10-15) Coach approves “In library” / “Not matched” with subtle solid/dotted underlines and labels only on hover or keyboard focus. Implement optional validated exercise-mention evidence, read-only exact library lookup and native display; legacy messages remain undecorated. Synthetic native appearance and keyboard label navigation pass. Hover timing, actual-library integration and live-provider mention identification remain unverified; no library mutation or paid calls.
 
 - [x] (2026-10-15) Run bounded native acceptance using a new isolated `--synthetic-entry` development route: Command-N preview, Escape cancellation, Return creation, heading search, comparison, cancellation and Command-Return identity-only association preserve scratchpad content. Fix misleading diff labels on unchanged interior headings; add two regressions. All five verification stages pass (214 tests/34 suites). Real Notes integration, full keyboard-only entry/selection and installed rollout remain outstanding.
 
@@ -110,6 +110,14 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Exercise decoration, 2026-10-15: responses previously contained plain text only.
+Matching library names throughout prose would mistake ordinary words for exercise
+mentions and could not identify unmatched exercises. Add optional exact-text UTF-16
+mention ranges supplied by the provider; validate bounds, character boundaries,
+text agreement and non-overlap before display. Native keyboard testing found the
+transcript caret at the end after rendering, causing Tab to skip every mention;
+Focus Conversation now explicitly selects the first decorated name.
 
 The first native association pass required mouse entry because Find and Compare
 had no menu commands. Add local shortcuts and explicit search-to-source Tab routing;
@@ -318,6 +326,15 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: The coach approves solid/dotted neutral underlines for In library/Not
+  matched, with compact hover/focus labels and canonical name for confirmed aliases.
+  No badges, permanent labels, links or exercise actions. Command-Shift-M focuses
+  the conversation's first decorated mention; Tab/Shift-Tab traverse mentions and
+  leave the view at the ends. Missing library access produces no match decoration.
+  Rationale: Preserve reading/programming flow and distinguish unknown wording from
+  genuinely new exercise identity. Provider mention evidence cannot establish identity.
+  Date/Author: 2026-10-15 / coach approval; Codex implementation details.
 
 - Decision: Use Command-Shift-F for Find Session in Notes and Command-Shift-D for
   Compare with Source, exposed in Edit; Tab from heading search focuses Notes.
@@ -567,6 +584,16 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 decoration increment: optional mention evidence survives message storage
+without rewriting older snapshots; completed assistant messages alone are decorated.
+The Service composition root delegates exact lookup to the existing exercise library
+without giving workspace/UI code library writes. The synthetic provider verifies
+display and keyboard labels, not real model extraction accuracy or live-library use.
+Read-only profile packaging, recovery and full Notes/provider acceptance remain open.
+All five verification stages pass with 219 tests across 36 suites. Four new tests
+cover range validation, backward-compatible messages, controller gating and native
+attribute/focus behavior. No actual library data or Notes was modified.
 
 2026-10-15 keyboard follow-up: bounded synthetic new-session entry through manual
 association now works without mouse input. The new regression and native pass
@@ -1452,6 +1479,16 @@ provenance; chat cannot change the profile or library. Synthetic integration tes
 record which inputs were sent, verify no hidden truncation, and exercise API failure
 without new automatic charges. Live trials separately establish coach usefulness.
 
+Exercise mention annotations are optional data attached to unchanged assistant text,
+not tools or mutation requests. The future API adapter must identify exercise spans
+explicitly and validate their literal text/UTF-16 offsets. Do not infer exercise
+mentions by decorating every ordinary phrase absent from the library. Recompute
+library status through exact canonical/confirmed-alias lookup when rendering; never
+persist a provider's claim of library membership. Invalid/overlapping ranges and
+unavailable lookups receive no decoration. Legacy messages without mention evidence
+remain readable and undecorated. Native hover timing and real-provider extraction
+remain acceptance items even after synthetic display checks pass.
+
 Fake-provider contract tests compare the complete application request with what
 the adapter receives, including roles, evidence status and version identities.
 Stale/unresolved association and oversized context must fail before submission.
@@ -1879,3 +1916,8 @@ full keyboard-navigation and rollout gates; 214 tests/34 suites pass.
 Revision note, 2026-10-15, keyboard entry: implement and verify Find/Compare shortcuts
 and preserved-selection Tab routing. Record the narrower keyboard-only native pass
 and one added regression without claiming all selection or Notes paths accepted.
+
+Revision note, 2026-10-15, exercise decoration: record coach approval and implement
+validated mention metadata, exact read-only lookup, quiet underline presentation and
+keyboard label navigation. Keep ordinary prose/legacy replies undecorated; no model
+identity claims, eager storage migration, exercise actions or paid requests.

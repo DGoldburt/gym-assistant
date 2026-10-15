@@ -609,8 +609,16 @@ clipboard publication from asynchronous verification and timeout/status delivery
 Generation guards suppress obsolete copy results; late verification never writes
 the clipboard. The comparison remains explicitly text-only, not formatting agreement
 or permission to advance a baseline. Native timing remains unverified.
-Live Notes window/registry integration, real
-profile inspection and library decoration remain incomplete; package tests do not establish their native
+Full native acceptance of live Notes window/registry integration and real
+profile inspection remains incomplete. Exercise decoration uses optional validated
+`ExerciseMention` ranges on responses/messages; older messages decode without them.
+The macOS conversation view decorates completed assistant mentions only, using a
+read-only injected lookup returning in-library canonical name, not-matched, or
+unavailable. The Service composition root calls existing exact-name/preferred-name
+library methods; no resolver guesses or library writes are exposed. Solid/dotted
+underlines carry tooltips and keyboard-focus labels without changing stored text.
+Unavailable lookup leaves text undecorated. Provider mention extraction and actual
+library integration still need acceptance; package tests do not establish their native
 behavior. No module from concurrent client-history
 work is imported or changed by this implementation.
 

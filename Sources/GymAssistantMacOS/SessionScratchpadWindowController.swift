@@ -22,7 +22,8 @@ import GymAssistantWorkspace
     private let noteContext: SessionNoteContext?
     private let pasteboard: NSPasteboard
     private let editor = ScratchpadTextView()
-    private let transcript = NSTextView()
+    private let transcript = ExerciseConversationView()
+    private let exerciseLookup: (String) -> ExerciseMentionMatch
     private let composer = ChatComposer()
     private let diff = NSTextView()
     private let status = NSTextField(labelWithString: "")
@@ -53,11 +54,13 @@ import GymAssistantWorkspace
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
                 note: NoteSnapshot, association: SessionAssociation?, profile: CoachingProfile,
                 assistant: any ProgrammingAssistant = FakeProgrammingAssistant(), noteContext: SessionNoteContext? = nil,
-                pasteboard: NSPasteboard = .general) throws {
+                pasteboard: NSPasteboard = .general,
+                exerciseLookup: @escaping (String) -> ExerciseMentionMatch = { _ in .unavailable }) throws {
         self.snapshot = snapshot; self.store = store; self.note = note
         self.association = association; self.profile = profile; self.assistant = assistant
         self.noteContext = noteContext
         self.pasteboard = pasteboard
+        self.exerciseLookup = exerciseLookup
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
@@ -137,6 +140,7 @@ import GymAssistantWorkspace
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
         if let keyWindow = NSApp.keyWindow, keyWindow !== window { return false }
+        if item.action == #selector(focusConversation) { return associationPane == nil }
         if item.action == #selector(findSessionInNotes) {
             return snapshot.anchor.isUnrecorded && associationPane == nil && boundaryTask == nil
                 && gate.active == nil && !preparingRequest && noteContext != nil
@@ -150,11 +154,16 @@ import GymAssistantWorkspace
     }
     public func comparisonMenuItems() -> [NSMenuItem] {
         [("Find Session in Notes…", #selector(findSessionInNotes), "f"),
-         ("Compare with Source", #selector(toggleDiff), "d")].map { title, action, key in
+         ("Compare with Source", #selector(toggleDiff), "d"),
+         ("Focus Conversation", #selector(focusConversation), "m")].map { title, action, key in
             let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
             item.target = self; item.keyEquivalentModifierMask = [.command, .shift]
             return item
         }
+    }
+    @objc public func focusConversation() {
+        guard associationPane == nil else { return }
+        transcript.focusFirstMention()
     }
     private struct FormattingState {
         let rich: NSAttributedString
@@ -746,7 +755,7 @@ import GymAssistantWorkspace
                 do {
                     let response = try await assistant.reply(to: request)
                     guard let self, self.gate.finish(response) != nil else { return }
-                    self.updateReply(requestID: request.id, text: response.text, status: .complete)
+                    self.updateReply(requestID: request.id, text: response.text, status: .complete, mentions: response.exerciseMentions)
                 } catch {
                     guard let self, self.gate.active?.id == request.id else { return }
                     self.gate.stop()
@@ -758,9 +767,10 @@ import GymAssistantWorkspace
             status.stringValue = "Question not sent: \(error). Your text is still in the composer."
         }
     }
-    private func updateReply(requestID: UUID, text: String, status: MessageStatus) {
+    private func updateReply(requestID: UUID, text: String, status: MessageStatus, mentions: [ExerciseMention] = []) {
         if let index = snapshot.messages.firstIndex(where: { $0.requestID == requestID && $0.role == .assistant }) {
             snapshot.messages[index].text = text; snapshot.messages[index].status = status
+            snapshot.messages[index].exerciseMentions = ExerciseMention.validated(mentions, in: text)
         }
         updateAvailability(); refreshTranscript(); saveNow()
     }
@@ -778,10 +788,23 @@ import GymAssistantWorkspace
         stopButton.isEnabled = gate.active != nil || preparingRequest
     }
     private func refreshTranscript() {
-        transcript.string = snapshot.messages.filter { $0.conversationID == snapshot.conversationID }.map { message in
+        let text = NSMutableAttributedString(string: "")
+        var decorations: [ExerciseConversationView.Decoration] = []
+        for message in snapshot.messages.filter({ $0.conversationID == snapshot.conversationID }) {
+            if text.length > 0 { text.append(NSAttributedString(string: "\n\n")) }
             let freshness = message.role == .assistant && message.scratchpadRevision != snapshot.revision ? " · Scratchpad changed" : ""
-            return "\(message.role == .coach ? "You" : "Assistant") · r\(message.scratchpadRevision) · \(message.status.rawValue)\(freshness)\n\(message.text)"
-        }.joined(separator: "\n\n")
+            text.append(NSAttributedString(string: "\(message.role == .coach ? "You" : "Assistant") · r\(message.scratchpadRevision) · \(message.status.rawValue)\(freshness)\n"))
+            let offset = text.length
+            text.append(NSAttributedString(string: message.text))
+            if message.role == .assistant && message.status == .complete {
+                for mention in ExerciseMention.validated(message.exerciseMentions ?? [], in: message.text) {
+                    decorations.append(.init(range: NSRange(location: offset + mention.range.location, length: mention.range.length),
+                                             match: exerciseLookup(mention.text)))
+                }
+            }
+        }
+        if text.length > 0 { text.addAttributes([.font: NSFont.systemFont(ofSize: 15), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: text.length)) }
+        transcript.display(text, decorations: decorations)
     }
     @objc public func copyForNotes() {
         saveTask?.cancel(); saveNow()

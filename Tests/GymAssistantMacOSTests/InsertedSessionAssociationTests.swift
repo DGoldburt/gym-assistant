@@ -32,7 +32,7 @@ private actor InsertionReader: NotesContextReading {
             association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
         let root = try #require(controller.window?.contentView)
         let items = controller.comparisonMenuItems()
-        #expect(items.map(\.keyEquivalent) == ["f", "d"])
+        #expect(items.map(\.keyEquivalent) == ["f", "d", "m"])
         #expect(items.allSatisfy { $0.keyEquivalentModifierMask == [.command, .shift] })
         #expect(controller.validateMenuItem(items[0]))
         #expect(NSApp.sendAction(try #require(items[0].action), to: items[0].target, from: items[0]))

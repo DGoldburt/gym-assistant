@@ -8,12 +8,15 @@ import GymAssistantWorkspace
     private let entry: SessionWorkspaceEntry
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
+    private let exerciseLookup: (String) -> ExerciseMentionMatch
     private var controllers: [WorkspaceID: SessionScratchpadWindowController] = [:]
     private var mostRecent: WorkspaceID?
 
     public init(store: WorkspaceSnapshotStore, reader: any NotesContextReading,
-                profile: CoachingProfile, assistant: any ProgrammingAssistant) {
+                profile: CoachingProfile, assistant: any ProgrammingAssistant,
+                exerciseLookup: @escaping (String) -> ExerciseMentionMatch = { _ in .unavailable }) {
         self.store = store; self.profile = profile; self.assistant = assistant
+        self.exerciseLookup = exerciseLookup
         entry = SessionWorkspaceEntry(store: store, reader: reader)
     }
 
@@ -39,7 +42,8 @@ import GymAssistantWorkspace
         mostRecent = prepared.snapshot.workspaceID
         if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
         let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
-            note: prepared.note, association: nil, profile: profile, assistant: assistant, noteContext: prepared.context)
+            note: prepared.note, association: nil, profile: profile, assistant: assistant, noteContext: prepared.context,
+            exerciseLookup: exerciseLookup)
         controllers[prepared.snapshot.workspaceID] = controller
         return controller
     }
@@ -52,7 +56,7 @@ import GymAssistantWorkspace
         if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
         let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
             note: prepared.note, association: prepared.association, profile: profile,
-            assistant: assistant, noteContext: prepared.context)
+            assistant: assistant, noteContext: prepared.context, exerciseLookup: exerciseLookup)
         controllers[prepared.snapshot.workspaceID] = controller
         return controller
     }

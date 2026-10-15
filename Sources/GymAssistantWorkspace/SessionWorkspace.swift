@@ -94,13 +94,17 @@ public struct ConversationMessage: Codable, Equatable, Sendable {
     public let role: MessageRole
     public var text: String
     public var status: MessageStatus
+    /// Optional for read compatibility with snapshots predating decoration.
+    public var exerciseMentions: [ExerciseMention]?
     public let scratchpadRevision: Int
     public let observationID: UUID
     public init(id: UUID = UUID(), requestID: UUID, conversationID: ConversationID, role: MessageRole,
-                text: String, status: MessageStatus, scratchpadRevision: Int, observationID: UUID) {
+                text: String, status: MessageStatus, scratchpadRevision: Int, observationID: UUID,
+                exerciseMentions: [ExerciseMention]? = nil) {
         self.id = id; self.requestID = requestID; self.conversationID = conversationID
         self.role = role; self.text = text; self.status = status
         self.scratchpadRevision = scratchpadRevision; self.observationID = observationID
+        self.exerciseMentions = exerciseMentions.map { ExerciseMention.validated($0, in: text) }
     }
 }
 

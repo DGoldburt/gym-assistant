@@ -267,3 +267,20 @@ Quit normally afterward. This closes the mouse-entry limitation for this specifi
 path, not arbitrary boundary selection, real Notes or installed-Service acceptance.
 One added regression covers command availability, focus/selection preservation and
 menu/checkbox parity. All five verification stages pass (215 tests/34 suites).
+
+### Exercise decoration follow-up — 2026-10-15
+
+Launch the development bundle with `--synthetic-entry --synthetic-mentions`, create
+a new session and submit any question. The isolated test assistant returns two
+explicit exercise mentions with fixture lookup: SL RDL (confirmed alias) and
+single-leg RDL with reach (not matched). No actual library/Notes/API access occurs.
+Observed native neutral solid/dotted underlines, without inline labels or links.
+Command-Shift-M selects the first mention and reveals its canonical-name label;
+Tab reveals Not matched for the second; another Tab closes the popup and focuses
+the composer. An initial end-of-text focus bug was found and fixed before retest.
+The app was quit normally. Tests cover tooltip attributes, but native mouse-hover
+timing, screen-reader behavior and real-provider mention extraction remain unverified.
+All five verification stages pass with 219 tests across 36 suites. Four added tests
+cover validated ranges, legacy/message round-trip compatibility, controller lookup
+gating and unchanged text, and underline/tooltip/focus behavior. A nested test macro
+initially failed compilation; split its intermediate value and rerun the full suite.
