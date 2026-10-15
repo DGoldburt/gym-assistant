@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [learner/main]
   push:
-    branches: [learner/main]
+    # The workflow exists on the learner/product line, not reusable main.
+    branches: ['**']
 
 permissions:
   contents: read
