@@ -9,14 +9,14 @@ import GymAssistantWorkspace
     }
 }
 
-/// Offline development entry. Native Notes capture/monitor and Service integration
-/// must be added before this controller can be used with real notes.
+/// Persistent editor for recorded sections or explicitly unrecorded additions.
+/// Live context is optional for bounded offline tests; installed rollout remains gated.
 @MainActor public final class SessionScratchpadWindowController: NSWindowController, NSTextViewDelegate, NSWindowDelegate, NSMenuItemValidation {
     public private(set) var snapshot: WorkspaceSnapshot
     public var onActivate: (() -> Void)?
     private let store: WorkspaceSnapshotStore
     private var note: NoteSnapshot
-    private var association: SessionAssociation
+    private var association: SessionAssociation?
     private let profile: CoachingProfile
     private let assistant: any ProgrammingAssistant
     private let noteContext: SessionNoteContext?
@@ -46,7 +46,7 @@ import GymAssistantWorkspace
     private var preparedBoundaryRestore: WorkspaceSnapshot?
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
-                note: NoteSnapshot, association: SessionAssociation, profile: CoachingProfile,
+                note: NoteSnapshot, association: SessionAssociation?, profile: CoachingProfile,
                 assistant: any ProgrammingAssistant = FakeProgrammingAssistant(), noteContext: SessionNoteContext? = nil,
                 pasteboard: NSPasteboard = .general) throws {
         self.snapshot = snapshot; self.store = store; self.note = note
@@ -55,11 +55,22 @@ import GymAssistantWorkspace
         self.pasteboard = pasteboard
         let rich = try RichTextArchive.decode(snapshot.richTextArchive)
         try snapshot.validate()
-        // The recorded-session controller path must never fabricate a Notes
-        // range for an unrecorded addition. Its UI integration is separate work.
-        guard !snapshot.anchor.isUnrecorded else { throw WorkspaceError.staleAssociation }
         guard rich.string == snapshot.text else { throw WorkspaceError.invalidArchive }
-        if let noteContext {
+        guard snapshot.anchor.noteID == note.id else { throw WorkspaceError.staleAssociation }
+        if let association {
+            guard association.sessionID == snapshot.anchor.sessionID, association.noteID == note.id else {
+                throw WorkspaceError.staleAssociation
+            }
+        }
+        if snapshot.anchor.isUnrecorded {
+            guard association == nil else { throw WorkspaceError.staleAssociation }
+            if let noteContext {
+                guard noteContext.noteID == note.id,
+                      noteContext.sourceDocument?.snapshot.observationID == note.observationID else {
+                    throw WorkspaceError.staleAssociation
+                }
+            }
+        } else if let association, let noteContext {
             guard try noteContext.association(for: snapshot.anchor.sessionID) == association,
                   noteContext.sourceDocument?.snapshot.observationID == note.observationID else {
                 throw WorkspaceError.staleAssociation
@@ -70,7 +81,7 @@ import GymAssistantWorkspace
                 self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: association.range)
                 self.snapshot.boundaryProtection?.markUncertain(currentLength: rich.length)
             }
-        } else if let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
+        } else if let association, let savedRange = snapshot.boundaryProtection?.sourceRange, savedRange != association.range {
             guard savedRange.isParagraphAligned(in: note.text),
                   snapshot.anchor.sourceEvidence?.text == (note.text as NSString).substring(with: savedRange.nsRange) else {
                 throw WorkspaceError.staleAssociation
@@ -78,6 +89,7 @@ import GymAssistantWorkspace
             self.association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
                                                   observationID: note.observationID, range: savedRange)
         }
+        guard snapshot.anchor.isUnrecorded || association != nil else { throw WorkspaceError.staleAssociation }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -97,8 +109,8 @@ import GymAssistantWorkspace
             }
             editor.boundaryUndoManager = undo
         }
-        if snapshot.boundaryProtection == nil {
-            self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: self.association.range)
+        if snapshot.boundaryProtection == nil, let association = self.association {
+            self.snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: association.range)
             // Older saved scratchpads have no edit correspondence. Preserve them;
             // do not assume visible text equality proves formatting was untouched.
             if snapshot.revision > 0 { self.snapshot.boundaryProtection?.markUncertain(currentLength: rich.length) }
@@ -120,6 +132,7 @@ import GymAssistantWorkspace
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
         if let keyWindow = NSApp.keyWindow, keyWindow !== window { return false }
+        if item.action == #selector(adjustBoundary) { return !snapshot.anchor.isUnrecorded }
         if item.action == #selector(formatScratchpad(_:)) {
             return window?.firstResponder === editor && !showingDiff && editor.isEditable
         }
@@ -275,8 +288,13 @@ import GymAssistantWorkspace
         guard !committingBoundary else { return }
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
+        if snapshot.anchor.isUnrecorded {
+            status.stringValue = noteContext.failure ?? "Unrecorded session · scratchpad saved locally; Notes not written."
+            if showingDiff { renderComparison() }
+            return
+        }
         if let fresh = try? noteContext.association(for: snapshot.anchor.sessionID) {
-            if fresh.range != association.range {
+            if fresh.range != association?.range {
                 snapshot.boundaryProtection = BoundaryEditProtection(sourceRange: fresh.range)
                 snapshot.boundaryProtection?.markUncertain(currentLength: (snapshot.text as NSString).length)
             }
@@ -320,6 +338,9 @@ import GymAssistantWorkspace
     }
 
     @objc public func adjustBoundary() {
+        guard let association, !snapshot.anchor.isUnrecorded else {
+            status.stringValue = "Unrecorded session has no Notes boundary to adjust."; return
+        }
         guard editor.boundaryUndoManager?.checking != true, boundaryTask == nil else { return }
         if let noteContext {
             boundaryTask = Task { [weak self] in
@@ -368,7 +389,7 @@ import GymAssistantWorkspace
         let fresh = try await noteContext.refresh(for: .boundary)
         try Task.checkCancellation()
         guard editor.boundaryUndoManager?.checking != true,
-              fresh.paragraphs == preview.paragraphs, association.range == expectedRange,
+              fresh.paragraphs == preview.paragraphs, association?.range == expectedRange,
               let rich = noteContext.richText else { throw WorkspaceError.staleAssociation }
         try applyBoundary(range, document: fresh, source: rich)
     }
@@ -379,6 +400,7 @@ import GymAssistantWorkspace
     }
 
     func applyBoundary(_ range: SourceRange, document: ProgramDocument, source: NSAttributedString) throws {
+        guard let association, !snapshot.anchor.isUnrecorded else { throw WorkspaceError.staleAssociation }
         guard document.snapshot.observationID == note.observationID else { throw WorkspaceError.staleAssociation }
         guard var protection = snapshot.boundaryProtection else { throw BoundaryChangeError.uncertainCorrespondence }
         let change = try protection.apply(range, in: note.text)
@@ -409,7 +431,7 @@ import GymAssistantWorkspace
             target.restoreBoundary(rich: before, association: previousAssociation, anchor: previousAnchor, protection: previousProtection)
         }
         editor.undoManager?.setActionName("Adjust session boundary")
-        association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
+        self.association = SessionAssociation(sessionID: association.sessionID, noteID: association.noteID,
                                          observationID: association.observationID, range: range)
         snapshot.anchor.sourceEvidence = try document.evidence(in: range)
         snapshot.boundaryProtection = protection
@@ -454,9 +476,10 @@ import GymAssistantWorkspace
         guard let undo = editor.boundaryUndoManager else { return }
         undo.registerUndo(withTarget: self) { controller in
             guard let candidate = controller.preparedBoundaryRestore,
+                  let association = controller.association,
                   let document = controller.noteContext?.sourceDocument else { return }
             let reverse = BoundaryState(rich: NSAttributedString(attributedString: controller.editor.attributedString()),
-                association: controller.association, anchor: controller.snapshot.anchor,
+                association: association, anchor: controller.snapshot.anchor,
                 protection: controller.snapshot.boundaryProtection, document: document)
             controller.preparedBoundaryRestore = nil
             controller.registerLiveBoundaryUndo(reverse)
@@ -477,6 +500,7 @@ import GymAssistantWorkspace
 
     private func restoreBoundary(rich: NSAttributedString, association previous: SessionAssociation,
                                  anchor: SessionAnchor, protection: BoundaryEditProtection?) {
+        guard let association else { return }
         // Frozen development source only. Live ownership/freshness must be checked
         // before this operation is offered in the real Notes workspace.
         guard previous.observationID == note.observationID else {
@@ -487,7 +511,7 @@ import GymAssistantWorkspace
         editor.undoManager?.registerUndo(withTarget: self) { target in
             target.restoreBoundary(rich: redoRich, association: redoAssociation, anchor: redoAnchor, protection: redoProtection)
         }
-        association = previous; snapshot.anchor = anchor; snapshot.boundaryProtection = protection
+        self.association = previous; snapshot.anchor = anchor; snapshot.boundaryProtection = protection
         editor.undoManager?.disableUndoRegistration()
         editor.textStorage?.setAttributedString(rich)
         editor.undoManager?.enableUndoRegistration()
@@ -522,7 +546,9 @@ import GymAssistantWorkspace
                     try Task.checkCancellation()
                     guard let document = noteContext.sourceDocument else { throw WorkspaceError.staleAssociation }
                     self.note = document.snapshot
-                    self.association = try noteContext.association(for: self.snapshot.anchor.sessionID)
+                    if !self.snapshot.anchor.isUnrecorded {
+                        self.association = try noteContext.association(for: self.snapshot.anchor.sessionID)
+                    }
                     self.preparingRequest = false
                     self.sendPrepared(question: question)
                 } catch {
@@ -538,8 +564,15 @@ import GymAssistantWorkspace
         saveTask?.cancel()
         guard saveNow() else { updateAvailability(); return }
         do {
-            let request = try ProgramContextAssembler.assemble(note: note, association: association,
-                workspace: snapshot, profile: profile, question: question, maximumContextBytes: 1_000_000)
+            let request: ProgrammingRequest
+            if snapshot.anchor.isUnrecorded {
+                request = try ProgramContextAssembler.assembleUnrecorded(note: note, workspace: snapshot,
+                    profile: profile, question: question, maximumContextBytes: 1_000_000)
+            } else {
+                guard let association else { throw WorkspaceError.staleAssociation }
+                request = try ProgramContextAssembler.assemble(note: note, association: association,
+                    workspace: snapshot, profile: profile, question: question, maximumContextBytes: 1_000_000)
+            }
             try gate.begin(request)
             snapshot.messages.append(ConversationMessage(requestID: request.id, conversationID: request.conversationID,
                 role: .coach, text: request.question, status: .complete, scratchpadRevision: request.revision, observationID: request.observationID))
@@ -604,6 +637,9 @@ import GymAssistantWorkspace
             guard let context else { return .unavailable }
             do {
                 let document = try await context.refresh(for: .checkedCopy)
+                // No recorded baseline exists yet; a successful read alone is
+                // not evidence that this addition is safe to paste again.
+                guard !anchor.isUnrecorded else { return .unavailable }
                 let association = try context.association(for: anchor.sessionID)
                 let latest = try document.evidence(in: association.range)
                 // Legacy or manually reassociated evidence is not necessarily
@@ -652,6 +688,14 @@ import GymAssistantWorkspace
         if !showingDiff { window?.makeFirstResponder(editor) }
     }
     private func renderComparison() {
+        if snapshot.anchor.isUnrecorded {
+            diff.string = "Unrecorded scratchpad r\(snapshot.revision) — proposed addition, not a replacement.\n"
+                + "No Notes section is associated yet.\n\n" + SessionComparison.text(before: "", after: snapshot.text)
+            return
+        }
+        guard let association else {
+            diff.string = "Notes association is unresolved. Scratchpad is preserved; comparison is unavailable."; return
+        }
         if noteContext != nil && (try? noteContext?.association(for: snapshot.anchor.sessionID)) == nil
             || association.observationID != note.observationID || !association.range.isParagraphAligned(in: note.text) {
             diff.string = "Notes association is unresolved. Scratchpad is preserved; comparison is unavailable."

@@ -26,6 +26,55 @@ private actor WindowNotesReader: NotesContextReading {
         }
         #expect(condition())
     }
+    @Test func unrecordedWindowHasNoInventedBoundaryAndPreservesAdditionThroughChatDiffAndCopy() async throws {
+        let reader = WindowNotesReader()
+        let context = try SessionNoteContext(noteID: NoteID("fixture"), anchors: [], reader: reader)
+        let document = try await context.refresh(for: .resume)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("unrecorded-window-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let board = NSPasteboard.withUniqueName()
+        defer { board.releaseGlobally() }
+        let rich = NSAttributedString(string: "Session 2\nWarmup\n")
+        let snapshot = WorkspaceSnapshot(anchor: .init(noteID: document.snapshot.id, recordedHeading: "Session 2",
+            baselineText: "", recordingState: .unrecorded), text: rich.string, richTextArchive: try RichTextArchive.encode(rich))
+        let store = WorkspaceSnapshotStore(directory: root)
+        let invented = SessionAssociation(sessionID: snapshot.anchor.sessionID, noteID: document.snapshot.id,
+            observationID: document.snapshot.observationID, range: document.candidates()[0].range)
+        #expect(throws: WorkspaceError.staleAssociation) {
+            _ = try SessionScratchpadWindowController(snapshot: snapshot, store: store, note: document.snapshot,
+                association: invented, profile: .init(version: "empty", entries: []), noteContext: context, pasteboard: board)
+        }
+        let controller = try SessionScratchpadWindowController(snapshot: snapshot, store: store, note: document.snapshot,
+            association: nil, profile: .init(version: "empty", entries: []),
+            assistant: FakeProgrammingAssistant(delay: .milliseconds(1)), noteContext: context, pasteboard: board)
+        let views = descendants(try #require(controller.window?.contentView))
+        let status = try #require(views.first { $0.identifier?.rawValue == "workspace-status" } as? NSTextField)
+        let composer = try #require(views.first { $0.identifier?.rawValue == "chat-composer" } as? NSTextView)
+        let comparison = try #require(views.first { $0.identifier?.rawValue == "notes-comparison" } as? NSTextView)
+        let send = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Send" })
+        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        #expect(controller.snapshot.boundaryProtection == nil)
+        controller.adjustBoundary()
+        #expect(status.stringValue.contains("no Notes boundary"))
+        composer.string = "What should A1 be?"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: composer))
+        let reads = await reader.reads
+        send.performClick(nil)
+        try await eventually { controller.snapshot.messages.last?.status == .complete }
+        #expect(await reader.reads > reads)
+        #expect(controller.snapshot.messages.last?.text.contains("unrecorded session added separately") == true)
+        toggle.performClick(nil)
+        try await eventually { comparison.string.contains("proposed addition") }
+        #expect(!comparison.string.contains("B2 Row"))
+        controller.copyForNotes()
+        try await eventually { status.stringValue.contains("Notes not verified") }
+        #expect(board.string(forType: .string)?.contains("Session 2") == true)
+        #expect(controller.flushAndStop())
+        let saved = try #require(store.load(id: snapshot.workspaceID)?.snapshot)
+        #expect(saved.anchor.isUnrecorded && saved.boundaryProtection == nil)
+        #expect(saved.text == snapshot.text && context.registry.mappings.isEmpty)
+        controller.window?.close()
+    }
     @Test func formattingRoutesToEditorProtectsBoundaryAndPersistsUndoRedo() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("scratchpad-format-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

@@ -19,6 +19,31 @@ import GymAssistantWorkspace
 
     public func captureNote() async throws -> NoteID { try await entry.captureNote() }
 
+    public enum NewSessionEntry {
+        case workspace(SessionScratchpadWindowController)
+        case proposal(SessionWorkspaceEntry.NewSessionProposal)
+    }
+
+    public func prepareNewSession(in noteID: NoteID) async throws -> NewSessionEntry {
+        switch try await entry.prepareNewSession(in: noteID) {
+        case .resume(let prepared): return .workspace(try unrecordedWindow(prepared))
+        case .proposal(let proposal): return .proposal(proposal)
+        }
+    }
+
+    public func acceptNewSession(_ proposal: SessionWorkspaceEntry.NewSessionProposal) async throws -> SessionScratchpadWindowController {
+        try unrecordedWindow(await entry.acceptNewSession(proposal))
+    }
+
+    private func unrecordedWindow(_ prepared: SessionWorkspaceEntry.UnrecordedSession) throws -> SessionScratchpadWindowController {
+        mostRecent = prepared.snapshot.workspaceID
+        if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
+        let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,
+            note: prepared.note, association: nil, profile: profile, assistant: assistant, noteContext: prepared.context)
+        controllers[prepared.snapshot.workspaceID] = controller
+        return controller
+    }
+
     /// The caller chooses when to show the window and install its menus. No
     /// permission prompt, focus change, clipboard publication or API call here.
     public func latest(in noteID: NoteID) async throws -> SessionScratchpadWindowController {

@@ -97,6 +97,22 @@ private actor EntryReader: NotesContextReading {
         #expect(windows.flushAndStop())
     }
 
+    @Test func unrecordedWindowsReuseTheEditorAcrossCloseAndReentry() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let windows = SessionWorkspaceWindows(store: store, reader: reader,
+            profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let id = try await windows.captureNote()
+        guard case .proposal(let proposal) = try await windows.prepareNewSession(in: id) else { Issue.record("Expected proposal"); return }
+        let first = try await windows.acceptNewSession(proposal)
+        first.window?.close()
+        guard case .workspace(let reopened) = try await windows.prepareNewSession(in: id) else { Issue.record("Expected existing window"); return }
+        #expect(first === reopened)
+        #expect(first.snapshot.anchor.isUnrecorded && first.snapshot.boundaryProtection == nil)
+        #expect(try store.storedAnchors().count == 1)
+        #expect(windows.flushAndStop())
+    }
+
     @Test func capturesOnceKeepsLetteredWeeksTogetherAndReopensSavedScratchpad() async throws {
         let reader = EntryReader(), store = temporaryStore()
         defer { try? FileManager.default.removeItem(at: store.directory) }

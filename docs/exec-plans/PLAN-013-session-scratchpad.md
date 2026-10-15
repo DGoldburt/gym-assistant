@@ -34,6 +34,8 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Connect unrecorded snapshots to the scratchpad controller/window registry with an explicitly absent Notes association, no invented boundary protection, addition-aware chat/comparison, conservative unverified copy, and retained-window reuse. Two new synthetic tests exercise these paths and reject fabricated associations. Programming-entry New Session remains disabled pending post-paste association/ambiguity handling and proposal presentation; native acceptance remains outstanding.
+
 - [x] (2026-10-14) Implement new-session entry preparation/acceptance: preview without writes, resume existing unrecorded work, retain uncertain-heading review data, fresh source validation before creation and no suspension between duplicate check and save. Three added entry tests cover concurrency, reopen, heading styles, changed source and multiple pending workspaces. UI connection and post-paste association remain outstanding.
 
 - [x] (2026-10-14) Add explicit unrecorded session state, schema-2 snapshots with read-only schema-1 compatibility, and context-as-addition. Five regressions cover legacy bytes/backups, downgrade rejection, no recorded-region ownership, identity and context limits. All five verification stages pass (198 tests/32 suites). Creation/resume UI and post-paste association remain pending; the existing recorded-session controller explicitly refuses an unrecorded snapshot.
@@ -95,6 +97,12 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+Unrecorded windows, 2026-10-15: existing boundary initialization assumed every
+scratchpad owned a recorded range. Make that association explicitly optional and
+guard every recorded-boundary operation. A successful Notes read for an addition
+cannot establish comparison with a baseline that does not yet exist; checked copy
+must remain unverified rather than claiming Notes agreement.
 
 New-session entry, 2026-10-14: two accepts can finish their Notes reads in either
 order. Lookup existing unrecorded work again after the read, then save without
@@ -257,6 +265,14 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Unrecorded windows have no `SessionAssociation` and no boundary edit
+  protection. Recorded-boundary commands are unavailable; comparison is an addition
+  and chat uses the existing unrecorded assembler after a full context read.
+  Rationale: Avoid invented offsets/ownership or false copy verification while
+  implementing the approved unrecorded state. Keep the entry button disabled until
+  post-paste association/ambiguity handling is ready.
+  Date/Author: 2026-10-15, Codex implementation.
 
 - Decision: Separate non-writing skeleton preparation from explicit acceptance.
   Revalidate the source before creation and resume existing unrecorded work before
@@ -450,6 +466,15 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+Unrecorded windows, 2026-10-15: the editor now persists and reuses an unrecorded
+scratchpad without inventing a Notes range. Injected-reader/native-controller tests
+cover fresh chat context, addition comparison, conservative copy using an isolated
+pasteboard, close/re-entry identity and no claimed recorded ownership. These are
+synthetic tests, not live Notes or installed shortcut acceptance. The New Session
+entry button is still disabled: proposal presentation and post-paste association
+remain required before exposing the complete path.
+All five deterministic verification stages pass: 203 tests across 32 suites.
 
 New-session entry, 2026-10-14: `SessionWorkspaceEntry` can prepare, accept and reload
 a heading-only unrecorded scratchpad without reserving any recorded Notes range.
@@ -1658,3 +1683,8 @@ explicit acceptance with a fresh source read, and durable resume before duplicat
 creation. Synthetic concurrent/reopen/changed-source tests and all five verification
 stages pass (201 tests/32 suites). New Session remains disabled until the
 addition-aware controller and post-paste association path are connected and tested.
+
+Revision note, 2026-10-15, unrecorded windows: connect the controller and window
+registry to absent Notes associations, addition-aware chat/comparison and safe
+unverified copy. This supersedes the earlier controller-refuses-unrecorded note;
+it does not enable the programming entry button or claim post-paste reconciliation.
