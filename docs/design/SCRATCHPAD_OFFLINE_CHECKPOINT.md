@@ -255,3 +255,15 @@ All five deterministic verification stages passed (214 tests/34 suites). This
 bounded pass used mouse clicks for Find and Compare: complete keyboard navigation,
 selection adjustment, real Notes freshness/round-trip behavior, profile/library
 integration and installed rollout are not established by it.
+
+### Keyboard entry follow-up — 2026-10-15
+
+After adding Edit-menu Find (Command-Shift-F) and Compare (Command-Shift-D), repeat
+the synthetic launch above. Observed without mouse input: Command-N, Return,
+Command-Shift-F, type Session 18, Tab, Command-Shift-D, Command-Return, then
+Command-Shift-D to return to the editor. Tab retained the selected source region;
+association preserved Session 19 text and comparison/menu state stayed synchronized.
+Quit normally afterward. This closes the mouse-entry limitation for this specific
+path, not arbitrary boundary selection, real Notes or installed-Service acceptance.
+One added regression covers command availability, focus/selection preservation and
+menu/checkbox parity. All five verification stages pass (215 tests/34 suites).

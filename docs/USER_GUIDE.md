@@ -30,11 +30,13 @@ Uncertain headings are listed as **Not copied**; old exercises, doses and result
 are not carried forward. If Notes changes during preview, cancel and prepare again.
 
 The scratchpad stays unrecorded until its Notes association is verified. When a
-match needs review, choose **Find session in Notes…**. The scratchpad becomes
+match needs review, choose **Find session in Notes…** (Command-Shift-F, also in Edit). The scratchpad becomes
 read-only and the Notes browser temporarily replaces the conversation. Find a
-heading, then use Shift–Arrow or drag to select the session paragraphs. The left
+heading, press Tab to focus the Notes text without losing selection, then use
+Shift–Arrow or drag to select the session paragraphs. The left
 **Compare with source** toggle shows text-only differences for that selection—not
-formatting differences. **Associate selected session** connects identity without
+formatting differences; Command-Shift-D toggles it, also from Edit.
+**Associate selected session** connects identity without
 replacing either version (Command-Return confirms). Cancel returns to editing;
 in a focused heading search, Escape clears the search first and a second Escape
 cancels review. If comparison is still on, turn it off to edit. Notes changes require a new
@@ -43,7 +45,8 @@ selection; a region owned by another workspace cannot be selected for associatio
 Choose **Not pasted yet** only if the scratchpad is still an addition, not a session
 already in Notes. This refreshes context without changing scratchpad content.
 These development interactions have automated tests and a bounded native pass with
-synthetic content. Full keyboard-only navigation and real Notes integration still
+synthetic content, including keyboard-only new-session creation, heading search,
+comparison and association. Broader keyboard selection and real Notes integration still
 need acceptance; they are not installed by these changes.
 
 ## Paste formatted Markdown into Apple Notes

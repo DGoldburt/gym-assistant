@@ -43,6 +43,7 @@ import GymAssistantWorkspace
         confirm.autoresizingMask = [.width]; confirm.target = self; confirm.action = #selector(confirmSelection)
         confirm.keyEquivalent = "\r"; confirm.keyEquivalentModifierMask = [.command]
         confirm.identifier = .init("association-confirm"); addSubview(confirm)
+        search.nextKeyView = source
         updateSelection()
     }
     required init?(coder: NSCoder) { nil }
@@ -79,6 +80,11 @@ import GymAssistantWorkspace
         let start = document.ranges[index]
         let range = document.candidates().first(where: { $0.range.location == start.location })?.range ?? start
         source.setSelectedRange(range.nsRange); source.scrollRangeToVisible(range.nsRange); updateSelection()
+    }
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control === search, commandSelector == #selector(NSResponder.insertTab(_:)) else { return false }
+        window?.makeFirstResponder(source)
+        return true
     }
     func textViewDidChangeSelection(_ notification: Notification) { updateSelection() }
     private func updateSelection() {

@@ -254,6 +254,7 @@ import GymAssistantWorkspace
             let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
             item.keyEquivalentModifierMask = [.command, .shift]; item.target = controller; editMenu.addItem(item)
         }
+        controller.comparisonMenuItems().forEach { editMenu.addItem($0) }
         edit.submenu = editMenu; menu.addItem(edit)
         let format = NSMenuItem(title: "Format", action: nil, keyEquivalent: "")
         format.submenu = controller.formattingMenu(); menu.addItem(format)

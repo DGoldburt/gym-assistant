@@ -23,6 +23,40 @@ private actor InsertionReader: NotesContextReading {
         #expect(condition())
     }
 
+    @Test func keyboardReviewCommandsKeepSelectionAndComparisonState() async throws {
+        let reader = InsertionReader()
+        let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        let pending = try await create(reader, store)
+        let controller = try SessionScratchpadWindowController(snapshot: pending.snapshot, store: store, note: pending.note,
+            association: nil, profile: .init(version: "test", entries: []), noteContext: pending.context)
+        let root = try #require(controller.window?.contentView)
+        let items = controller.comparisonMenuItems()
+        #expect(items.map(\.keyEquivalent) == ["f", "d"])
+        #expect(items.allSatisfy { $0.keyEquivalentModifierMask == [.command, .shift] })
+        #expect(controller.validateMenuItem(items[0]))
+        #expect(NSApp.sendAction(try #require(items[0].action), to: items[0].target, from: items[0]))
+        try await eventually { descendants(root).contains { $0 is SessionAssociationPane } }
+        #expect(!controller.validateMenuItem(items[0]))
+        let pane = try #require(descendants(root).compactMap { $0 as? SessionAssociationPane }.first)
+        let search = try #require(descendants(pane).compactMap { $0 as? NSSearchField }.first)
+        let source = try #require(descendants(pane).first { $0.identifier?.rawValue == "association-source" } as? NSTextView)
+        search.stringValue = "Session 1"
+        pane.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: search))
+        let selection = source.selectedRange()
+        #expect(selection.length > 0 && search.nextKeyView === source)
+        #expect(pane.control(search, textView: NSTextView(), doCommandBy: #selector(NSResponder.insertTab(_:))))
+        #expect(controller.window?.firstResponder === source && source.selectedRange() == selection)
+        #expect(!source.isEditable)
+        let toggle = try #require(descendants(root).compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        #expect(NSApp.sendAction(try #require(items[1].action), to: items[1].target, from: items[1]))
+        #expect(controller.validateMenuItem(items[1]) && items[1].state == .on && toggle.state == .on)
+        toggle.performClick(nil)
+        #expect(controller.validateMenuItem(items[1]) && items[1].state == .off && toggle.state == .off)
+        #expect(controller.flushAndStop())
+        controller.window?.close()
+    }
+
     @Test func embeddedReviewComparesSelectionRefreshesAndConfirmsWithoutReplacingContent() async throws {
         let reader = InsertionReader()
         let store = WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))

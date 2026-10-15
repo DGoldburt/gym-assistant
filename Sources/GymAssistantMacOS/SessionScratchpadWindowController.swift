@@ -47,6 +47,7 @@ import GymAssistantWorkspace
     private var associationPane: SessionAssociationPane?
     private var conversationViews: [NSView] = []
     private let findSessionButton = NSButton(title: "Find session in Notes…", target: nil, action: nil)
+    private var compareButton: NSButton?
     private let notPastedButton = NSButton(title: "Not pasted yet", target: nil, action: nil)
 
     public init(snapshot: WorkspaceSnapshot, store: WorkspaceSnapshotStore,
@@ -136,11 +137,24 @@ import GymAssistantWorkspace
     }
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
         if let keyWindow = NSApp.keyWindow, keyWindow !== window { return false }
+        if item.action == #selector(findSessionInNotes) {
+            return snapshot.anchor.isUnrecorded && associationPane == nil && boundaryTask == nil
+                && gate.active == nil && !preparingRequest && noteContext != nil
+        }
+        if item.action == #selector(toggleDiff) { item.state = showingDiff ? .on : .off }
         if item.action == #selector(adjustBoundary) { return !snapshot.anchor.isUnrecorded }
         if item.action == #selector(formatScratchpad(_:)) {
             return window?.firstResponder === editor && !showingDiff && editor.isEditable
         }
         return true
+    }
+    public func comparisonMenuItems() -> [NSMenuItem] {
+        [("Find Session in Notes…", #selector(findSessionInNotes), "f"),
+         ("Compare with Source", #selector(toggleDiff), "d")].map { title, action, key in
+            let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+            item.target = self; item.keyEquivalentModifierMask = [.command, .shift]
+            return item
+        }
     }
     private struct FormattingState {
         let rich: NSAttributedString
@@ -265,6 +279,7 @@ import GymAssistantWorkspace
         copy.keyEquivalent = "c"; copy.keyEquivalentModifierMask = [.command, .shift]
         root.addSubview(copy)
         let compare = NSButton(checkboxWithTitle: "Compare with source", target: self, action: #selector(toggleDiff))
+        compareButton = compare
         compare.frame = NSRect(x: 16, y: 26, width: 195, height: 24)
         compare.toolTip = noteContext == nil ? "Compare with the frozen synthetic source; live Notes monitoring is not connected."
             : "Compare with Notes after a fresh read. Notes changes never replace the scratchpad."
@@ -813,6 +828,7 @@ import GymAssistantWorkspace
     }
     @objc private func toggleDiff() {
         showingDiff.toggle()
+        compareButton?.state = showingDiff ? .on : .off
         comparisonTask?.cancel()
         comparisonGeneration = UUID()
         if showingDiff {

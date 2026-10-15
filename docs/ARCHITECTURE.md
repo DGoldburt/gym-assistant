@@ -591,7 +591,11 @@ the scratchpad becomes read-only and its existing text diff compares against the
 selection. Line-level differences preserve matching interior lines and show two
 lines of context around changes, with omitted context marked by an ellipsis.
 Heading search and Shift–Arrow/drag selection identify a proposed region,
-not identity proof. Changed Notes clears selection before reconfirmation. Occupied
+not identity proof. The entry-installed Edit menu exposes Find Session in Notes
+(Command-Shift-F) and Compare with Source (Command-Shift-D). Find validates the
+unrecorded/idle/live-context state; the comparison menu and checkbox share state.
+Tab in heading search focuses the read-only source without replacing its selection.
+Changed Notes clears selection before reconfirmation. Occupied
 regions are blocked; the transaction revalidates ownership after a fresh read.
 Explicit confirmation records identity/reference evidence without replacing either
 version and marks edit correspondence uncertain. Cancel restores the conversation

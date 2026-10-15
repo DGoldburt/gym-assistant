@@ -34,6 +34,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 
 ## Progress
 
+- [x] (2026-10-15) Add discoverable Edit-menu Find/Compare shortcuts and direct Tab from heading search to read-only source. Test command availability, preserved selection and comparison state. Observe native keyboard-only synthetic creation/search/comparison/association without content replacement. All five stages pass (215 tests/34 suites); broader selection, real Notes and installed acceptance remain open.
+- [ ] Resolve exercise-decoration wording with coach: proposed exact confirmed names/aliases as “In library,” other exercise mentions as “Not matched,” never implying new identity. No decoration code or library writes yet.
+
 - [x] (2026-10-15) Run bounded native acceptance using a new isolated `--synthetic-entry` development route: Command-N preview, Escape cancellation, Return creation, heading search, comparison, cancellation and Command-Return identity-only association preserve scratchpad content. Fix misleading diff labels on unchanged interior headings; add two regressions. All five verification stages pass (214 tests/34 suites). Real Notes integration, full keyboard-only entry/selection and installed rollout remain outstanding.
 
 - [x] (2026-10-15) Connect New Session/Command-N to existing-work resume or a non-writing headings-only preview. List uncertain omitted headings; Create rechecks Notes, Cancel creates nothing, and ambiguous labels remain editable placeholders without prompts. Add two injected-presentation tests for preview/cancel/create/reuse and placeholder/omissions/stale-source refusal. Update coach-facing instructions. Native UI/shortcut acceptance and installed rollout remain pending.
@@ -107,6 +110,11 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+The first native association pass required mouse entry because Find and Compare
+had no menu commands. Add local shortcuts and explicit search-to-source Tab routing;
+keep the highlighted source selection while moving focus. Menu-driven comparison
+must also update the checkbox, rather than relying on the checkbox's click behavior.
 
 Native synthetic association review exposed a coarse-diff defect: changing a session
 number and removing exercise lines labeled unchanged Warmup/Strength headings as
@@ -310,6 +318,12 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Use Command-Shift-F for Find Session in Notes and Command-Shift-D for
+  Compare with Source, exposed in Edit; Tab from heading search focuses Notes.
+  Rationale: Close the observed mouse-entry gap without adding permanent controls
+  or changing identity/confirmation policy. Keep comparison state synchronized.
+  Date/Author: 2026-10-15 / Codex, approved keyboard-first scope.
 
 - Decision: Add an explicit synthetic entry mode to the non-installing development
   app, with an in-memory Notes reader and a fresh temporary store per launch.
@@ -553,6 +567,12 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-15 keyboard follow-up: bounded synthetic new-session entry through manual
+association now works without mouse input. The new regression and native pass
+cover separate evidence: menu availability/state versus actual shortcut routing.
+Exercise-decoration wording is awaiting coach clarification; broader Notes and
+provider acceptance remain incomplete.
 
 2026-10-15 bounded native entry/association pass: the actual AppKit controls worked
 with synthetic Session 18 as source and a Session 19 skeleton. Association retained
@@ -1855,3 +1875,7 @@ Revision note, 2026-10-15, synthetic native acceptance: add an isolated developm
 entry route, record observed New Session and association interactions, and fix the
 false interior-heading changes exposed by that pass. Preserve separate real Notes,
 full keyboard-navigation and rollout gates; 214 tests/34 suites pass.
+
+Revision note, 2026-10-15, keyboard entry: implement and verify Find/Compare shortcuts
+and preserved-selection Tab routing. Record the narrower keyboard-only native pass
+and one added regression without claiming all selection or Notes paths accepted.
