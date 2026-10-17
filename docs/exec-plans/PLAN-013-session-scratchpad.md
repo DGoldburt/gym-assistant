@@ -45,6 +45,7 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-17) Coach authorizes installation. Gracefully quit only the installed Service, preserve its prior bundle in a local rollback directory, copy/verify the new bundle and register/launch it. Installed executable matches the tested build's SHA-256. Leave the separate alias-test process and synthetic development window untouched. User library, workspaces, profile and Keychain are not migrated or reset. Native shortcut/profile/live-request acceptance is the next manual checkpoint; installation alone is not a pass.
 - [x] (2026-10-17) Wire Notes Service source to the regular-use provider and validated private read-only coaching profile. Package authored philosophy, 15 approved seed preferences and explicit evidence/coverage caveats outside Git; no client-specific reconciliation examples are imported. Add optional entry account controls (connect/usage/sign-out), no request on opening. Missing/invalid profile blocks entry rather than using an empty fallback. Preserve existing workspace directory and exact library lookup. Installation, native real-Notes acceptance and account sign-out remain unverified.
 - [x] (2026-10-17) Coach approves post-trial regular use: explicit user submissions only, 100 KB local text bound, no lifetime request-count cap, automatic retries or background inference; billing unchanged. Add explicit `.regularUse` connection policy preserving the historical trial ledger; synthetic tools still default to `.syntheticTrial`. Production Notes/profile composition remains the next implementation step. No inference is sent by this policy change.
 - [x] (2026-10-16) Coach marks the native synthetic live test passed: edit B1 in the scratchpad and ask what B1 is now and what complements it at B2. This accepts that bounded native interaction, not real Notes/profile loading, account sign-out, or broad coaching quality. The manual test was offered the tenth and last trial request; no further inference is authorized beyond the original ceiling. Do not reset or expand the ledger without a new approved usage policy.
@@ -724,6 +725,12 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-17 installed checkpoint: the coach-approved build is now installed and
+running. Signature and executable equality verified. Previous application retained
+locally for rollback; data stores unchanged. Next manually open Program session
+through the Notes shortcut, inspect preferences, and send one contextual question.
+No agent-initiated real-Notes read or inference was part of installation.
 
 2026-10-17 composition increment: Service source now uses the approved model and
 regular-use policy with the same immutable profile shown in preference inspection.

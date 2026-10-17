@@ -28,8 +28,8 @@ The bounded synthetic native test has passed; this is not full product acceptanc
 
 ### Notes entry
 
-This is implemented on the feature branch, not installed or yet verified through
-the native Notes shortcut. After opening autocomplete with Option-Command-G,
+The feature build was installed on 2026-10-17; the combined real-Notes/model flow
+still needs manual acceptance. After opening autocomplete with Option-Command-G,
 Command-P chooses **Program session**. Once the selected note has been captured,
 Return opens its latest session or reuses its existing scratchpad. The Service
 returns before the programming window opens; this action does not insert text.
