@@ -56,6 +56,11 @@ response-stream format validation before completed-reply decoding. It does not
 establish successful generation; no further request or account change followed.
 Opt-in native trial wiring and sign-out exist, but
 production composition remains offline.
+Subsequent evidence: attempt 6 isolated empty terminal text. Retaining completed
+streamed output items, while still requiring successful response completion, enabled
+usable replies on attempts 7–9. The second turn recognized the updated B1 but asked
+redundantly for that same context; conversation-quality acceptance remains open.
+Nine of ten attempts are used. No billing settings or real Notes were changed.
 Official documentation checked on 2026-10-16:
 
 - https://developers.openai.com/siwc/token-sharing-open-source/sign-in

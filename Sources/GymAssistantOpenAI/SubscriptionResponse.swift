@@ -63,12 +63,14 @@ struct SubscriptionTrialLedger: Codable {
 
 /// SSE event framing is separate from transport so split/malformed streams can be tested.
 struct SubscriptionStream {
+    private(set) var diagnostic = "Waiting for SSE event."
     private var lineBytes = Data()
     private var dataLines: [String] = []
     private(set) var completedText: String?
     private(set) var inputTokens: Int?
     private(set) var outputTokens: Int?
     private var terminal = false
+    private var finishedItems: [Int: Event.Response.Item] = [:]
     mutating func byte(_ byte: UInt8) throws {
         if byte == 10 {
             if lineBytes.last == 13 { lineBytes.removeLast() }
@@ -104,9 +106,29 @@ struct SubscriptionStream {
         guard !dataLines.isEmpty else { return }
         let data = dataLines.joined(separator: "\n"); dataLines = []
         if data == "[DONE]" { return }
-        guard !terminal, let event = try? JSONDecoder().decode(Event.self, from: Data(data.utf8))
-        else { throw SubscriptionFailure.invalidResponse }
+        guard !terminal else { diagnostic = "Event after terminal."; throw SubscriptionFailure.invalidResponse }
+        let event: Event
+        do { event = try JSONDecoder().decode(Event.self, from: Data(data.utf8)) }
+        catch {
+            let context: DecodingError.Context?
+            switch error {
+            case DecodingError.typeMismatch(_, let value), DecodingError.valueNotFound(_, let value),
+                 DecodingError.keyNotFound(_, let value), DecodingError.dataCorrupted(let value): context = value
+            default: context = nil
+            }
+            let keys = Set(["type", "response", "status", "output", "role", "content", "text", "error", "code", "usage", "input_tokens", "output_tokens"])
+            let path = context?.codingPath.map { key in
+                key.intValue.map { "[\($0)]" } ?? (keys.contains(key.stringValue) ? key.stringValue : "?")
+            }.joined(separator: ".") ?? "unknown"
+            diagnostic = "Event decoding failed at " + path + "."
+            throw SubscriptionFailure.invalidResponse
+        }
+        diagnostic = "Decoded nonterminal event."
         switch event.type {
+        case "response.output_item.done":
+            guard let index = event.output_index, index >= 0, let item = event.item,
+                  finishedItems[index] == nil else { throw SubscriptionFailure.invalidResponse }
+            finishedItems[index] = item
         case "error", "response.failed":
             let code = event.error?.code ?? event.response?.error?.code ?? event.code
             if code == "subscription_sharing_usage_limit_exceeded" {
@@ -124,19 +146,26 @@ struct SubscriptionStream {
             throw SubscriptionFailure.provider
         case "response.incomplete": throw SubscriptionFailure.incomplete
         case "response.completed":
+            diagnostic = "Completed event: validating status/output."
             guard let response = event.response, response.status == "completed",
-                  let output = response.output else { throw SubscriptionFailure.invalidResponse }
+                  let finalOutput = response.output else { throw SubscriptionFailure.invalidResponse }
+            // Some streams deliver completed items separately, with an empty terminal output.
+            // Item completion alone is never enough: this branch requires response.completed.
+            let output = finalOutput.isEmpty ? finishedItems.sorted { $0.key < $1.key }.map(\.value) : finalOutput
             var texts: [String] = []
             for item in output {
                 if item.type == "reasoning" { continue }
+                diagnostic = "Completed event: validating message item."
                 guard item.type == "message", item.role == "assistant", item.status == "completed",
                       let content = item.content else { throw SubscriptionFailure.invalidResponse }
                 for part in content {
+                    diagnostic = "Completed event: validating text part."
                     guard part.type == "output_text", let text = part.text else { throw SubscriptionFailure.invalidResponse }
                     texts.append(text)
                 }
             }
             let text = texts.joined(separator: "\n")
+            diagnostic = "Completed event: validating nonempty text (terminal items: \(finalOutput.count), streamed items: \(finishedItems.count))."
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw SubscriptionFailure.invalidResponse }
             completedText = text; terminal = true
             inputTokens = response.usage?.input_tokens; outputTokens = response.usage?.output_tokens
@@ -154,6 +183,7 @@ struct SubscriptionStream {
             let status: String?; let output: [Item]?; let error: Failure?; let usage: Usage?
         }
         let type: String; let response: Response?; let error: Failure?; let code: String?
+        let item: Response.Item?; let output_index: Int?
     }
 }
 

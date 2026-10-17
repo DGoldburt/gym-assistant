@@ -66,6 +66,31 @@ import GymAssistantWorkspace
         for byte in wire.utf8 { try byteStream.byte(byte) }
         #expect(try byteStream.finish() == "🏋️ reply")
     }
+    @Test func completedStreamedItemsRequireSuccessfulTerminalEvent() throws {
+        let item = "data: {\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{\"type\":\"message\",\"role\":\"assistant\",\"status\":\"completed\",\"content\":[{\"type\":\"output_text\",\"text\":\"reply\"}]}}"
+        var stream = SubscriptionStream()
+        try stream.line(item); try stream.line("")
+        #expect(throws: SubscriptionFailure.incomplete) { try stream.finish() }
+        var failed = stream
+        try failed.line("data: {\"type\":\"response.failed\"}")
+        #expect(throws: SubscriptionFailure.provider) { try failed.finish() }
+        try stream.line("data: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\",\"output\":[]}}")
+        #expect(try stream.finish() == "reply")
+        var duplicate = SubscriptionStream()
+        try duplicate.line(item); try duplicate.line(""); try duplicate.line(item)
+        #expect(throws: SubscriptionFailure.invalidResponse) { try duplicate.finish() }
+        var malformed = SubscriptionStream()
+        try malformed.line("data: {\"type\":\"response.completed\",\"response\":{\"status\":4}}")
+        #expect(throws: SubscriptionFailure.invalidResponse) { try malformed.finish() }
+        #expect(malformed.diagnostic.contains("response.status"))
+        for itemType in ["function_call", "unknown"] {
+            var unsupported = SubscriptionStream()
+            try unsupported.line(item.replacingOccurrences(of: "\"type\":\"message\"", with: "\"type\":\"\(itemType)\""))
+            try unsupported.line("")
+            try unsupported.line("data: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\",\"output\":[]}}")
+            #expect(throws: SubscriptionFailure.invalidResponse) { try unsupported.finish() }
+        }
+    }
     @Test func rejectsLateFailureMalformedAndToolOutput() throws {
         var limited = SubscriptionStream()
         try limited.line("data: {\"type\":\"response.output_text.delta\",\"delta\":\"partial\"}")

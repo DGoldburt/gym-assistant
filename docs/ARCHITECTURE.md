@@ -12,8 +12,10 @@ processes. Connection commands send no Notes/profile content; the explicit synth
 trial makes inference calls using 5.6 Terra medium. The adapter validates a 100 KB
 whole-request text bound, reserves attempts durably in Keychain, and requires a
 completed stream event plus a valid reply before updating conversation text. No
-automatic retries or API-key fallback. Five attempts have yielded no usable reply;
-the latest failed local response-stream format validation after HTTP 200.
+automatic retries or API-key fallback. Completed streamed items are retained when
+terminal output is empty; a successful terminal event remains mandatory. Attempts
+7–9 yielded usable synthetic replies, including recognition of changed scratchpad
+content; native acceptance and follow-up quality remain open. Nine attempts used.
 Usage-check unavailability is distinct from an exhausted allowance; diagnostics
 separate known provider codes from local format rejection without exposing raw
 provider messages. PLAN 013 records remaining live/native/production validation.

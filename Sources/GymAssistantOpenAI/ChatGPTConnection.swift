@@ -255,6 +255,7 @@ public actor ChatGPTConnection {
                 throw AssistantFailure.provider
             }
             var stream = SubscriptionStream()
+            defer { trialDiagnostic += " " + stream.diagnostic }
             trialDiagnostic += " Reading event stream."
             for try await byte in bytes {
                 try Task.checkCancellation()
