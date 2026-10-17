@@ -23,6 +23,42 @@ private actor PermissionEntryReader: NotesContextReading {
 }
 
 @Suite("Programming entry onboarding") @MainActor struct SessionProgrammingEntryTests {
+    @Test(arguments: [false, true]) func unknownHeadingOpensBoundaryBrowserAndExplicitSelectionContinues(newSession: Bool) async throws {
+        let reader = PermissionEntryReader()
+        await reader.grant()
+        await reader.replace("<div><h2>Monday plan</h2></div><div>A1 Row</div>")
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = WorkspaceSnapshotStore(directory: root)
+        let windows = SessionWorkspaceWindows(store: store, reader: reader, profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        var opened: SessionScratchpadWindowController?
+        let entry = SessionProgrammingEntryWindow(workspaces: windows, modeDescription: "Synthetic", presentWorkspace: { opened = $0 }, presentBoundary: { _ in }, requestAccess: {})
+        defer { entry.cancel(); opened?.window?.close() }
+        let content = try #require(entry.window?.contentView)
+        let capture = try #require(descendants(content).first { $0.identifier?.rawValue == "program-entry-capture" } as? NSButton)
+        capture.performClick(nil)
+        let latest = try #require(descendants(content).first { $0.identifier?.rawValue == (newSession ? "program-entry-new" : "program-entry-latest") } as? NSButton)
+        try await eventually { latest.isEnabled }
+        latest.performClick(nil)
+        try await eventually { entry.boundaryBrowser != nil }
+        #expect(try store.storedAnchors().isEmpty)
+        let browser = try #require(entry.boundaryBrowser?.window?.contentView)
+        let source = try #require(descendants(browser).first { $0.identifier?.rawValue == "boundary-source" } as? NSTextView)
+        #expect(!source.isEditable)
+        let apply = try #require(descendants(browser).first { $0.identifier?.rawValue == "boundary-apply" } as? NSButton)
+        apply.performClick(nil)
+        if newSession {
+            try await eventually { entry.window?.contentView.map { descendants($0).contains { $0.identifier?.rawValue == "session-skeleton-preview" } } == true }
+            #expect(opened == nil)
+            #expect(try store.storedAnchors().isEmpty)
+            entry.cancel()
+            #expect(try store.storedAnchors().isEmpty)
+        } else {
+            try await eventually { opened != nil }
+            #expect(opened?.snapshot.text == "Monday plan\nA1 Row\n")
+            #expect(try store.storedAnchors().count == 1)
+        }
+    }
     @Test func longDisclosureFitsWithoutOverlappingStatus() throws {
         let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)),
             reader: PermissionEntryReader(), profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())

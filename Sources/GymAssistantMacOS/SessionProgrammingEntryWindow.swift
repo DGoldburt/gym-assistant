@@ -14,8 +14,10 @@ import GymAssistantWorkspace
     private var noteID: NoteID?
     private var task: Task<Void, Never>?
     private var generation = UUID()
+    private(set) var boundaryBrowser: SessionBoundaryBrowser?
     private let modeDescription: String
     private let presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)?
+    private let presentBoundary: (@MainActor (SessionBoundaryBrowser) -> Void)?
     private var entryContent: NSView?
     private var entryHeight: CGFloat = 295
     private var proposal: SessionWorkspaceEntry.NewSessionProposal?
@@ -29,11 +31,13 @@ import GymAssistantWorkspace
 
     public init(workspaces: SessionWorkspaceWindows, modeDescription: String,
                 presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)? = nil,
+                presentBoundary: (@MainActor (SessionBoundaryBrowser) -> Void)? = nil,
                 accountAction: (@MainActor () -> Void)? = nil,
                 requestAccess: @escaping @MainActor () async throws -> Void) {
         self.accountAction = accountAction
         self.workspaces = workspaces; self.modeDescription = modeDescription; self.requestAccess = requestAccess
         self.presentWorkspace = presentWorkspace
+        self.presentBoundary = presentBoundary
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 530, height: 250),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -102,6 +106,7 @@ import GymAssistantWorkspace
     }
 
     @objc private func captureSelection() {
+        boundaryBrowser?.close(); boundaryBrowser = nil
         restoreEntryContent()
         recoveryID = nil; previewBackup.isHidden = true; latest.isHidden = false; skeleton.isHidden = false
         task?.cancel(); generation = UUID(); let operation = generation
@@ -156,6 +161,9 @@ import GymAssistantWorkspace
                 try Task.checkCancellation()
                 guard self.generation == operation else { return }
                 self.showWorkspace(controller)
+            } catch SessionEntryError.boundaryReviewRequired {
+                do { try await self.showEntryBoundary(noteID: noteID, newSession: false, operation: operation) }
+                catch { if !Task.isCancelled { self.present(error) } }
             } catch { if !Task.isCancelled { self.present(error) } }
             guard self.generation == operation else { return }
             self.latest.isEnabled = true; self.skeleton.isEnabled = true; self.retry.isEnabled = true; self.task = nil
@@ -204,10 +212,42 @@ import GymAssistantWorkspace
                 case .workspace(let controller): self.showWorkspace(controller)
                 case .proposal(let proposal): self.showProposal(proposal)
                 }
+            } catch SessionEntryError.boundaryReviewRequired {
+                do { try await self.showEntryBoundary(noteID: noteID, newSession: true, operation: operation) }
+                catch { if !Task.isCancelled { self.present(error) } }
             } catch { if !Task.isCancelled { self.present(error) } }
             guard self.generation == operation else { return }
             self.task = nil; self.latest.isEnabled = true; self.skeleton.isEnabled = true; self.retry.isEnabled = true
         }
+    }
+
+    private func showEntryBoundary(noteID: NoteID, newSession: Bool, operation: UUID) async throws {
+        let review = try await workspaces.boundaryReview(in: noteID)
+        try Task.checkCancellation()
+        guard generation == operation else { return }
+        boundaryBrowser?.close()
+        let browser = SessionBoundaryBrowser(document: review.document, richText: review.richText,
+            selected: review.selected, owners: newSession ? [] : review.owners, allowExactOwner: true) { [weak self] range in
+                guard let self, self.generation == operation else { throw CancellationError() }
+                if newSession {
+                    let result = try await self.workspaces.prepareNewSession(in: noteID, review: review, range: range)
+                    try Task.checkCancellation()
+                    guard self.generation == operation else { throw CancellationError() }
+                    switch result {
+                    case .workspace(let controller): self.showWorkspace(controller)
+                    case .proposal(let proposal): self.showProposal(proposal)
+                    }
+                } else {
+                    let controller = try await self.workspaces.latest(in: noteID, review: review, range: range)
+                    try Task.checkCancellation()
+                    guard self.generation == operation else { throw CancellationError() }
+                    self.showWorkspace(controller)
+                }
+            }
+        boundaryBrowser = browser
+        browser.window?.title = newSession ? "Choose previous session structure — read-only Notes" : "Choose session — read-only Notes"
+        status.stringValue = "Highlight the session in the read-only Notes browser, then press Command–Return. Cancel leaves existing work unchanged."
+        if let presentBoundary { presentBoundary(browser) } else { browser.show() }
     }
 
     private func showProposal(_ proposal: SessionWorkspaceEntry.NewSessionProposal) {
@@ -328,7 +368,7 @@ import GymAssistantWorkspace
         case SessionEntryError.duplicateHeadings(let labels):
             status.stringValue = "Duplicate session headings: \(labels.joined(separator: ", ")). Correct them in Notes, then press Return again. No scratchpad was replaced."
         case SessionEntryError.boundaryReviewRequired:
-            status.stringValue = "The latest session needs explicit boundary selection. Entry boundary review is not connected yet; existing scratchpads are preserved."
+            status.stringValue = "No session paragraphs are available to select. Add the session in Notes, then retry. Existing scratchpads are preserved."
         case SessionEntryError.recoveryRequired(let id), SnapshotStoreError.recoveryRequired(let id):
             recoveryID = id; previewBackup.isHidden = false; latest.isHidden = true; skeleton.isHidden = true
             status.stringValue = "A saved scratchpad could not be opened safely. Preview its last valid backup before deciding whether to restore. Existing files are preserved."
@@ -371,6 +411,7 @@ import GymAssistantWorkspace
     }
 
     private func stopPending() {
+        boundaryBrowser?.close(); boundaryBrowser = nil
         task?.cancel(); task = nil; generation = UUID()
         retry.isEnabled = true; access.isEnabled = true; latest.isEnabled = noteID != nil
         skeleton.isEnabled = noteID != nil

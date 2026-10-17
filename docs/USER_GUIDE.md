@@ -113,6 +113,16 @@ records remain read-only references, not competing editable scratchpads.
 
 ### Start or resume a new session
 
+If the latest session's heading or boundary is unclear, entry opens a read-only
+Notes browser. Highlight the complete session with the mouse or Shift–Arrow keys
+and press Command–Return. Cancel saves nothing. For **New session**, this selects
+the previous session's structure for the usual preview; it does not copy its
+prescriptions. Notes is rechecked on confirmation; if it changed, reopen the browser.
+For existing work, a partial overlap is blocked; choosing its exact boundary resumes
+that scratchpad. If saved work cannot be located reliably, use **Previous planning…**
+and **Continue scratchpad**, then **Find session in Notes…** instead of creating a
+competing copy.
+
 Choose **New session** (Command-N in the programming entry window). Existing
 unrecorded work reopens instead of creating another copy. Otherwise, review the
 session-headings and Parking Lot preview and choose **Create scratchpad** or **Cancel**. Nothing is

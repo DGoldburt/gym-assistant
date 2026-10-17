@@ -66,6 +66,40 @@ public enum SessionEntryError: Error, Equatable {
     public struct NewSessionProposal {
         public let skeleton: SessionSkeleton
         public let source: ProgramDocument
+        public let sourceRange: SourceRange
+    }
+
+    public struct BoundaryReview {
+        public let document: ProgramDocument
+        public let richText: NSAttributedString
+        public let selected: SourceRange
+        public let owners: [SessionBoundaryBrowser.Owner]
+    }
+
+    public func boundaryReview(in noteID: NoteID) async throws -> BoundaryReview {
+        let context = try pool.context(for: noteID)
+        let document = try await context.refresh(for: .resume)
+        try Task.checkCancellation()
+        guard let rich = context.richText, let selected = document.candidates().last?.range ?? document.ranges.first else {
+            throw SessionEntryError.boundaryReviewRequired
+        }
+        return BoundaryReview(document: document, richText: rich, selected: selected,
+            owners: context.registry.mappings.values.map {
+                SessionBoundaryBrowser.Owner(label: context.registry.anchor(for: $0.sessionID)?.recordedHeading ?? "Saved session", range: $0.range)
+            })
+    }
+
+    private func selectedRange(in document: ProgramDocument, review: BoundaryReview?, range: SourceRange?) throws -> SourceRange {
+        if let review, let range {
+            guard review.document.snapshot.id == document.snapshot.id,
+                  review.document.paragraphs == document.paragraphs else { throw WorkspaceError.staleAssociation }
+            _ = try document.evidence(in: range)
+            return range
+        }
+        guard let candidate = document.candidates().last, !candidate.needsClassification else {
+            throw SessionEntryError.boundaryReviewRequired
+        }
+        return candidate.range
     }
 
     public enum NewSessionPreparation {
@@ -75,7 +109,7 @@ public enum SessionEntryError: Error, Equatable {
 
     /// Preview only: no file creation, no question about the new label. Any
     /// unfamiliar headings remain visible as review items in the proposal.
-    public func prepareNewSession(in noteID: NoteID) async throws -> NewSessionPreparation {
+    public func prepareNewSession(in noteID: NoteID, review: BoundaryReview? = nil, range: SourceRange? = nil) async throws -> NewSessionPreparation {
         let context = try pool.context(for: noteID)
         let document = try await context.refresh(for: .resume)
         try Task.checkCancellation()
@@ -85,12 +119,10 @@ public enum SessionEntryError: Error, Equatable {
         guard context.registry.duplicateLabels.isEmpty else {
             throw SessionEntryError.duplicateHeadings(context.registry.duplicateLabels.sorted())
         }
-        guard let candidate = document.candidates().last, !candidate.needsClassification else {
-            throw SessionEntryError.boundaryReviewRequired
-        }
-        let previous = try document.evidence(in: candidate.range)
+        let sourceRange = try selectedRange(in: document, review: review, range: range)
+        let previous = try document.evidence(in: sourceRange)
         let headings = document.candidates().map(\.label)
-        return .proposal(NewSessionProposal(skeleton: try SessionSkeleton(previous: previous, existingHeadings: headings), source: document))
+        return .proposal(NewSessionProposal(skeleton: try SessionSkeleton(previous: previous, existingHeadings: headings), source: document, sourceRange: sourceRange))
     }
 
     /// Explicit acceptance of session headings plus carried parking-lot ideas. A full read
@@ -113,13 +145,13 @@ public enum SessionEntryError: Error, Equatable {
             ]))
         }
         if carriedCount > 0 {
-            guard let sourceRich = context.richText, let candidate = document.candidates().last else {
+            guard let sourceRich = context.richText else {
                 throw WorkspaceError.staleAssociation
             }
             let length = proposal.skeleton.evidence.paragraphs.suffix(carriedCount)
                 .reduce(0) { $0 + $1.text.utf16.count }
-            let range = NSRange(location: NSMaxRange(candidate.range.nsRange) - length, length: length)
-            guard range.location >= candidate.range.location,
+            let range = NSRange(location: NSMaxRange(proposal.sourceRange.nsRange) - length, length: length)
+            guard range.location >= proposal.sourceRange.location,
                   NSMaxRange(range) <= sourceRich.length else { throw WorkspaceError.staleAssociation }
             rich.append(sourceRich.attributedSubstring(from: range))
         }
@@ -143,24 +175,22 @@ public enum SessionEntryError: Error, Equatable {
 
     /// Last region in document order, never highest label or modification date.
     /// Does not silently classify an unknown heading or bypass a saved owner.
-    public func latest(in noteID: NoteID) async throws -> PreparedSession {
+    public func latest(in noteID: NoteID, review: BoundaryReview? = nil, range: SourceRange? = nil) async throws -> PreparedSession {
         let context = try pool.context(for: noteID)
         let document = try await context.refresh(for: .resume)
         try Task.checkCancellation()
         guard context.registry.duplicateLabels.isEmpty else {
             throw SessionEntryError.duplicateHeadings(context.registry.duplicateLabels.sorted())
         }
-        guard let candidate = document.candidates().last, !candidate.needsClassification else {
-            throw SessionEntryError.boundaryReviewRequired
-        }
+        let selected = try selectedRange(in: document, review: review, range: range)
         let owners = context.registry.mappings.values.filter {
-            NSIntersectionRange($0.range.nsRange, candidate.range.nsRange).length > 0
+            NSIntersectionRange($0.range.nsRange, selected.nsRange).length > 0
         }
         let snapshot: WorkspaceSnapshot
         if let owner = owners.first {
             // A manually adjusted range needs its own explicit entry choice if
             // it overlaps multiple inferred regions; do not resize it on entry.
-            guard owners.count == 1, owner.range == candidate.range else {
+            guard owners.count == 1, owner.range == selected else {
                 throw SessionEntryError.boundaryReviewRequired
             }
             let headers = try store.storedAnchors().filter {
@@ -183,7 +213,7 @@ public enum SessionEntryError: Error, Equatable {
             guard context.registry.unresolved.isEmpty else {
                 throw SessionEntryError.unresolvedSavedWorkspace
             }
-            snapshot = try context.createWorkspace(range: candidate.range,
+            snapshot = try context.createWorkspace(range: selected,
                 observation: document.snapshot.observationID, store: store)
         }
         return PreparedSession(snapshot: snapshot, context: context,

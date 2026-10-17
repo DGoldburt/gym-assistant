@@ -134,8 +134,12 @@ import GymAssistantWorkspace
         case proposal(SessionWorkspaceEntry.NewSessionProposal)
     }
 
-    public func prepareNewSession(in noteID: NoteID) async throws -> NewSessionEntry {
-        switch try await entry.prepareNewSession(in: noteID) {
+    public func boundaryReview(in noteID: NoteID) async throws -> SessionWorkspaceEntry.BoundaryReview {
+        try await entry.boundaryReview(in: noteID)
+    }
+
+    public func prepareNewSession(in noteID: NoteID, review: SessionWorkspaceEntry.BoundaryReview? = nil, range: SourceRange? = nil) async throws -> NewSessionEntry {
+        switch try await entry.prepareNewSession(in: noteID, review: review, range: range) {
         case .resume(let prepared): return .workspace(try unrecordedWindow(prepared))
         case .proposal(let proposal): return .proposal(proposal)
         }
@@ -158,8 +162,8 @@ import GymAssistantWorkspace
 
     /// The caller chooses when to show the window and install its menus. No
     /// permission prompt, focus change, clipboard publication or API call here.
-    public func latest(in noteID: NoteID) async throws -> SessionScratchpadWindowController {
-        let prepared = try await entry.latest(in: noteID)
+    public func latest(in noteID: NoteID, review: SessionWorkspaceEntry.BoundaryReview? = nil, range: SourceRange? = nil) async throws -> SessionScratchpadWindowController {
+        let prepared = try await entry.latest(in: noteID, review: review, range: range)
         mostRecent = prepared.snapshot.workspaceID
         if let existing = controllers[prepared.snapshot.workspaceID] { return existing }
         let controller = try SessionScratchpadWindowController(snapshot: prepared.snapshot, store: store,

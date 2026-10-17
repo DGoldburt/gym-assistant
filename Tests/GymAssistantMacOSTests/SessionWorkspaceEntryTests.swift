@@ -21,6 +21,45 @@ private actor EntryReader: NotesContextReading {
 }
 
 @Suite("Session workspace entry") @MainActor struct SessionWorkspaceEntryTests {
+    @Test func explicitBoundaryCreatesOnceAndRejectsStaleOrOverlappingChoice() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        await reader.replace("<div><h2>Monday plan</h2></div><div>A1 Row</div><div>Extra idea</div>")
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let id = try await entry.captureNote()
+        await #expect(throws: SessionEntryError.boundaryReviewRequired) { _ = try await entry.latest(in: id) }
+        let review = try await entry.boundaryReview(in: id)
+        #expect(try store.storedAnchors().isEmpty)
+        let opened = try await entry.latest(in: id, review: review, range: review.selected)
+        let reopened = try await entry.latest(in: id, review: review, range: review.selected)
+        #expect(opened.snapshot.workspaceID == reopened.snapshot.workspaceID)
+        await #expect(throws: SessionEntryError.boundaryReviewRequired) {
+            _ = try await entry.latest(in: id, review: review, range: review.document.ranges[0])
+        }
+        await reader.replace("<div><h2>Monday plan</h2></div><div>A1 Changed</div>")
+        await #expect(throws: WorkspaceError.staleAssociation) {
+            _ = try await entry.latest(in: id, review: review, range: review.selected)
+        }
+        #expect(try store.storedAnchors().count == 1)
+        #expect(try store.load(id: opened.snapshot.workspaceID)?.snapshot == opened.snapshot)
+    }
+
+    @Test func explicitSkeletonSourceCarriesParkingLotFromSelectedRegionNotLastCandidate() async throws {
+        let reader = EntryReader(), store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        await reader.replace("<div><h2>Session A</h2></div><div><h3>Warmup</h3></div><div><h2>Parking Lot</h2></div><div>Try cleans</div><div><h2>Other ideas</h2></div><div>Unrelated</div>")
+        let entry = SessionWorkspaceEntry(store: store, reader: reader)
+        let id = try await entry.captureNote(), review = try await entry.boundaryReview(in: id)
+        let range = try #require(review.document.candidates().first?.range)
+        guard case .proposal(let proposal) = try await entry.prepareNewSession(in: id, review: review, range: range) else {
+            Issue.record("Expected preview"); return
+        }
+        #expect(try store.storedAnchors().isEmpty)
+        let created = try await entry.acceptNewSession(proposal)
+        #expect(created.snapshot.text.contains("Session B"))
+        #expect(created.snapshot.text.contains("Try cleans"))
+        #expect(!created.snapshot.text.contains("Unrelated"))
+    }
     private func temporaryStore() -> WorkspaceSnapshotStore {
         WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent("entry-test-" + UUID().uuidString))
     }

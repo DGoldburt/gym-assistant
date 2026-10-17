@@ -45,6 +45,7 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-17) Connect the disconnected Latest/New boundary entry route to the existing read-only paragraph browser. No creation on preview/cancel; confirmation checks fresh semantic source, reuses exact owners and refuses partial overlap or unresolved ownership. Selected skeleton range also governs parking-lot carry-forward. Three new regression tests (including both native entry routes) pass; all five verification stages pass, 265 tests/41 suites. Installation and manual real-Notes selection acceptance remain separate.
 - [x] (2026-10-17) Field report: Latest/New failed generically; entry disclosure clipped; app absent from Dock. Read-only formatting inspection found simple numbered lists, underlining, HTTPS links and literal ampersands. Preserve these on import (no external fetches), add faithful semantic archive tests, dynamic disclosure height retained across view restoration, specific import errors and regular Dock activation. Actual selected note passes import/archive validation: 445 paragraphs, 18 candidates; no text persisted/printed or note changed. Markdown export still rejects unsupported numbered/link/underline content rather than flattening it. Full entry behavior remains a manual retest, not established by import success alone.
 - [x] (2026-10-17) Coach authorizes installation. Gracefully quit only the installed Service, preserve its prior bundle in a local rollback directory, copy/verify the new bundle and register/launch it. Installed executable matches the tested build's SHA-256. Leave the separate alias-test process and synthetic development window untouched. User library, workspaces, profile and Keychain are not migrated or reset. Native shortcut/profile/live-request acceptance is the next manual checkpoint; installation alone is not a pass.
 - [x] (2026-10-17) Wire Notes Service source to the regular-use provider and validated private read-only coaching profile. Package authored philosophy, 15 approved seed preferences and explicit evidence/coverage caveats outside Git; no client-specific reconciliation examples are imported. Add optional entry account controls (connect/usage/sign-out), no request on opening. Missing/invalid profile blocks entry rather than using an empty fallback. Preserve existing workspace directory and exact library lookup. Installation, native real-Notes acceptance and account sign-out remain unverified.
@@ -145,6 +146,13 @@ is authorized here.
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+The importer field fix exposed a separate entry dead end: unknown headings and
+manually adjusted regions threw `boundaryReviewRequired`, but the entry presenter
+only displayed a placeholder error. Existing boundary adjustment UI was available
+only after opening a scratchpad. Reuse that browser before creation, with fresh
+source validation and no writes on cancellation. Import success was insufficient
+evidence of successful session entry.
 
 2026-10-16 stream assembly: attempt 6 passed terminal-status/output decoding but
 had no terminal text. The adapter had discarded earlier completed output items.
@@ -419,6 +427,12 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: wire explicit entry selection through the existing boundary browser,
+  retaining strict automatic heading classification and saved ownership guards.
+  New-session selection chooses a skeleton source, not a new recorded ownership
+  claim. Rationale: resolve the reported dead end without guessing a region or
+  broadening automatic association. Date: 2026-10-17.
 
 - Decision: Validate authorization and exact model discovery with a small native executable before wiring live inference into the scratchpad.
   Rationale: Isolate human consent and account availability from requests containing notes. Use Foundation, Security and CryptoKit without a new runtime dependency. The helper retains one registration and refuses a changed verified subject on reauthorization; account-switching UI, sign-out and inference remain work. Unsupported JWT algorithms fail closed.
@@ -726,6 +740,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-17 entry boundary repair: domain regressions cover stale-source refusal,
+exact-owner reuse, partial-overlap refusal and carry-forward from the selected
+source rather than the last inferred candidate. Injected native-control tests
+exercise both Latest and New through the browser; they are not visual/keyboard
+acceptance. Full verification passes (265 tests/41 suites, five stages). The
+remaining acceptance is selecting a complete session from the real note in the
+installed browser, then opening the intended scratchpad or skeleton preview.
 
 2026-10-17 field fixes: the importer was overly narrow for real Notes HTML; literal
 ampersands also broke its XML adaptation. Read support now retains observed simple

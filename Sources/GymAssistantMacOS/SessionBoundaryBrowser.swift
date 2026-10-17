@@ -9,6 +9,7 @@ import GymAssistantWorkspace
     }
     private let sourceDocument: ProgramDocument
     private let owners: [Owner]
+    private let allowExactOwner: Bool
     private let applyRange: @MainActor (SourceRange) async throws -> Void
     private let previewRange: @MainActor (SourceRange) throws -> Void
     private let text = NSTextView()
@@ -17,9 +18,10 @@ import GymAssistantWorkspace
     private var task: Task<Void, Never>?
 
     public init(document: ProgramDocument, richText: NSAttributedString, selected: SourceRange,
-                owners: [Owner], preview: @escaping @MainActor (SourceRange) throws -> Void = { _ in },
+                owners: [Owner], allowExactOwner: Bool = false, preview: @escaping @MainActor (SourceRange) throws -> Void = { _ in },
                 apply: @escaping @MainActor (SourceRange) async throws -> Void) {
         self.sourceDocument = document; self.owners = owners; self.applyRange = apply
+        self.allowExactOwner = allowExactOwner
         self.previewRange = preview
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 650),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
@@ -74,7 +76,7 @@ import GymAssistantWorkspace
     }
     private func updateSelection() {
         guard let range = selection() else { status.stringValue = "Highlight at least one paragraph."; applyButton.isEnabled = false; return }
-        if let owner = owners.first(where: { NSIntersectionRange($0.range.nsRange, range.nsRange).length > 0 }) {
+        if let owner = owners.first(where: { NSIntersectionRange($0.range.nsRange, range.nsRange).length > 0 && !(allowExactOwner && $0.range == range) }) {
             status.stringValue = "Overlaps the scratchpad for \(owner.label). Choose a non-overlapping boundary."
             applyButton.isEnabled = false; return
         }
@@ -109,6 +111,12 @@ import GymAssistantWorkspace
                 self.close()
             } catch {
                 switch error {
+                case SessionEntryError.unresolvedSavedWorkspace:
+                    self.status.stringValue = "Saved work needs association review. Cancel, open Previous planning, and continue that scratchpad to Find session in Notes."
+                case SessionEntryError.boundaryReviewRequired:
+                    self.status.stringValue = "This selection only partly overlaps saved work. Select its complete boundary or use Previous planning to continue it."
+                case SessionEntryError.duplicateHeadings:
+                    self.status.stringValue = "Duplicate session headings need correction in Notes. Cancel and retry after correcting them."
                 case BoundaryChangeError.editedRegion:
                     self.status.stringValue = "Boundary unchanged. This would remove edited, added, or deleted scratchpad content."
                 case BoundaryChangeError.uncertainCorrespondence:
