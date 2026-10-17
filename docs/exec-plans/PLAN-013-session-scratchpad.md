@@ -3,8 +3,9 @@
 This approved ExecPlan follows repository-root `PLANS.md`. Keep Progress, Surprises
 & Discoveries, Decision Log, and Outcomes & Retrospective current. The coach accepted
 the bounded scope and authorized local preparation followed by offline implementation
-on 2026-10-14. Live API defaults/calls, installation and integration into learner/main
-remain separate gates. No client-history work is part of this implementation.
+on 2026-10-14. Provider defaults and bounded synthetic calls were subsequently
+approved on 2026-10-16 as recorded below. Installation and integration into
+learner/main remain separate gates. No client-history work is part of this implementation.
 
 Reconciliation note, 2026-10-13: this proposal was drafted in a worktree based on
 reusable `main` and then transferred to a branch based on `learner/main`, where the
@@ -29,10 +30,17 @@ has no actionable chat proposals or automatic Notes writes.
 
 In progress, 2026-10-14. The user accepted the recommended scope and authorized
 preparation and implementation, beginning with the offline workspace/fake assistant.
-Model, spending and credential/retention defaults remain a required checkpoint before
-live calls; no paid API request, push or merge into learner/main is authorized here.
+The coach selected `gpt-5.6-terra` with medium reasoning and Sign in with ChatGPT
+plan usage on 2026-10-16. The coach subsequently approved credential/retention
+defaults and bounded synthetic trials, explicitly lifting the proposed output-token
+cap because the subscription route does not support it. Sign-in consent and account
+model availability still require verification. No push or merge into learner/main
+is authorized here.
 
 ## Progress
+
+- [x] (2026-10-16) Implement isolated native `ChatGPTConnection` authorization/model-discovery helper and `GymAssistantOpenAI` module. App-owned Keychain storage, persistent host/issued-client identity, loopback callback, PKCE/state/nonce and Security-framework RS256 verification. Seven new security/loopback tests and all five repository verification stages pass. No inference or change to the scratchpad's fake provider.
+- [ ] Verify browser authorization and the account-specific 5.6 Terra catalog. Then implement the subscription Responses adapter, durable ten-attempt trial ledger, 32,000-input-token validation, terminal-event handling and native account controls; no claim of live programming assistance yet.
 
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
@@ -115,7 +123,9 @@ live calls; no paid API request, push or merge into learner/main is authorized h
 - [x] (2026-10-14) Coach accepts scope/contracts and authorizes offline implementation after local preparation; tutorial progress is unchanged.
 - [ ] Verify session association and full rich-text paste fidelity with synthetic native tests; finish the outstanding capability-plan session-anchor item only on evidence.
 - [ ] Implement persistent native workspace and production Notes permission/read adapter; pass offline/close/relaunch/recovery tests with a fake assistant.
-- [ ] Select API model and explicit spending bounds, approve credential/retention defaults, and validate the request/response contract before live calls.
+- [x] (2026-10-16) Coach selects `gpt-5.6-terra`, medium reasoning, using Sign in with ChatGPT plan usage rather than API-key billing. Official documentation establishes the local-personal-app flow, not this account's eligibility or model availability.
+- [x] (2026-10-16) Coach approves Keychain credentials, local conversation ownership, `store: false`, no automatic inference retries/background inference/billing fallback, and ten synthetic trial requests with at most 32,000 input tokens each. Plan allowance or available credits follow account settings; no credit purchases. Coach explicitly removes the proposed 8,000 output/reasoning-token cap; concise replies are a preference, not a usage bound.
+- [ ] Implement and validate sign-in and the request/response contract before live calls. No account credentials have been accessed and no live inference has run.
 - [ ] Implement conversation freshness, fixed read-only profile, and truthful exercise decoration; verify fake-provider behavior before paid tests.
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
@@ -370,6 +380,10 @@ working autocomplete and library review. Do not copy the learner checkout wholes
 into reusable main or implement against nonexistent starter interfaces.
 
 ## Decision Log
+
+- Decision: Validate authorization and exact model discovery with a small native executable before wiring live inference into the scratchpad.
+  Rationale: Isolate human consent and account availability from requests containing notes. Use Foundation, Security and CryptoKit without a new runtime dependency. The helper retains one registration and refuses a changed verified subject on reauthorization; account-switching UI, sign-out and inference remain work. Unsupported JWT algorithms fail closed.
+  Date/Author: 2026-10-16 / Codex, within the approved provider milestone.
 
 - Decision: Preserve pre-replacement content as an independent inactive workspace
   reference before updating the active workspace; retain conversation and composer.
@@ -1423,13 +1437,53 @@ editing/recovery and permission behavior, not model usefulness.
 ### Milestone 3 — Connect assistance without adding editing powers
 
 
-Before API-backed edits/tests, use the available API-key setup mechanism and official
-OpenAI documentation skill. Choose the exact model and maximum request/output and
-trial-spending limits with the user. Propose macOS Keychain for the user's key,
-locally owned conversations, explicit `store: false` Responses requests, no hosted
-conversation objects, no background calls, and no automatic billable retries.
-These provider defaults require approval; do not assume credentials or account
-controls are already available.
+Use official OpenAI documentation for the coach-selected Sign in with ChatGPT flow;
+API-key setup is superseded for this path. The selected model is `gpt-5.6-terra`
+with `reasoning.effort: medium`. Validate its availability using the signed-in
+account's model catalog; never substitute a model or billing method silently.
+The approved defaults are macOS Keychain for app-owned OAuth credentials,
+locally owned conversations, explicit
+`store: false` Responses requests, no hosted conversation objects, no background
+calls, and no automatic inference retries. Do not reuse Codex credentials.
+These defaults were approved on 2026-10-16; do not assume credentials or account
+controls are already available. The initial synthetic trial permits ten inference
+requests total, at most 32,000 input tokens per request, with no app-imposed output
+or reasoning-token cap. Count submitted attempts including failed or cancelled
+requests against the trial allowance; preserve that count across restarts. Validate
+the complete input before submission, rejecting oversized context without trimming.
+Use plan allowance or available credits under the coach's account settings; never
+purchase credits. These bounds do not establish a hard total token or monetary cap.
+The coach's short-response preference remains guidance, not a guaranteed limit on
+visible output or hidden reasoning usage.
+
+Official subscription preview limitations explicitly reject `max_output_tokens`;
+omit it, rather than sending the previously proposed 8,000-token cap. Send `input`
+as an array and use `instructions` or developer messages, not explicit system
+message items. Omit unsupported fields, including `previous_response_id`,
+`conversation`, `metadata`, `temperature`, and `truncation`; retain request correlation
+locally and include necessary conversation history in each request. Add payload
+regressions for the subscription route rather than relying on generic API examples.
+Verified source: https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations.
+
+The official flow requires browser authorization with fresh state, nonce and PKCE,
+a loopback callback, a persistent installation identifier and a separately issued
+client identifier. Verify the ID-token signature/issuer/audience/expiry/nonce before
+accepting identity, and check granted plan-usage permissions separately. Preserve
+registration through recoverable sign-in failures; protect refresh-token rotation
+and keep credentials out of workspace snapshots, logs and source control. Sign-in
+does not grant ChatGPT conversation access or synchronization.
+
+Use the public Responses endpoint, `store: false` and `stream: true`. Success requires
+the terminal `response.completed` event, not merely text deltas. Interrupted,
+incomplete, failed and usage-limit responses are not completed assistant replies.
+Transport streaming does not require incremental UI rendering. First validate this
+contract with injected responses, then the approved bounded synthetic live trial
+after the coach completes browser sign-in and plan-usage consent.
+Sources checked 2026-10-16: OpenAI's Sign in with ChatGPT cookbook,
+registration/sign-in guide, and models/inference guide at
+https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt,
+https://developers.openai.com/siwc/token-sharing-open-source/sign-in and
+https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference.
 
 Keep the API adapter replaceable by the fake provider. Build immutable request
 context from note/session/scratchpad revision/profile version/conversation. Treat
@@ -1449,9 +1503,10 @@ a late completion to replace the active reply or revive a stopped request.
 
 Use typed context/unavailability, size-limit, cancellation, transport and provider
 failure outcomes, preserving the submitted question and, if partial replies are
-displayed, their clearly marked incomplete text. This does not require streaming.
+displayed, their clearly marked incomplete text. Incremental display is optional;
+the selected plan-usage transport requires streaming through its terminal event.
 Validate context before network submission and check configured provider
-input/output limits without silent truncation. No automatic retry or another paid
+input limits without silent truncation. No automatic retry or another paid
 request follows an uncertain outcome. First-slice pending-follow-up behavior uses
 the coach-authorized fallback: composer typing remains available, but Enter and Send
 cannot submit another request until the active request completes, fails or is stopped.
@@ -1761,6 +1816,24 @@ and [data controls](https://developers.openai.com/api/docs/guides/your-data).
 Recheck account/model-specific requirements at the provider checkpoint.
 
 ## Interfaces and Dependencies
+
+The first provider checkpoint adds `Sources/GymAssistantOpenAI/ChatGPTAuthorization.swift`
+for browser parameters, callback and signed identity validation;
+`ChatGPTConnection.swift` for app-owned Keychain registration and model discovery;
+and `ChatGPTLoopbackListener.swift` for the one-shot local callback. Build the helper
+at `Sources/ChatGPTConnection/main.swift` with `swift build --product ChatGPTConnection`
+from this worktree. Run `.build/debug/ChatGPTConnection --connect`, complete browser
+consent, and expect confirmation of plan authorization and `gpt-5.6-terra` availability.
+This does not verify inference or medium reasoning at runtime. `--check-model` reuses
+the connection and refreshes its token if necessary, without inference. Neither
+command prints credentials, raw provider bodies, authorization URLs or callbacks.
+Run `swift test --filter ChatGPTAuthorizationTests` for synthetic security checks.
+Keychain service: `GymAssistant.ChatGPT`; account: `local-personal-connection-v1`.
+No Codex credentials are read. A lock under Application Support/GymAssistant
+serializes registration/refresh across processes. Failed exchange preserves issued
+registration for retry; invalid identity never replaces credentials. A five-minute
+callback timeout permits retry. Until native disconnect is implemented, revoke the
+connection in ChatGPT account settings. Production composition remains offline.
 
 
 Use Foundation, AppKit, ApplicationServices for Notes Automation consent, Security
@@ -2147,3 +2220,23 @@ no longer stops implementation. Native acceptance remains tracked separately.
 Revision note, 2026-10-15, targeted resumption: connect explicit active-record resume
 and identity-only recorded association, preserve files on unchanged reopen, and record
 deterministic plus synthetic native lifecycle evidence. Batch repair stays deferred.
+
+Revision note, 2026-10-16, provider selection: record the coach's approved model,
+reasoning and subscription-authentication path. Replace API-key assumptions and
+clarify required transport streaming. Credential/retention and trial-usage defaults
+remain an explicit approval checkpoint, not inferred from model selection. The
+separate Notes-plugin/mobile spike is running in thread
+01a1473a-7c92-7fb2-a4c7-df1704a88639 with 6.1 Sol medium; it does not change this
+scratchpad's scope or grant ChatGPT history access.
+
+Revision note, 2026-10-16, provider approval: the coach approves the proposed
+credential, retention and trial defaults with the output cap removed. Official
+subscription limitations confirm `max_output_tokens` is unsupported. Record the
+remaining request-count/input bounds, no-credit-purchase constraint and required
+payload omissions. Browser consent, account eligibility, implementation and live
+verification remain outstanding; short replies do not imply bounded reasoning usage.
+
+Revision note, 2026-10-16, authorization checkpoint: add a native connection helper
+with seven synthetic security/loopback tests; all five verification stages pass.
+Browser authorization is the next human checkpoint. Inference, trial accounting
+and native account UI are explicitly not implemented by this step.

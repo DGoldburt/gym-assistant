@@ -1,5 +1,18 @@
 # Architecture
 
+## ChatGPT subscription connection checkpoint
+
+`GymAssistantOpenAI` currently contains an isolated authorization and model-discovery
+boundary, exercised by the `ChatGPTConnection` development executable. It is not yet
+the scratchpad's live `ProgrammingAssistant`. Browser OAuth uses PKCE, state and
+nonce; identity verification checks the OpenAI signature and bound claims before
+accepting credentials. App-owned credentials live in macOS Keychain, separately from
+workspace files and Codex credentials. Registration/refresh is serialized across
+processes. The helper makes no inference calls and sends no Notes/profile content.
+The approved next adapter is 5.6 Terra with medium reasoning through subscription
+Responses requests; no API-key fallback. PLAN 013 records remaining adapter,
+trial-ledger, native account controls and live-validation work.
+
 Status: the Notes adapter direction is validated by ADR 001. The initial
 exercise-identity persistence boundary, deterministic normalization and
 normalized-name lookup, scored candidate generation, explicit suggestion

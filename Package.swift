@@ -6,6 +6,7 @@ let package = Package(
     name: "GymAssistant",
     platforms: [.macOS(.v13)],
     products: [
+        .executable(name: "ChatGPTConnection", targets: ["ChatGPTConnection"]),
         .library(name: "GymAssistantCore", targets: ["GymAssistantCore"]),
         .library(name: "GymAssistantWorkspace", targets: ["GymAssistantWorkspace"]),
         .library(name: "GymAssistantMacOS", targets: ["GymAssistantMacOS"]),
@@ -18,6 +19,9 @@ let package = Package(
         .executable(name: "SetFieldFeedbackDisposition", targets: ["SetFieldFeedbackDisposition"]),
     ],
     targets: [
+        .target(name: "GymAssistantOpenAI"),
+        .executableTarget(name: "ChatGPTConnection", dependencies: ["GymAssistantOpenAI"]),
+        .testTarget(name: "GymAssistantOpenAITests", dependencies: ["GymAssistantOpenAI"]),
         .target(name: "GymAssistantCore", linkerSettings: [.linkedLibrary("sqlite3")]),
         .target(name: "GymAssistantWorkspace"),
         .target(name: "GymAssistantMacOS", dependencies: ["GymAssistantWorkspace"], linkerSettings: [.linkedFramework("AppKit")]),
