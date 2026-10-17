@@ -61,6 +61,9 @@ streamed output items, while still requiring successful response completion, ena
 usable replies on attempts 7–9. The second turn recognized the updated B1 but asked
 redundantly for that same context; conversation-quality acceptance remains open.
 Nine of ten attempts are used. No billing settings or real Notes were changed.
+The coach subsequently marked the native synthetic live test passed. This accepts
+the bounded edit-and-question interaction; production profile/composition and a
+post-trial usage policy remain pending. The ten-request ledger is not reset.
 Official documentation checked on 2026-10-16:
 
 - https://developers.openai.com/siwc/token-sharing-open-source/sign-in

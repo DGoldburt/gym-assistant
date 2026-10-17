@@ -45,12 +45,13 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-16) Coach marks the native synthetic live test passed: edit B1 in the scratchpad and ask what B1 is now and what complements it at B2. This accepts that bounded native interaction, not real Notes/profile loading, account sign-out, or broad coaching quality. The manual test was offered the tenth and last trial request; no further inference is authorized beyond the original ceiling. Do not reset or expand the ledger without a new approved usage policy.
 - [x] (2026-10-16) Coach authorizes continuation without between-attempt prompts within the ten-request ceiling. Attempt 6 reached completion with no usable terminal text. Retain `response.output_item.done` items, validate their message/text structure and require `response.completed` before returning. Attempt 7 completed in 8s; attempts 8–9 completed a synthetic two-turn exchange in 3s/6s. Updated B1 was read correctly, but the follow-up unnecessarily asked for already supplied context. Nine attempts used; reserve the last for native manual testing. All five stages pass; local stream guards, duplicate/unsupported items and late failure remain covered.
 - [x] (2026-10-16) Run one additional coach-authorized synthetic request with improved diagnostics: HTTP 200, then local response-stream format validation failure. Five of ten attempts consumed, no usable reply. No automatic retry, real Notes data or account changes. Next diagnose individual stream-validation guards offline before proposing another request; do not infer an exhausted allowance or successful generation from this result.
 - [x] (2026-10-16) Implement isolated native `ChatGPTConnection` authorization/model-discovery helper and `GymAssistantOpenAI` module. App-owned Keychain storage, persistent host/issued-client identity, loopback callback, PKCE/state/nonce and Security-framework RS256 verification. Seven new security/loopback tests and all five repository verification stages pass. No inference or change to the scratchpad's fake provider.
 - [x] (2026-10-16) Browser authorization completed; app-owned Keychain registration and 5.6 Terra catalog availability verified. Exact input-count preflight returned HTTP 401 while model discovery still succeeded. Coach approves a 100,000-byte whole-request text limit instead of the proposed 32,000-token cap; no truncation or exact token-limit claim.
 - [x] (2026-10-16) Implement subscription payload and byte-framed SSE parser, exact model/medium selection, persistent ten-attempt ledger saved before submission, late-failure/completion checks, validated mention ranges and safe user errors. Add opt-in `--live-synthetic` scratchpad and account controls; the installed Service remains fake/offline. Thirteen targeted security/contract tests pass.
-- [ ] Complete live acceptance: successful synthetic inference and changed-context access are observed in attempts 7–9. Native live-window acceptance, follow-up quality and production composition/profile loading remain outstanding. One authorized trial request remains; do not reset the ledger or silently expand it.
+- [ ] Complete production composition/profile loading and broader follow-up quality acceptance. Synthetic inference and changed-context access are observed in attempts 7–9; the coach passed the subsequent native synthetic live test. Further live use requires an approved post-trial usage policy; do not reset the ledger or silently expand it.
 
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
@@ -135,7 +136,7 @@ is authorized here.
 - [ ] Implement persistent native workspace and production Notes permission/read adapter; pass offline/close/relaunch/recovery tests with a fake assistant.
 - [x] (2026-10-16) Coach selects `gpt-5.6-terra`, medium reasoning, using Sign in with ChatGPT plan usage rather than API-key billing. Official documentation establishes the local-personal-app flow, not this account's eligibility or model availability.
 - [x] (2026-10-16) Coach approves Keychain credentials, local conversation ownership, `store: false`, no automatic inference retries/background inference/billing fallback, and ten synthetic trial requests with at most 32,000 input tokens each. Plan allowance or available credits follow account settings; no credit purchases. Coach explicitly removes the proposed 8,000 output/reasoning-token cap; concise replies are a preference, not a usage bound.
-- [ ] Complete native acceptance after the successful synthetic inference milestone. Nine synthetic attempts have run, three returned usable replies. No real Notes/profile data has been sent.
+- [x] (2026-10-16) Coach passes native synthetic live acceptance after the successful command-line inference milestone. No real Notes/profile data was part of this test.
 - [ ] Implement conversation freshness, fixed read-only profile, and truthful exercise decoration; verify fake-provider behavior before paid tests.
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
@@ -721,6 +722,11 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-16 coach acceptance: the native synthetic edit-and-question test is marked
+passed by the coach. Production wiring, the actual read-only coaching profile and
+broader coaching-quality evaluation remain separate work. Do not infer sign-out,
+real Notes integration or unlimited future inference acceptance from this pass.
 
 2026-10-16 successful live increment: three synthetic replies completed using the
 approved exact model/medium configuration and app-owned connection. The live
@@ -2346,3 +2352,7 @@ terminal output is empty, still requiring validated response completion. Add saf
 stage/decoding-path diagnostics and regression coverage; never emit raw response
 or credential data in diagnostics. Attempts 7–9 succeed, with qualified follow-up
 quality evidence above. Reserve the remaining trial request for native manual use.
+
+Revision note, 2026-10-16, native live pass: record the coach's explicit acceptance
+of the synthetic scratchpad edit-and-question test. Preserve outstanding production
+profile/composition work and the ten-request boundary. No code or billing changes.
