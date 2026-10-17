@@ -34,14 +34,16 @@ The coach selected `gpt-5.6-terra` with medium reasoning and Sign in with ChatGP
 plan usage on 2026-10-16. The coach subsequently approved credential/retention
 defaults and bounded synthetic trials, explicitly lifting the proposed output-token
 cap because the subscription route does not support it. Sign-in and model discovery
-succeeded; live inference remains unverified after four failed synthetic attempts.
-The latest failure was neither of the two recognized subscription usage errors.
+succeeded; live inference remains unverified after five failed synthetic attempts.
+The latest returned HTTP 200, then failed local response-stream format validation,
+before completed-reply decoding. This does not establish successful generation.
 The approved trial input bound is now 100,000 UTF-8 bytes, not an exact token cap.
 No push or merge into learner/main
 is authorized here.
 
 ## Progress
 
+- [x] (2026-10-16) Run one additional coach-authorized synthetic request with improved diagnostics: HTTP 200, then local response-stream format validation failure. Five of ten attempts consumed, no usable reply. No automatic retry, real Notes data or account changes. Next diagnose individual stream-validation guards offline before proposing another request; do not infer an exhausted allowance or successful generation from this result.
 - [x] (2026-10-16) Implement isolated native `ChatGPTConnection` authorization/model-discovery helper and `GymAssistantOpenAI` module. App-owned Keychain storage, persistent host/issued-client identity, loopback callback, PKCE/state/nonce and Security-framework RS256 verification. Seven new security/loopback tests and all five repository verification stages pass. No inference or change to the scratchpad's fake provider.
 - [x] (2026-10-16) Browser authorization completed; app-owned Keychain registration and 5.6 Terra catalog availability verified. Exact input-count preflight returned HTTP 401 while model discovery still succeeded. Coach approves a 100,000-byte whole-request text limit instead of the proposed 32,000-token cap; no truncation or exact token-limit claim.
 - [x] (2026-10-16) Implement subscription payload and byte-framed SSE parser, exact model/medium selection, persistent ten-attempt ledger saved before submission, late-failure/completion checks, validated mention ranges and safe user errors. Add opt-in `--live-synthetic` scratchpad and account controls; the installed Service remains fake/offline. Thirteen targeted security/contract tests pass.
@@ -1868,7 +1870,7 @@ each trial request ID before submission. Failed/cancelled attempts remain consum
 Run `.build/debug/ChatGPTConnection --synthetic-trial` only after the account usage
 issue is resolved: it attempts a two-question synthetic planning exchange, changing
 B1 from Press to Side plank between requests. Each submission counts against ten;
-there are currently four used. Use `--synthetic-single` instead for exactly one
+there are currently five used. Use `--synthetic-single` instead for exactly one
 diagnostic request (no follow-up even on success). Run `swift run ScratchpadDevelopment --live-synthetic`
 for the opt-in native trial; it uses a separate `GymAssistantLiveSyntheticTrial`
 workspace directory and frozen synthetic Notes. The app menu offers ChatGPT Account
@@ -2315,3 +2317,9 @@ approved one further synthetic request. Separate the two usage errors, add a
 single-submission helper mode, and record the fourth failure without inventing its
 cause. Add safe provider-code/local-format diagnostics for future investigation.
 No account settings, credentials, real Notes or production wiring were changed.
+
+Revision note, 2026-10-16, fifth synthetic attempt: the coach authorized one more
+request. The observed diagnostic was HTTP 200 followed by local response-stream
+format validation failure, before completed-reply decoding. No usable reply or
+recognized usage error; five attempts remain. Further live requests are paused
+while narrowing stream-validation guards offline. Code is unchanged by this test.

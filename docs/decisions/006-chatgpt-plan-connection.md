@@ -51,6 +51,9 @@ app access and remaining allowance returned HTTP 200, then a different generic
 failure; its exact cause was not retained. Diagnostics now distinguish usage-limit,
 usage-check unavailability, allowlisted provider codes and local format rejection.
 No further request or settings change was made at this checkpoint.
+A subsequent separately authorized fifth attempt returned HTTP 200 and failed local
+response-stream format validation before completed-reply decoding. It does not
+establish successful generation; no further request or account change followed.
 Opt-in native trial wiring and sign-out exist, but
 production composition remains offline.
 Official documentation checked on 2026-10-16:
