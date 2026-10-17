@@ -52,11 +52,33 @@ import GymAssistantWorkspace
         #expect(markdown.contains("* Balance"))
     }
 
+    @Test func preservesObservedNumberingUnderlineAndLinksWithoutFetching() throws {
+        let html = "<div><h2>Session 1</h2></div><ol><li>First</li><li><u>Second</u></li></ol><div><a href=\"https://example.test/?a=1&amp;b=2\">Reference</a></div><ol><li>Restart</li></ol>"
+        let (document, rich) = try ProgramDocumentReader.read(.init(id: NoteID("fixture"), text: "", html: html))
+        #expect(rich.string.contains("\t1.\tFirst\n\t2.\tSecond\n"))
+        #expect(rich.string.contains("\t1.\tRestart\n"))
+        #expect(document.paragraphs.contains { $0.marks.contains { $0.kind == .underline } })
+        #expect(document.paragraphs.contains { $0.marks.contains { $0.kind == .link && $0.value == "https://example.test/?a=1&b=2" } })
+        let decoded = try RichTextArchive.decode(RichTextArchive.encode(rich))
+        let reopened = try ProgramDocumentReader.document(snapshot: document.snapshot, richText: decoded)
+        #expect(decoded.string == rich.string)
+        #expect(reopened.paragraphs == document.paragraphs)
+        // Do not silently flatten formats whose Markdown handoff is not supported.
+        #expect(throws: WorkspaceError.self) { try ScratchpadRichTextExporter.markdown(rich) }
+    }
+    @Test func literalAmpersandsPreserveBodyAndLinkQuery() throws {
+        let (_, rich) = try ProgramDocumentReader.read(.init(id: NoteID("fixture"), text: "",
+            html: "<div>Push & pull &amp; carry</div><div><a href=\"https://example.test/?a=1&b=2\">Link</a></div>"))
+        #expect(rich.string == "Push & pull & carry\nLink\n")
+        let range = (rich.string as NSString).range(of: "Link")
+        #expect((rich.attribute(.link, at: range.location, effectiveRange: nil) as? URL)?.absoluteString == "https://example.test/?a=1&b=2")
+    }
     @Test func refusesUnrepresentedFormattingAndExternalResources() {
         for html in ["<div><img src=\"https://example.test/image\"/></div>",
                      "<div style=\"color:red\">Warning</div>", "<div><i>Italic</i></div>",
                      "<ul><li>Outer<ul><li>Inner</li></ul></li></ul>",
-                     "<!DOCTYPE x><div>Text</div>", "<div>Unclosed"] {
+                     "<!DOCTYPE x><div>Text</div>", "<div>Unclosed",
+                     "<a href=\"javascript:alert(1)\">Unsafe</a>", "<ol><li>A<ul><li>B</li></ul></li></ol>"] {
             #expect(throws: ProgramDocumentReadError.self) {
                 try ProgramDocumentReader.read(NoteSnapshot(id: NoteID("fixture"), text: "", html: html))
             }

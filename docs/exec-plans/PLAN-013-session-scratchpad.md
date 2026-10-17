@@ -45,6 +45,7 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-17) Field report: Latest/New failed generically; entry disclosure clipped; app absent from Dock. Read-only formatting inspection found simple numbered lists, underlining, HTTPS links and literal ampersands. Preserve these on import (no external fetches), add faithful semantic archive tests, dynamic disclosure height retained across view restoration, specific import errors and regular Dock activation. Actual selected note passes import/archive validation: 445 paragraphs, 18 candidates; no text persisted/printed or note changed. Markdown export still rejects unsupported numbered/link/underline content rather than flattening it. Full entry behavior remains a manual retest, not established by import success alone.
 - [x] (2026-10-17) Coach authorizes installation. Gracefully quit only the installed Service, preserve its prior bundle in a local rollback directory, copy/verify the new bundle and register/launch it. Installed executable matches the tested build's SHA-256. Leave the separate alias-test process and synthetic development window untouched. User library, workspaces, profile and Keychain are not migrated or reset. Native shortcut/profile/live-request acceptance is the next manual checkpoint; installation alone is not a pass.
 - [x] (2026-10-17) Wire Notes Service source to the regular-use provider and validated private read-only coaching profile. Package authored philosophy, 15 approved seed preferences and explicit evidence/coverage caveats outside Git; no client-specific reconciliation examples are imported. Add optional entry account controls (connect/usage/sign-out), no request on opening. Missing/invalid profile blocks entry rather than using an empty fallback. Preserve existing workspace directory and exact library lookup. Installation, native real-Notes acceptance and account sign-out remain unverified.
 - [x] (2026-10-17) Coach approves post-trial regular use: explicit user submissions only, 100 KB local text bound, no lifetime request-count cap, automatic retries or background inference; billing unchanged. Add explicit `.regularUse` connection policy preserving the historical trial ledger; synthetic tools still default to `.syntheticTrial`. Production Notes/profile composition remains the next implementation step. No inference is sent by this policy change.
@@ -725,6 +726,14 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-17 field fixes: the importer was overly narrow for real Notes HTML; literal
+ampersands also broke its XML adaptation. Read support now retains observed simple
+numbering, underline and safe HTTP(S)/mailto links. Nested lists and unknown styling
+remain rejected. A new archive test compares semantic text/marks/list styles, not
+AppKit list-object equality. No existing tests were weakened. Dock activation is
+regular from startup; entry disclosure sizes to content. Copy-format expansion is
+not claimed: unsupported handoff formatting still fails visibly.
 
 2026-10-17 installed checkpoint: the coach-approved build is now installed and
 running. Signature and executable equality verified. Previous application retained

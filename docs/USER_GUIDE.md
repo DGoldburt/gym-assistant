@@ -28,6 +28,12 @@ The bounded synthetic native test has passed; this is not full product acceptanc
 
 ### Notes entry
 
+Gym Assistant appears in the Dock; click its icon to return to retained programming
+work. Reading a note supports simple numbered lists, underline and web links, but
+Markdown handoff for these formats is not yet supported. Copy refuses unsupported
+formatting rather than silently discarding it; ordinary rich-text selection/copy
+remains available. Nested lists and other unsupported formatting may still block entry.
+
 The feature build was installed on 2026-10-17; the combined real-Notes/model flow
 still needs manual acceptance. After opening autocomplete with Option-Command-G,
 Command-P chooses **Program session**. Once the selected note has been captured,

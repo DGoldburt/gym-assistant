@@ -225,6 +225,30 @@ private actor SyntheticEntryReader: NotesContextReading {
 
 @main @MainActor struct DevelopmentMain {
     static func main() {
+        if CommandLine.arguments.contains("--validate-note-html") {
+            do {
+                var data = Data()
+                while data.count <= 2_000_000 {
+                    let chunk = try FileHandle.standardInput.read(upToCount: min(65_536, 2_000_001 - data.count)) ?? Data()
+                    if chunk.isEmpty { break }
+                    data.append(chunk)
+                }
+                guard data.count <= 2_000_000, let html = String(data: data, encoding: .utf8) else { throw ProgramDocumentReadError.unsupportedHTML }
+                let (document, rich) = try ProgramDocumentReader.read(.init(id: NoteID("read-only-validation"), text: "", html: html))
+                let reopened = try RichTextArchive.decode(RichTextArchive.encode(rich))
+                let restored = try ProgramDocumentReader.document(snapshot: document.snapshot, richText: reopened)
+                guard restored.paragraphs == document.paragraphs else { throw ProgramDocumentReadError.inconsistentText }
+                print("Read-only import/archive validation passed: \(document.paragraphs.count) paragraphs; \(document.candidates().count) session candidates. No note text stored or printed.")
+            } catch {
+                switch error {
+                case ProgramDocumentReadError.unsupportedHTML: print("Read-only validation failed: unsupported HTML.")
+                case ProgramDocumentReadError.inconsistentText: print("Read-only validation failed: semantic archive mismatch.")
+                default: print("Read-only validation failed: document/archive validation.")
+                }
+                exit(1)
+            }
+            return
+        }
         let app = NSApplication.shared
         let delegate = DevelopmentDelegate()
         app.delegate = delegate; app.setActivationPolicy(.regular)

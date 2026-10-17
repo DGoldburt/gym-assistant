@@ -17,6 +17,7 @@ import GymAssistantWorkspace
     private let modeDescription: String
     private let presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)?
     private var entryContent: NSView?
+    private var entryHeight: CGFloat = 295
     private var proposal: SessionWorkspaceEntry.NewSessionProposal?
     private var previewStatus: NSTextField?
     private var acceptSkeleton: NSButton?
@@ -40,7 +41,10 @@ import GymAssistantWorkspace
         workspaces.onResumeWorkspace = { [weak self] controller in self?.showWorkspace(controller) }
         window.title = "Program session"; window.isReleasedWhenClosed = false; window.delegate = self
         let detail = NSTextField(wrappingLabelWithString: modeDescription)
-        detail.frame = NSRect(x: 20, y: 192, width: 490, height: 40)
+        let detailHeight = max(40, ceil(detail.cell?.cellSize(forBounds: NSRect(x: 0, y: 0, width: 490, height: 10_000)).height ?? 40))
+        detail.frame = NSRect(x: 20, y: 192, width: 490, height: detailHeight)
+        detail.identifier = .init("program-entry-description")
+        entryHeight = 295 + detailHeight - 40
         window.contentView?.addSubview(detail)
         status.frame = NSRect(x: 20, y: 104, width: 490, height: 78)
         status.identifier = NSUserInterfaceItemIdentifier("program-entry-status")
@@ -71,7 +75,7 @@ import GymAssistantWorkspace
         window.contentView?.addSubview(previewBackup)
         // Leave the existing entry/recovery controls together; add one quiet route below.
         window.contentView?.subviews.forEach { $0.frame.origin.y += 45 }
-        window.setContentSize(NSSize(width: 530, height: 295))
+        window.setContentSize(NSSize(width: 530, height: entryHeight))
         previousPlanning.frame = NSRect(x: 20, y: 12, width: 220, height: 28)
         previousPlanning.target = self; previousPlanning.action = #selector(openPreviousPlanning)
         previousPlanning.identifier = .init("program-entry-previous-planning")
@@ -181,7 +185,7 @@ import GymAssistantWorkspace
             guard let self, let controller else { return }
             self.installMenus(for: controller)
         }
-        controller.window?.title = "Session scratchpad — local test assistant"
+        controller.window?.title = "Session scratchpad"
         controller.show(); window?.orderOut(nil)
     }
 
@@ -260,7 +264,7 @@ import GymAssistantWorkspace
         guard proposal != nil || recoveryPreview != nil, let entryContent else { return }
         recoveryPreview = nil
         proposal = nil; previewStatus = nil; acceptSkeleton = nil
-        window?.contentView = entryContent; window?.setContentSize(NSSize(width: 530, height: 295))
+        window?.contentView = entryContent; window?.setContentSize(NSSize(width: 530, height: entryHeight))
     }
     @objc private func cancelProposal() { stopPending(); restoreEntryContent() }
 
@@ -312,6 +316,10 @@ import GymAssistantWorkspace
 
     private func present(_ error: any Error) {
         switch error {
+        case ProgramDocumentReadError.unsupportedHTML:
+            status.stringValue = "This note contains formatting the scratchpad cannot yet preserve. Notes access succeeded; no note or scratchpad was changed."
+        case ProgramDocumentReadError.inconsistentText:
+            status.stringValue = "The note's text and formatting could not be aligned safely. Nothing was changed; retry after Notes finishes updating."
         case NotesReadError.permission:
             status.stringValue = "Notes read access is needed. Allow access explicitly, then choose the intended note."
             access.isHidden = false

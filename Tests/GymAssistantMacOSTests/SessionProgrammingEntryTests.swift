@@ -23,6 +23,20 @@ private actor PermissionEntryReader: NotesContextReading {
 }
 
 @Suite("Programming entry onboarding") @MainActor struct SessionProgrammingEntryTests {
+    @Test func longDisclosureFitsWithoutOverlappingStatus() throws {
+        let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)),
+            reader: PermissionEntryReader(), profile: .init(version: "test", entries: []), assistant: FakeProgrammingAssistant())
+        let entry = SessionProgrammingEntryWindow(workspaces: windows, modeDescription: String(repeating: "Notes and coaching profile context. ", count: 12), requestAccess: {})
+        let root = try #require(entry.window?.contentView)
+        let detail = try #require(descendants(root).first { $0.identifier?.rawValue == "program-entry-description" } as? NSTextField)
+        let status = try #require(descendants(root).first { $0.identifier?.rawValue == "program-entry-status" })
+        #expect(detail.frame.height > 40)
+        #expect(detail.frame.minY >= status.frame.maxY)
+        #expect(detail.frame.maxY <= root.bounds.height)
+        let height = root.bounds.height
+        entry.cancel()
+        #expect(entry.window?.contentView?.bounds.height == height)
+    }
     @Test func accountControlIsExplicitAndDoesNotCaptureNotes() async throws {
         let reader = PermissionEntryReader()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
