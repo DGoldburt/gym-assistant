@@ -2399,3 +2399,15 @@ Revision note, 2026-10-17, production composition: load the approved private pro
 and select the live regular-use adapter in Service source. Add explicit account
 entry controls, safe profile errors and offline validation. The installed app is
 not replaced; manual real-Notes/connection acceptance remains the next checkpoint.
+
+Revision note, 2026-10-17, installed entry fixes: installed commit `aaae93b` in
+`/Users/dan/Applications/Gym Assistant.app` and relaunched it. The installed
+executable SHA-256 matches the verified candidate; `LSUIElement` is false.
+Rollback bundle: `/Users/dan/Applications/GymAssistant-rollback.1EGFUc/Previous.bundle`.
+The selected real note passed read-only import and archive validation (445
+paragraphs, 18 session candidates); all five verification stages passed (262
+tests, 41 suites). No Notes content, library, scratchpads or credentials were
+changed by installation. Native visual inspection timed out, so actual Dock
+visibility, disclosure layout and opening latest/new session remain manual
+acceptance checks, not inferred passes. Whole-scratchpad Markdown export still
+refuses ordered lists, links and underline rather than silently losing formatting.
