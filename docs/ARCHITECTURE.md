@@ -2,6 +2,12 @@
 
 ## ChatGPT subscription connection checkpoint
 
+Regular-use policy approved 2026-10-17: explicitly composed `.regularUse`
+connections keep the 100 KB bound but have no lifetime request cap. Synthetic
+helpers default to the original ten-request policy. Both use the same no-retry
+transport; regular use preserves the old trial ledger and does not change billing.
+Production Notes/profile wiring remains pending.
+
 `GymAssistantOpenAI` contains authorization, model discovery and a subscription
 `ProgrammingAssistant`, exercised by `ChatGPTConnection` and an opt-in synthetic
 development window. The installed Service still uses the fake provider. Browser OAuth uses PKCE, state and

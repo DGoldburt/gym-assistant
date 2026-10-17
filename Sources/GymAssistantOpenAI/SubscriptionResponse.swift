@@ -1,6 +1,19 @@
 import Foundation
 import GymAssistantWorkspace
 
+/// Selected by the composition root, never by a model response or saved conversation.
+public enum ChatGPTUsagePolicy: Sendable {
+    case syntheticTrial
+    case regularUse
+
+    func reserveTrialRequest(_ id: UUID, ledger: inout SubscriptionTrialLedger?) throws {
+        guard case .syntheticTrial = self else { return }
+        var updated = ledger ?? SubscriptionTrialLedger()
+        try updated.reserve(id)
+        ledger = updated
+    }
+}
+
 /// Closed payload schema prevents accidental use of unsupported subscription fields.
 struct SubscriptionPayload: Encodable {
     struct Message: Encodable { let role: String; let content: String }

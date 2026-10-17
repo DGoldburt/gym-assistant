@@ -45,6 +45,7 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-17) Coach approves post-trial regular use: explicit user submissions only, 100 KB local text bound, no lifetime request-count cap, automatic retries or background inference; billing unchanged. Add explicit `.regularUse` connection policy preserving the historical trial ledger; synthetic tools still default to `.syntheticTrial`. Production Notes/profile composition remains the next implementation step. No inference is sent by this policy change.
 - [x] (2026-10-16) Coach marks the native synthetic live test passed: edit B1 in the scratchpad and ask what B1 is now and what complements it at B2. This accepts that bounded native interaction, not real Notes/profile loading, account sign-out, or broad coaching quality. The manual test was offered the tenth and last trial request; no further inference is authorized beyond the original ceiling. Do not reset or expand the ledger without a new approved usage policy.
 - [x] (2026-10-16) Coach authorizes continuation without between-attempt prompts within the ten-request ceiling. Attempt 6 reached completion with no usable terminal text. Retain `response.output_item.done` items, validate their message/text structure and require `response.completed` before returning. Attempt 7 completed in 8s; attempts 8–9 completed a synthetic two-turn exchange in 3s/6s. Updated B1 was read correctly, but the follow-up unnecessarily asked for already supplied context. Nine attempts used; reserve the last for native manual testing. All five stages pass; local stream guards, duplicate/unsupported items and late failure remain covered.
 - [x] (2026-10-16) Run one additional coach-authorized synthetic request with improved diagnostics: HTTP 200, then local response-stream format validation failure. Five of ten attempts consumed, no usable reply. No automatic retry, real Notes data or account changes. Next diagnose individual stream-validation guards offline before proposing another request; do not infer an exhausted allowance or successful generation from this result.
@@ -722,6 +723,11 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-17 policy milestone: regular-use approval removes the lifetime request cap
+only from explicitly selected regular-use connections. Synthetic helpers retain
+their ten-attempt boundary and existing ledger. The size guard and no-retry transport
+are shared. No real Notes, billing mutation or model request is part of this change.
 
 2026-10-16 coach acceptance: the native synthetic edit-and-question test is marked
 passed by the coach. Production wiring, the actual read-only coaching profile and
@@ -2356,3 +2362,8 @@ quality evidence above. Reserve the remaining trial request for native manual us
 Revision note, 2026-10-16, native live pass: record the coach's explicit acceptance
 of the synthetic scratchpad edit-and-question test. Preserve outstanding production
 profile/composition work and the ten-request boundary. No code or billing changes.
+
+Revision note, 2026-10-17: coach approves the regular-use policy. Implement it as
+an explicit connection mode, preserving trial defaults and evidence. Next wire
+the actual profile and provider into the Notes composition; do not describe that
+unimplemented integration as available merely because regular use is approved.

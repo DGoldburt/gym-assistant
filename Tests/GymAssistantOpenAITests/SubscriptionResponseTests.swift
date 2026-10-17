@@ -4,6 +4,19 @@ import GymAssistantWorkspace
 @testable import GymAssistantOpenAI
 
 @Suite("Subscription response contract") struct SubscriptionResponseTests {
+    @Test func regularUsePreservesExhaustedTrialLedgerWithoutLifetimeCap() throws {
+        var ledger: SubscriptionTrialLedger?
+        for _ in 0..<10 { try ChatGPTUsagePolicy.syntheticTrial.reserveTrialRequest(UUID(), ledger: &ledger) }
+        let original = try JSONEncoder().encode(ledger)
+        #expect(throws: SubscriptionFailure.trialLimit) {
+            try ChatGPTUsagePolicy.syntheticTrial.reserveTrialRequest(UUID(), ledger: &ledger)
+        }
+        for _ in 0..<25 { try ChatGPTUsagePolicy.regularUse.reserveTrialRequest(UUID(), ledger: &ledger) }
+        #expect(try JSONEncoder().encode(ledger) == original)
+        var absent: SubscriptionTrialLedger?
+        try ChatGPTUsagePolicy.regularUse.reserveTrialRequest(UUID(), ledger: &absent)
+        #expect(absent == nil)
+    }
     @Test func trialLedgerPersistsAndRefusesReplayAndEleventhAttempt() throws {
         var ledger = SubscriptionTrialLedger()
         let first = UUID()

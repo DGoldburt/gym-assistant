@@ -74,7 +74,9 @@ public actor ChatGPTConnection {
     public private(set) var trialDiagnostic = "No trial request started."
     private let keychain = ChatGPTKeychain()
     private let session: URLSession
-    public init() {
+    private let usagePolicy: ChatGPTUsagePolicy
+    public init(usagePolicy: ChatGPTUsagePolicy = .syntheticTrial) {
+        self.usagePolicy = usagePolicy
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 180
@@ -223,9 +225,7 @@ public actor ChatGPTConnection {
             request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
             try Task.checkCancellation()
             var state = try keychain.load()
-            var ledger = state.trialLedger ?? SubscriptionTrialLedger()
-            try ledger.reserve(input.id)
-            state.trialLedger = ledger
+            try usagePolicy.reserveTrialRequest(input.id, ledger: &state.trialLedger)
             // Persist before submission. A crash/timeout/cancel cannot restore the allowance.
             try keychain.save(state)
             trialDiagnostic = "Inference submitted; awaiting response headers."

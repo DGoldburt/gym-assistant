@@ -29,6 +29,15 @@ bytes of total request text each, without an output cap: the subscription route 
 
 ## Consequences and alternatives
 
+On 2026-10-17 the coach approved regular use after the native synthetic pass:
+user-submitted requests only, the same 100,000-byte text limit, no lifetime request
+count cap, no automatic retries/background inference, and unchanged account billing
+settings. `ChatGPTUsagePolicy.regularUse` explicitly selects this policy; synthetic
+tools retain the default ten-attempt policy. Existing trial history is preserved,
+not reset or repurposed. This approval does not authorize agent-driven unbounded
+testing, credit purchases, or model/billing fallbacks. Production wiring remains
+separate implementation work.
+
 The native authorization helper adds no runtime dependency, but its protocol and
 signature validation require dedicated tests. It initially retains one registration;
 account switching and production account controls are not complete. Native trial

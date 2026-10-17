@@ -57,7 +57,7 @@ public enum AssistantFailure: Error, Equatable, Sendable {
         case .usageLimit: "ChatGPT reported a usage limit. Review your plan or this app's limit in ChatGPT usage settings. No automatic retry."
         case .usageUnavailable: "OpenAI could not check ChatGPT usage availability. This does not establish that your allowance is exhausted. Try again later; no automatic retry."
         case .trialLimit: "The ten-request trial allowance is exhausted or this request was already submitted. No request sent."
-        case .sizeLimit: "Context exceeds the 100 KB trial text limit. Nothing was trimmed or sent."
+        case .sizeLimit: "Context exceeds the 100 KB text limit. Nothing was trimmed or sent."
         case .incomplete: "The reply did not complete. No automatic retry; your question is preserved."
         case .busy: "Another Gym Assistant account operation is running. No request sent."
         case .cancelled: "Reply stopped. A request already received by OpenAI may still count toward usage."
