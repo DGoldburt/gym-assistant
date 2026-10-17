@@ -6,6 +6,7 @@ import Security
 public enum ChatGPTConnectionError: Error, Equatable {
     case invalidCallback, declined, invalidIdentity, invalidResponse, storage, network, busy, timeout
     case planPermissionMissing, modelUnavailable, browserUnavailable
+    case inputCountingUnavailable(Int)
 }
 
 extension Data {

@@ -5,6 +5,28 @@ and product specifications. It is a starting point, not yet a complete app manua
 
 ## Session entry — development build only
 
+### Optional ChatGPT synthetic trial
+
+A separate development trial can use **5.6 Terra, medium reasoning** through your
+ChatGPT plan. It is not yet enabled in the Notes Service. Its title clearly says
+**Synthetic trial**; the note context and coaching profile are synthetic, not your
+actual client note or full coaching preferences. Do not paste private content into
+this trial window. It saves its scratchpad separately from normal workspaces.
+
+In that window, the app menu's **ChatGPT Account…** offers **Continue with ChatGPT**,
+**Manage usage**, and **Sign out**. Credentials are stored in macOS Keychain. Signing
+out does not delete local planning. If remote revocation cannot be confirmed, the
+app tells you to disconnect it in ChatGPT settings.
+
+The trial allows ten submitted requests total, including failed or stopped requests,
+and 100 KB of total request text each. Oversized requests are rejected, not trimmed.
+There is no output-token cap. Requests use your plan allowance or available credits
+under your ChatGPT settings; the app does not buy credits or retry automatically.
+If usage is unavailable or limited, use **Manage usage** before deliberately retrying.
+The current live trial is blocked by that provider response, not a completed launch.
+
+### Notes entry
+
 This is implemented on the feature branch, not installed or yet verified through
 the native Notes shortcut. After opening autocomplete with Option-Command-G,
 Command-P chooses **Program session**. Once the selected note has been captured,

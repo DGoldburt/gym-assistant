@@ -1,6 +1,7 @@
 import Foundation
 import Security
 import Darwin
+import GymAssistantWorkspace
 
 struct ChatGPTCredentials: Codable {
     let accessToken: String
@@ -17,6 +18,7 @@ struct ChatGPTRegistration: Codable {
 struct ChatGPTAccountState: Codable {
     var hostID = "urn:uuid:" + UUID().uuidString.lowercased()
     var registration: ChatGPTRegistration?
+    var trialLedger: SubscriptionTrialLedger?
 }
 
 /// One app-owned Keychain item. This never opens Codex/ChatGPT credential stores.
@@ -69,12 +71,13 @@ private final class NoRedirect: NSObject, URLSessionTaskDelegate, Sendable {
 }
 
 public actor ChatGPTConnection {
+    public private(set) var trialDiagnostic = "No trial request started."
     private let keychain = ChatGPTKeychain()
     private let session: URLSession
     public init() {
         let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 180
         config.httpCookieStorage = nil; config.urlCredentialStorage = nil; config.urlCache = nil
         session = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
     }
@@ -116,10 +119,7 @@ public actor ChatGPTConnection {
         guard credentials.scopes.contains("chatgpt.tokens.use.direct") else { throw ChatGPTConnectionError.planPermissionMissing }
     }
 
-    /// Returns only whether the selected model is listed. Tokens never leave this actor.
-    public func verifySelectedModel() async throws {
-        let lock = try ChatGPTConnectionLock()
-        defer { withExtendedLifetime(lock) {} }
+    private func authorizedCredentials() async throws -> ChatGPTCredentials {
         var state = try keychain.load()
         guard let registration = state.registration, registration.identity != nil,
               var credentials = registration.credentials else { throw ChatGPTConnectionError.planPermissionMissing }
@@ -135,7 +135,38 @@ public actor ChatGPTConnection {
             try keychain.save(state)
         }
         guard credentials.scopes.contains("chatgpt.tokens.use.direct") else { throw ChatGPTConnectionError.planPermissionMissing }
-        let data = try await get("https://api.openai.com/v1/models", token: credentials.accessToken)
+        return credentials
+    }
+
+    public func checkSyntheticInputCount() async throws -> Int {
+        let lock = try ChatGPTConnectionLock()
+        defer { withExtendedLifetime(lock) {} }
+        let credentials = try await authorizedCredentials()
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses/input_tokens")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer " + credentials.accessToken, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["model": "gpt-5.6-terra",
+            "input": [["role": "user", "content": "Synthetic input-count capability test."]]])
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ChatGPTConnectionError.network }
+        guard http.statusCode == 200 else { throw ChatGPTConnectionError.inputCountingUnavailable(http.statusCode) }
+        struct Count: Decodable { let input_tokens: Int }
+        guard let count = try? JSONDecoder().decode(Count.self, from: data), count.input_tokens >= 0
+        else { throw ChatGPTConnectionError.invalidResponse }
+        return count.input_tokens
+    }
+
+    /// Returns only whether the selected model is listed. Tokens never leave this actor.
+    public func verifySelectedModel() async throws {
+        let lock = try ChatGPTConnectionLock()
+        defer { withExtendedLifetime(lock) {} }
+        let credentials = try await authorizedCredentials()
+        try await verifySelectedModel(token: credentials.accessToken)
+    }
+
+    private func verifySelectedModel(token: String) async throws {
+        let data = try await get("https://api.openai.com/v1/models", token: token)
         struct Catalog: Decodable {
             struct Model: Decodable { let slug: String; let visibility: String }
             let models: [Model]
@@ -143,6 +174,120 @@ public actor ChatGPTConnection {
         guard let catalog = try? JSONDecoder().decode(Catalog.self, from: data) else { throw ChatGPTConnectionError.invalidResponse }
         guard catalog.models.contains(where: { $0.slug == "gpt-5.6-terra" && $0.visibility == "list" })
         else { throw ChatGPTConnectionError.modelUnavailable }
+    }
+
+    public func trialRequestsUsed() throws -> Int { try keychain.load().trialLedger?.submitted.count ?? 0 }
+
+    /// Returns false if local credentials were cleared but remote revocation was not confirmed.
+    public func disconnect() async throws -> Bool {
+        let lock = try ChatGPTConnectionLock()
+        defer { withExtendedLifetime(lock) {} }
+        var state = try keychain.load()
+        var revoked = state.registration?.credentials == nil
+        if let registration = state.registration, let refresh = registration.credentials?.refreshToken {
+            do {
+                struct Discovery: Decodable { let revocation_endpoint: URL }
+                let discovery = try JSONDecoder().decode(Discovery.self,
+                    from: try await get("https://auth.openai.com/.well-known/openid-configuration"))
+                let endpoint = discovery.revocation_endpoint
+                guard endpoint.scheme == "https", endpoint.host == "auth.openai.com",
+                      endpoint.user == nil, endpoint.password == nil, endpoint.port == nil
+                else { throw ChatGPTConnectionError.invalidResponse }
+                var request = URLRequest(url: endpoint)
+                request.httpMethod = "POST"
+                request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+                request.httpBody = formData(["token": refresh, "token_type_hint": "refresh_token", "client_id": registration.clientID])
+                _ = try await perform(request)
+                revoked = true
+            } catch { revoked = false }
+        }
+        state.registration?.credentials = nil
+        try keychain.save(state) // Preserve registration, host and trial attempts.
+        return revoked
+    }
+
+    public func reply(to input: ProgrammingRequest) async throws -> ProgrammingResponse {
+        trialDiagnostic = "Validating local request."
+        do {
+            let payload = try SubscriptionPayload(input)
+            try payload.validateTrialSize()
+            try Task.checkCancellation()
+            let lock = try ChatGPTConnectionLock()
+            defer { withExtendedLifetime(lock) {} }
+            let credentials = try await authorizedCredentials()
+            try await verifySelectedModel(token: credentials.accessToken)
+            var request = URLRequest(url: URL(string: "https://api.openai.com/v1/responses")!)
+            request.httpMethod = "POST"; request.httpBody = try payload.encoded()
+            request.setValue("Bearer " + credentials.accessToken, forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            try Task.checkCancellation()
+            var state = try keychain.load()
+            var ledger = state.trialLedger ?? SubscriptionTrialLedger()
+            try ledger.reserve(input.id)
+            state.trialLedger = ledger
+            // Persist before submission. A crash/timeout/cancel cannot restore the allowance.
+            try keychain.save(state)
+            trialDiagnostic = "Inference submitted; awaiting response headers."
+            let (bytes, response) = try await session.bytes(for: request)
+            defer { bytes.task.cancel() }
+            guard let http = response as? HTTPURLResponse else { throw AssistantFailure.transport }
+            trialDiagnostic = "Inference HTTP \(http.statusCode)."
+            if http.statusCode == 401 || http.statusCode == 403 { throw AssistantFailure.authentication }
+            if http.statusCode == 429 { throw AssistantFailure.usageLimit }
+            if http.statusCode != 200 {
+                var errorData = Data()
+                for try await byte in bytes {
+                    if errorData.count >= 32_768 { break }
+                    errorData.append(byte)
+                }
+                struct ProviderError: Decodable {
+                    struct Detail: Decodable { let code: String?; let param: String? }
+                    let error: Detail
+                }
+                if let parsed = try? JSONDecoder().decode(ProviderError.self, from: errorData) {
+                    // Only known protocol labels; never reflect provider messages or arbitrary values.
+                    let codes = ["unsupported_parameter", "unsupported_value", "invalid_request_error", "model_not_found", "insufficient_quota"]
+                    let fields = ["input", "instructions", "model", "reasoning", "reasoning.effort", "store", "stream", "text", "tools"]
+                    if let code = parsed.error.code, codes.contains(code) { trialDiagnostic += " Code: " + code + "." }
+                    if let field = parsed.error.param, fields.contains(field) { trialDiagnostic += " Field: " + field + "." }
+                }
+                throw AssistantFailure.provider
+            }
+            var stream = SubscriptionStream()
+            trialDiagnostic = "Reading event stream."
+            for try await byte in bytes {
+                try Task.checkCancellation()
+                try stream.byte(byte)
+                if stream.completedText != nil { break }
+            }
+            try Task.checkCancellation()
+            let raw = try stream.finish()
+            trialDiagnostic = "Completed event received; validating reply format."
+            let result = try SubscriptionReply.decode(raw, requestID: input.id)
+            trialDiagnostic = "Reply validated."
+            return result
+        } catch is CancellationError { throw AssistantFailure.cancelled }
+        catch let error as AssistantFailure { throw error }
+        catch let error as SubscriptionFailure {
+            switch error {
+            case .inputLimit: throw AssistantFailure.sizeLimit
+            case .trialLimit: throw AssistantFailure.trialLimit
+            case .usageLimit: throw AssistantFailure.usageLimit
+            case .incomplete: throw AssistantFailure.incomplete
+            default: throw AssistantFailure.provider
+            }
+        } catch let error as ChatGPTConnectionError {
+            switch error {
+            case .planPermissionMissing, .invalidIdentity: throw AssistantFailure.authentication
+            case .modelUnavailable: throw AssistantFailure.modelUnavailable
+            case .busy: throw AssistantFailure.busy
+            default: throw AssistantFailure.transport
+            }
+        } catch {
+            if Task.isCancelled { throw AssistantFailure.cancelled }
+            throw AssistantFailure.transport
+        }
     }
 
     private func get(_ address: String, token: String? = nil) async throws -> Data {
@@ -165,6 +310,14 @@ public actor ChatGPTConnection {
         } catch is CancellationError { throw CancellationError() }
         catch let error as ChatGPTConnectionError { throw error }
         catch { throw ChatGPTConnectionError.network }
+    }
+}
+
+public struct ChatGPTProgrammingAssistant: ProgrammingAssistant {
+    private let connection: ChatGPTConnection
+    public init(connection: ChatGPTConnection = ChatGPTConnection()) { self.connection = connection }
+    public func reply(to request: ProgrammingRequest) async throws -> ProgrammingResponse {
+        try await connection.reply(to: request)
     }
 }
 

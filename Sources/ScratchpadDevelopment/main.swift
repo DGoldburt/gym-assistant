@@ -1,6 +1,7 @@
 import AppKit
 import GymAssistantWorkspace
 import GymAssistantMacOS
+import GymAssistantOpenAI
 
 private struct MentionFixtureAssistant: ProgrammingAssistant {
     func reply(to request: ProgrammingRequest) async throws -> ProgrammingResponse {
@@ -28,6 +29,7 @@ private actor SyntheticEntryReader: NotesContextReading {
     private var entry: SessionProgrammingEntryWindow?
     private var workspaces: SessionWorkspaceWindows?
     private let notesReader = NotesContextReader()
+    private let chatGPTConnection = ChatGPTConnection()
     func applicationDidFinishLaunching(_ notification: Notification) {
         if CommandLine.arguments.contains("--synthetic-entry") {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
@@ -76,6 +78,7 @@ private actor SyntheticEntryReader: NotesContextReading {
             return
         }
         do {
+            let live = CommandLine.arguments.contains("--live-synthetic")
             let noteID = NoteID("synthetic-development-note")
             let workspaceID = WorkspaceID(UUID(uuidString: "B1FB8360-E88A-4245-BFAD-FE8BB89C48EE")!)
             let sessionID = SessionID(UUID(uuidString: "2F4C5870-0933-4EA8-B9B5-C7A954CB43F8")!)
@@ -87,7 +90,7 @@ private actor SyntheticEntryReader: NotesContextReading {
                 observationID: note.observationID, range: SourceRange(location: range.location, length: range.length))
             // Separate synthetic store, not the installed app's user workspace directory.
             let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("GymAssistantScratchpadDevelopment", isDirectory: true)
+                .appendingPathComponent(live ? "GymAssistantLiveSyntheticTrial" : "GymAssistantScratchpadDevelopment", isDirectory: true)
             let store = WorkspaceSnapshotStore(directory: root)
             let rich = NSMutableAttributedString(string: body, attributes: [.font: NSFont.systemFont(ofSize: 16)])
             for (heading, level) in [("Session 18\n", 2), ("Warmup\n", 3)] {
@@ -100,8 +103,11 @@ private actor SyntheticEntryReader: NotesContextReading {
                 anchor: SessionAnchor(sessionID: sessionID, noteID: noteID, recordedHeading: "Session 18", baselineText: body),
                 text: body, richTextArchive: RichTextArchive.encode(rich))
             controller = try SessionScratchpadWindowController(snapshot: snapshot, store: store, note: note,
-                association: association, profile: CoachingProfile(version: "synthetic-empty-1", entries: []),
-                assistant: FakeProgrammingAssistant(delay: .seconds(15)))
+                association: association, profile: CoachingProfile(version: "synthetic-short-replies-1", entries: [
+                    .init(wording: "Keep replies short.", source: "Synthetic trial profile", kind: .authored, confirmed: true)
+                ]),
+                assistant: live ? ChatGPTProgrammingAssistant(connection: chatGPTConnection) : FakeProgrammingAssistant(delay: .seconds(15)))
+            if live { controller?.window?.title = "Synthetic trial · 5.6 Terra medium · Using ChatGPT plan · 100 KB / 10 requests" }
             if loaded?.recoveredFromPrevious == true {
                 let alert = NSAlert(); alert.messageText = "Recovered previous synthetic scratchpad"
                 alert.informativeText = "Revision \(snapshot.revision) is available; damaged current state is preserved. Saves may remain blocked until recovery is resolved."
@@ -111,6 +117,10 @@ private actor SyntheticEntryReader: NotesContextReading {
             let item = NSMenuItem(); let appMenu = NSMenu()
             appMenu.addItem(withTitle: "Quit Scratchpad Development", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
             item.submenu = appMenu; menu.addItem(item)
+            if live {
+                let account = NSMenuItem(title: "ChatGPT Account…", action: #selector(showChatGPTAccount), keyEquivalent: "")
+                account.target = self; appMenu.addItem(account)
+            }
             let edit = NSMenuItem(); edit.title = "Edit"; let editMenu = NSMenu(title: "Edit")
             for (title, action, key) in [("Undo", Selector(("undo:")), "z"), ("Copy", #selector(NSText.copy(_:)), "c"),
                                         ("Paste", #selector(NSText.paste(_:)), "v"), ("Select All", #selector(NSText.selectAll(_:)), "a")] {
@@ -154,6 +164,33 @@ private actor SyntheticEntryReader: NotesContextReading {
         controller?.show(); return false
     }
     @objc private func showScratchpad() { controller?.show() }
+    @objc private func showChatGPTAccount() {
+        Task {
+            let used = (try? await chatGPTConnection.trialRequestsUsed()).map(String.init) ?? "unknown"
+            let alert = NSAlert()
+            alert.messageText = "ChatGPT plan · 5.6 Terra · medium"
+            alert.informativeText = "Synthetic trial requests used: \(used) / 10. Whole-request text limit: 100 KB. No output-token cap or automatic retries. Notes are not connected in this test window."
+            for title in ["Done", "Continue with ChatGPT", "Manage usage", "Sign out"] { alert.addButton(withTitle: title) }
+            let choice = alert.runModal()
+            do {
+                if choice.rawValue == NSApplication.ModalResponse.alertFirstButtonReturn.rawValue + 1 {
+                    try await chatGPTConnection.connect { url in await MainActor.run { NSWorkspace.shared.open(url) } }
+                    try await chatGPTConnection.verifySelectedModel()
+                    showConnectionResult("Connected. 5.6 Terra is available. No programming request was sent.")
+                } else if choice.rawValue == NSApplication.ModalResponse.alertFirstButtonReturn.rawValue + 2 {
+                    NSWorkspace.shared.open(URL(string: "https://chatgpt.com/#settings/Usage")!)
+                } else if choice.rawValue == NSApplication.ModalResponse.alertFirstButtonReturn.rawValue + 3 {
+                    let confirmed = try await chatGPTConnection.disconnect()
+                    showConnectionResult(confirmed ? "Signed out. Local programming work is preserved." : "Signed out locally. Remote revocation was not confirmed; disconnect Gym Assistant in ChatGPT settings. Local programming work is preserved.")
+                }
+            } catch {
+                showConnectionResult("Account action could not complete. If a reply is running, stop it first. Existing scratchpad content is preserved.")
+            }
+        }
+    }
+    private func showConnectionResult(_ text: String) {
+        let alert = NSAlert(); alert.messageText = "ChatGPT connection"; alert.informativeText = text; alert.runModal()
+    }
     @objc private func requestNotesAccess() {
         Task {
             do { try await notesReader.requestAccess(); showFixtureResult("Notes access is available. Select the synthetic capability-test note, then run Verify Selected Notes Test Fixture.") }

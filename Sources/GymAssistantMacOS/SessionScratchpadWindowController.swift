@@ -829,7 +829,8 @@ import GymAssistantWorkspace
                 } catch {
                     guard let self, self.gate.active?.id == request.id else { return }
                     self.gate.stop()
-                    self.updateReply(requestID: request.id, text: "Reply unavailable. No automatic retry.", status: .failed)
+                    self.updateReply(requestID: request.id,
+                        text: (error as? AssistantFailure)?.userMessage ?? "Reply unavailable. No automatic retry.", status: .failed)
                 }
             }
         } catch {

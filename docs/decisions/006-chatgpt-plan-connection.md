@@ -23,15 +23,16 @@ Use only the exact approved model when it appears in the account-specific catalo
 The subsequent adapter uses public Responses HTTP streaming with `store: false`,
 waits for completed inference and supplies conversation context explicitly. No
 automatic inference retries, hidden model substitution, API-key fallback or credit
-purchases. Initial trials allow ten synthetic inference attempts and 32,000 input
-tokens each, without an output cap: the subscription route rejects
+purchases. Initial trials allow ten synthetic inference attempts and 100,000 UTF-8
+bytes of total request text each, without an output cap: the subscription route rejects
 `max_output_tokens`. Short replies are a coaching preference, not a token guarantee.
 
 ## Consequences and alternatives
 
 The native authorization helper adds no runtime dependency, but its protocol and
 signature validation require dedicated tests. It initially retains one registration;
-account switching, native sign-out and production account controls are not complete.
+account switching and production account controls are not complete. Native trial
+sign-out is implemented but not yet verified in live use.
 Unsupported identity-signature algorithms fail closed rather than bypassing checks.
 The coach must authorize the app in the browser before account-specific behavior
 can be verified. API-key billing and reusing Codex authentication were rejected for
@@ -39,8 +40,14 @@ this path. The separate Notes-plugin spike does not change this decision.
 
 ## Evidence
 
-Seven synthetic security/loopback tests and all five repository verification stages
-pass. This is not evidence of actual account eligibility or successful inference.
+Seven synthetic security/loopback tests and all five initial repository verification
+stages passed. Subsequent browser authorization and model discovery succeeded.
+Exact token-count preflight returned HTTP 401; the coach approved replacing the
+32,000-input-token proposal with the stated local byte limit. Six additional contract
+tests pass. Three synthetic submissions yielded no completed reply; the latest reached
+the event stream and reported subscription usage unavailable/limited. Successful
+inference remains unverified. Opt-in native trial wiring and sign-out exist, but
+production composition remains offline.
 Official documentation checked on 2026-10-16:
 
 - https://developers.openai.com/siwc/token-sharing-open-source/sign-in
