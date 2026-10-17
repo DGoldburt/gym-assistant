@@ -2433,3 +2433,13 @@ changed by installation. Native visual inspection timed out, so actual Dock
 visibility, disclosure layout and opening latest/new session remain manual
 acceptance checks, not inferred passes. Whole-scratchpad Markdown export still
 refuses ordered lists, links and underline rather than silently losing formatting.
+
+Revision note, 2026-10-17, entry boundary wiring: installed `f675c8d` after five
+verification stages passed (265 tests/41 suites). Gracefully terminated only the
+installed app, retained `/Users/dan/Applications/GymAssistant-rollback.klKz4W/Previous.bundle`,
+and registered/relaunched the replacement. Installed executable SHA-256 matches
+the tested candidate. No Notes, library, profile, credential or workspace migration
+was performed. Native real-note selection remains a manual acceptance check:
+Latest opens the read-only boundary browser; highlight the whole intended session
+and use Command–Return. New uses the selected source for the existing skeleton
+preview. Do not infer that this manual interaction passed from automated checks.
