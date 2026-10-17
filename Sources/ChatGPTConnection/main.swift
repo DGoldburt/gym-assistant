@@ -5,11 +5,21 @@ import GymAssistantWorkspace
 @main struct ConnectionMain {
     static func main() async {
         guard CommandLine.arguments.count == 2,
-              ["--connect", "--check-model", "--check-input-count", "--synthetic-trial", "--synthetic-single"].contains(CommandLine.arguments[1]) else {
+              ["--connect", "--check-model", "--check-input-count", "--check-profile", "--synthetic-trial", "--synthetic-single"].contains(CommandLine.arguments[1]) else {
             print("Use --connect to authorize Gym Assistant, or --check-model to verify 5.6 Terra availability. No inference is performed.")
             return
         }
         do {
+            if CommandLine.arguments[1] == "--check-profile" {
+                do {
+                    let profile = try CoachingProfileStore.load()
+                    print("Private coaching profile validated: \(profile.entries.count) entries. No network request or Notes read.")
+                } catch {
+                    print("Private coaching profile is missing or invalid. No network request or Notes read.")
+                    exit(1)
+                }
+                return
+            }
             let connection = ChatGPTConnection()
             if ["--synthetic-trial", "--synthetic-single"].contains(CommandLine.arguments[1]) {
                 do { try await runSyntheticTrial(connection, single: CommandLine.arguments[1] == "--synthetic-single") }

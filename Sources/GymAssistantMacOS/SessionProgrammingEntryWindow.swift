@@ -24,10 +24,13 @@ import GymAssistantWorkspace
     private var recoveryPreview: WorkspaceRecoveryPreview?
     private let previewBackup = NSButton(title: "Preview last valid backup…", target: nil, action: nil)
     private let previousPlanning = NSButton(title: "Previous planning…", target: nil, action: nil)
+    private let accountAction: (@MainActor () -> Void)?
 
     public init(workspaces: SessionWorkspaceWindows, modeDescription: String,
                 presentWorkspace: (@MainActor (SessionScratchpadWindowController) -> Void)? = nil,
+                accountAction: (@MainActor () -> Void)? = nil,
                 requestAccess: @escaping @MainActor () async throws -> Void) {
+        self.accountAction = accountAction
         self.workspaces = workspaces; self.modeDescription = modeDescription; self.requestAccess = requestAccess
         self.presentWorkspace = presentWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 530, height: 250),
@@ -75,7 +78,14 @@ import GymAssistantWorkspace
         previousPlanning.keyEquivalent = "h"; previousPlanning.keyEquivalentModifierMask = [.command, .shift]
         previousPlanning.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
         previousPlanning.isEnabled = false; window.contentView?.addSubview(previousPlanning)
+        if accountAction != nil {
+            let account = NSButton(title: "ChatGPT account…", target: self, action: #selector(openAccount))
+            account.frame = NSRect(x: 300, y: 12, width: 210, height: 28)
+            account.identifier = .init("program-entry-account")
+            window.contentView?.addSubview(account)
+        }
     }
+    @objc private func openAccount() { accountAction?() }
     public required init?(coder: NSCoder) { nil }
 
     public func start() {

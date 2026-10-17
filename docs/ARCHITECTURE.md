@@ -6,11 +6,17 @@ Regular-use policy approved 2026-10-17: explicitly composed `.regularUse`
 connections keep the 100 KB bound but have no lifetime request cap. Synthetic
 helpers default to the original ten-request policy. Both use the same no-retry
 transport; regular use preserves the old trial ledger and does not change billing.
-Production Notes/profile wiring remains pending.
+The Notes Service composition now selects regular use and loads a private,
+validated read-only profile from Application Support/GymAssistant/coaching-profile.json.
+Missing/invalid profiles block new entry instead of falling back to empty preferences.
+The loaded profile is immutable for that app session. Account controls are exposed
+through an optional entry-window callback; the reusable macOS module has no provider
+dependency. Built-source integration is not installed/native acceptance.
 
 `GymAssistantOpenAI` contains authorization, model discovery and a subscription
 `ProgrammingAssistant`, exercised by `ChatGPTConnection` and an opt-in synthetic
-development window. The installed Service still uses the fake provider. Browser OAuth uses PKCE, state and
+development window. The Service source is wired live; the previously installed build
+is not updated by source edits. Browser OAuth uses PKCE, state and
 nonce; identity verification checks the OpenAI signature and bound claims before
 accepting credentials. App-owned credentials live in macOS Keychain, separately from
 workspace files and Codex credentials. Registration/refresh is serialized across

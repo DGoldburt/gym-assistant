@@ -8,7 +8,7 @@ and product specifications. It is a starting point, not yet a complete app manua
 ### Optional ChatGPT synthetic trial
 
 A separate development trial can use **5.6 Terra, medium reasoning** through your
-ChatGPT plan. It is not yet enabled in the Notes Service. Its title clearly says
+ChatGPT plan. It is separate from the real Notes entry. Its title clearly says
 **Synthetic trial**; the note context and coaching profile are synthetic, not your
 actual client note or full coaching preferences. Do not paste private content into
 this trial window. It saves its scratchpad separately from normal workspaces.
@@ -22,8 +22,9 @@ The trial allows ten submitted requests total, including failed or stopped reque
 and 100 KB of total request text each. Oversized requests are rejected, not trimmed.
 There is no output-token cap. Requests use your plan allowance or available credits
 under your ChatGPT settings; the app does not buy credits or retry automatically.
-If usage is unavailable or limited, use **Manage usage** before deliberately retrying.
-The current live trial is blocked by that provider response, not a completed launch.
+If a usage limit is reported, review **Manage usage**. If usage availability could
+not be checked, try later; that error does not establish an exhausted allowance.
+The bounded synthetic native test has passed; this is not full product acceptance.
 
 ### Notes entry
 
@@ -37,9 +38,23 @@ If Notes access is missing, choose **Allow Notes access**. After granting access
 select the intended note in Notes and explicitly choose **Use currently selected
 Notes note**. Granting permission does not silently capture a new selection.
 
-This development route uses a clearly labeled local test assistant, not OpenAI,
-and has no coaching profile loaded. Damaged-file recovery and uncertain initial
-boundary entry remain unfinished. Do not treat this as the completed product slice.
+The current feature build uses **5.6 Terra, medium reasoning**, through the app's
+ChatGPT connection. Only sending a question initiates inference; opening the entry
+or reading Notes does not. The request includes the current note context,
+scratchpad, conversation and fixed coaching profile. The 100 KB text bound remains,
+with no lifetime request cap, automatic retries or background inference. Your
+ChatGPT billing settings remain unchanged. Notes are never edited by the model.
+
+Choose **ChatGPT account…** in the entry window to connect, manage usage or sign
+out. Opening the panel does not verify current account availability. The existing
+**Programming preferences** view shows the same read-only profile supplied to the
+assistant, including sources, scope and caveats. Chat cannot edit that profile.
+
+The private profile is loaded from `Library/Application Support/GymAssistant/coaching-profile.json`
+in your user folder. Missing or invalid content blocks new programming entry rather
+than silently loading an empty profile. The profile is fixed for the current app
+session; restart after an externally prepared profile update. The new real-Notes
+composition still needs installed/manual acceptance; this is not the completed slice.
 
 ### Recover an earlier idea
 

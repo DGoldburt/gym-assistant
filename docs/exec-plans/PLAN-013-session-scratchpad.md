@@ -45,6 +45,7 @@ is authorized here.
 
 ## Progress
 
+- [x] (2026-10-17) Wire Notes Service source to the regular-use provider and validated private read-only coaching profile. Package authored philosophy, 15 approved seed preferences and explicit evidence/coverage caveats outside Git; no client-specific reconciliation examples are imported. Add optional entry account controls (connect/usage/sign-out), no request on opening. Missing/invalid profile blocks entry rather than using an empty fallback. Preserve existing workspace directory and exact library lookup. Installation, native real-Notes acceptance and account sign-out remain unverified.
 - [x] (2026-10-17) Coach approves post-trial regular use: explicit user submissions only, 100 KB local text bound, no lifetime request-count cap, automatic retries or background inference; billing unchanged. Add explicit `.regularUse` connection policy preserving the historical trial ledger; synthetic tools still default to `.syntheticTrial`. Production Notes/profile composition remains the next implementation step. No inference is sent by this policy change.
 - [x] (2026-10-16) Coach marks the native synthetic live test passed: edit B1 in the scratchpad and ask what B1 is now and what complements it at B2. This accepts that bounded native interaction, not real Notes/profile loading, account sign-out, or broad coaching quality. The manual test was offered the tenth and last trial request; no further inference is authorized beyond the original ceiling. Do not reset or expand the ledger without a new approved usage policy.
 - [x] (2026-10-16) Coach authorizes continuation without between-attempt prompts within the ten-request ceiling. Attempt 6 reached completion with no usable terminal text. Retain `response.output_item.done` items, validate their message/text structure and require `response.completed` before returning. Attempt 7 completed in 8s; attempts 8–9 completed a synthetic two-turn exchange in 3s/6s. Updated B1 was read correctly, but the follow-up unnecessarily asked for already supplied context. Nine attempts used; reserve the last for native manual testing. All five stages pass; local stream guards, duplicate/unsupported items and late failure remain covered.
@@ -52,7 +53,7 @@ is authorized here.
 - [x] (2026-10-16) Implement isolated native `ChatGPTConnection` authorization/model-discovery helper and `GymAssistantOpenAI` module. App-owned Keychain storage, persistent host/issued-client identity, loopback callback, PKCE/state/nonce and Security-framework RS256 verification. Seven new security/loopback tests and all five repository verification stages pass. No inference or change to the scratchpad's fake provider.
 - [x] (2026-10-16) Browser authorization completed; app-owned Keychain registration and 5.6 Terra catalog availability verified. Exact input-count preflight returned HTTP 401 while model discovery still succeeded. Coach approves a 100,000-byte whole-request text limit instead of the proposed 32,000-token cap; no truncation or exact token-limit claim.
 - [x] (2026-10-16) Implement subscription payload and byte-framed SSE parser, exact model/medium selection, persistent ten-attempt ledger saved before submission, late-failure/completion checks, validated mention ranges and safe user errors. Add opt-in `--live-synthetic` scratchpad and account controls; the installed Service remains fake/offline. Thirteen targeted security/contract tests pass.
-- [ ] Complete production composition/profile loading and broader follow-up quality acceptance. Synthetic inference and changed-context access are observed in attempts 7–9; the coach passed the subsequent native synthetic live test. Further live use requires an approved post-trial usage policy; do not reset the ledger or silently expand it.
+- [ ] Complete installed real-Notes composition/account acceptance and broader follow-up quality evaluation. Source composition/profile loading is implemented and regular-use policy approved. Synthetic helpers still retain their trial ledger and ceiling. Do not equate build/offline success with installed acceptance.
 
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
@@ -723,6 +724,16 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-17 composition increment: Service source now uses the approved model and
+regular-use policy with the same immutable profile shown in preference inspection.
+Profile loading is bounded, read-only and rejects missing, malformed, empty or
+unsourced content. Private content is outside Git; only synthetic tests are tracked.
+No live inference or Notes read was performed for this increment. Preserve the
+existing workspace store; no migration, reset or installation occurs implicitly.
+All five verification stages pass (259 tests/41 suites); the private local profile
+validates with 18 entries. A signed non-installed bundle is ready at
+`/private/tmp/gym-assistant-plan013-live-composition/Gym Assistant.app`.
 
 2026-10-17 policy milestone: regular-use approval removes the lifetime request cap
 only from explicitly selected regular-use connections. Synthetic helpers retain
@@ -2367,3 +2378,8 @@ Revision note, 2026-10-17: coach approves the regular-use policy. Implement it a
 an explicit connection mode, preserving trial defaults and evidence. Next wire
 the actual profile and provider into the Notes composition; do not describe that
 unimplemented integration as available merely because regular use is approved.
+
+Revision note, 2026-10-17, production composition: load the approved private profile
+and select the live regular-use adapter in Service source. Add explicit account
+entry controls, safe profile errors and offline validation. The installed app is
+not replaced; manual real-Notes/connection acceptance remains the next checkpoint.

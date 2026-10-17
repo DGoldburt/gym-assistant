@@ -33,7 +33,7 @@ let package = Package(
         .executableTarget(name: "PersonalLibraryImport", dependencies: ["GymAssistantCore"]),
         .executableTarget(
             name: "GymAssistantNotesService",
-            dependencies: ["GymAssistantCore", "GymAssistantMacOS", "GymAssistantWorkspace"],
+            dependencies: ["GymAssistantCore", "GymAssistantMacOS", "GymAssistantWorkspace", "GymAssistantOpenAI"],
             linkerSettings: [.linkedFramework("AppKit")]
         ),
         .executableTarget(name: "FieldFeedbackReport", dependencies: ["GymAssistantCore"]),

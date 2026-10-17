@@ -49,6 +49,12 @@ this path. The separate Notes-plugin spike does not change this decision.
 
 ## Evidence
 
+2026-10-17 composition update: Service source now supplies the validated private
+coaching profile to the regular-use adapter. Optional account controls on the entry
+window do not trigger inference. Profile content remains outside Git; inspection
+and requests share the same immutable loaded value. The new app bundle is built
+but not installed; real-Notes/native account acceptance remains outstanding.
+
 Seven synthetic security/loopback tests and all five initial repository verification
 stages passed. Subsequent browser authorization and model discovery succeeded.
 Exact token-count preflight returned HTTP 401; the coach approved replacing the

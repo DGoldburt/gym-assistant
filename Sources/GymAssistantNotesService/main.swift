@@ -2,6 +2,7 @@ import AppKit
 import GymAssistantCore
 import GymAssistantMacOS
 import GymAssistantWorkspace
+import GymAssistantOpenAI
 import UniformTypeIdentifiers
 
 private enum WorkflowEventLog {
@@ -1896,6 +1897,7 @@ private final class ExerciseServiceProvider: NSObject {
     private var sessionWindows: SessionWorkspaceWindows?
     private var programEntry: SessionProgrammingEntryWindow?
     private var lastStandaloneWasProgramming = false
+    private let programmingConnection = ChatGPTConnection(usagePolicy: .regularUse)
 
     func flushWorkspaces() -> Bool {
         programEntry?.cancel()
@@ -1905,11 +1907,20 @@ private final class ExerciseServiceProvider: NSObject {
     private func showProgramEntry() {
         lastStandaloneWasProgramming = true
         if programEntry == nil {
+            let profile: CoachingProfile
+            do { profile = try CoachingProfileStore.load() }
+            catch {
+                let alert = NSAlert()
+                alert.messageText = "Coaching profile unavailable"
+                alert.informativeText = "The private coaching profile is missing or invalid. Programming assistance has not started; no note or profile was sent. Restore the approved coaching-profile.json in Application Support/GymAssistant, then try again."
+                alert.runModal()
+                return
+            }
             let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("GymAssistantScratchpadDevelopment", isDirectory: true)
                 .appendingPathComponent("ServiceWorkspaces", isDirectory: true)
             let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: notesReader,
-                profile: CoachingProfile(version: "development-empty", entries: []), assistant: FakeProgrammingAssistant(),
+                profile: profile, assistant: ChatGPTProgrammingAssistant(connection: programmingConnection),
                 exerciseLookup: { [library] text in
                     do {
                         guard let name = try library.exactName(for: text) else { return .notMatched }
@@ -1919,10 +1930,37 @@ private final class ExerciseServiceProvider: NSObject {
                 })
             sessionWindows = windows
             programEntry = SessionProgrammingEntryWindow(workspaces: windows,
-                modeDescription: "Development preview: local test assistant, no API calls. Coaching profile is not loaded. Notes are read only; handoff is manual.",
+                modeDescription: "5.6 Terra · medium · ChatGPT plan connection. Sending a question shares Notes context, the scratchpad, conversation and read-only coaching profile with OpenAI. Notes are read only; handoff is manual.",
+                accountAction: { [weak self] in self?.showProgrammingAccount() },
                 requestAccess: { [notesReader] in try await notesReader.requestAccess() })
         }
         programEntry?.start()
+    }
+
+    private func showProgrammingAccount() {
+        Task {
+            let alert = NSAlert()
+            alert.messageText = "ChatGPT account · 5.6 Terra · medium"
+            alert.informativeText = "User-submitted questions only. 100 KB text limit; no lifetime request cap, automatic retries or background inference. Existing ChatGPT billing settings apply. Sign-in is checked when sending; opening this panel does not verify availability."
+            for title in ["Done", "Continue with ChatGPT", "Manage usage", "Sign out"] { alert.addButton(withTitle: title) }
+            let choice = alert.runModal().rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+            do {
+                switch choice {
+                case 1:
+                    try await programmingConnection.connect { url in await MainActor.run { NSWorkspace.shared.open(url) } }
+                    try await programmingConnection.verifySelectedModel()
+                    showAccountResult("Connected. 5.6 Terra is available. No programming request was sent.")
+                case 2: NSWorkspace.shared.open(URL(string: "https://chatgpt.com/settings/usage?tab=overview")!)
+                case 3:
+                    let confirmed = try await programmingConnection.disconnect()
+                    showAccountResult(confirmed ? "Signed out. Saved programming work is preserved." : "Signed out locally. Remote revocation was not confirmed; disconnect Gym Assistant in ChatGPT settings. Saved programming work is preserved.")
+                default: break
+                }
+            } catch { showAccountResult("Account action could not complete. If a reply is running, stop it first. Your programming work is preserved.") }
+        }
+    }
+    private func showAccountResult(_ message: String) {
+        let alert = NSAlert(); alert.messageText = "ChatGPT connection"; alert.informativeText = message; alert.runModal()
     }
 
     func reopenLibraryMaintenance() -> Bool {

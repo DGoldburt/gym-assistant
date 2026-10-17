@@ -23,6 +23,23 @@ private actor PermissionEntryReader: NotesContextReading {
 }
 
 @Suite("Programming entry onboarding") @MainActor struct SessionProgrammingEntryTests {
+    @Test func accountControlIsExplicitAndDoesNotCaptureNotes() async throws {
+        let reader = PermissionEntryReader()
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let windows = SessionWorkspaceWindows(store: WorkspaceSnapshotStore(directory: root), reader: reader,
+            profile: .init(version: "synthetic", entries: []), assistant: FakeProgrammingAssistant())
+        var opened = 0
+        let entry = SessionProgrammingEntryWindow(workspaces: windows, modeDescription: "Synthetic",
+            accountAction: { opened += 1 }, requestAccess: {})
+        let content = try #require(entry.window?.contentView)
+        let button = try #require(descendants(content).first { $0.identifier?.rawValue == "program-entry-account" } as? NSButton)
+        #expect(opened == 0)
+        button.performClick(nil)
+        #expect(opened == 1)
+        #expect(await reader.captures == 0)
+        let offline = SessionProgrammingEntryWindow(workspaces: windows, modeDescription: "Synthetic", requestAccess: {})
+        #expect(!descendants(try #require(offline.window?.contentView)).contains { $0.identifier?.rawValue == "program-entry-account" })
+    }
     private func descendants(_ view: NSView) -> [NSView] { [view] + view.subviews.flatMap(descendants) }
     private func eventually(_ test: () -> Bool) async throws {
         for _ in 0..<100 {
