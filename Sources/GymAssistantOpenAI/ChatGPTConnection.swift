@@ -255,7 +255,7 @@ public actor ChatGPTConnection {
                 throw AssistantFailure.provider
             }
             var stream = SubscriptionStream()
-            trialDiagnostic = "Reading event stream."
+            trialDiagnostic += " Reading event stream."
             for try await byte in bytes {
                 try Task.checkCancellation()
                 try stream.byte(byte)
@@ -273,9 +273,22 @@ public actor ChatGPTConnection {
             switch error {
             case .inputLimit: throw AssistantFailure.sizeLimit
             case .trialLimit: throw AssistantFailure.trialLimit
-            case .usageLimit: throw AssistantFailure.usageLimit
+            case .usageLimit:
+                trialDiagnostic += " Code: subscription_sharing_usage_limit_exceeded."
+                throw AssistantFailure.usageLimit
+            case .usageUnavailable:
+                trialDiagnostic += " Code: subscription_sharing_usage_unavailable."
+                throw AssistantFailure.usageUnavailable
             case .incomplete: throw AssistantFailure.incomplete
-            default: throw AssistantFailure.provider
+            case .providerCode(let code):
+                trialDiagnostic += " Code: " + code + "."
+                throw AssistantFailure.provider
+            case .invalidResponse:
+                trialDiagnostic += " Response failed local format validation."
+                throw AssistantFailure.provider
+            case .provider:
+                trialDiagnostic += " Provider failure event; code absent or not in diagnostic allowlist."
+                throw AssistantFailure.provider
             }
         } catch let error as ChatGPTConnectionError {
             switch error {

@@ -78,6 +78,28 @@ import GymAssistantWorkspace
             #expect(throws: SubscriptionFailure.invalidResponse) { try stream.finish() }
         }
     }
+    @Test func usageUnavailableIsNotAnExhaustedAllowance() throws {
+        for raw in [
+            "{\"type\":\"response.failed\",\"response\":{\"error\":{\"code\":\"subscription_sharing_usage_unavailable\"}}}",
+            "{\"type\":\"error\",\"code\":\"subscription_sharing_usage_unavailable\"}"
+        ] {
+            var stream = SubscriptionStream()
+            try stream.line("data: " + raw)
+            #expect(throws: SubscriptionFailure.usageUnavailable) { try stream.line("") }
+        }
+        #expect(AssistantFailure.usageUnavailable.userMessage != AssistantFailure.usageLimit.userMessage)
+        #expect(AssistantFailure.usageUnavailable.userMessage.contains("could not check"))
+    }
+    @Test func providerDiagnosticsOnlyExposeKnownProtocolCodes() throws {
+        for (code, expected) in [
+            ("subscription_sharing_user_unavailable", SubscriptionFailure.providerCode("subscription_sharing_user_unavailable")),
+            ("private arbitrary text", SubscriptionFailure.provider)
+        ] {
+            var stream = SubscriptionStream()
+            try stream.line("data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"code\":\"\(code)\",\"message\":\"private text\"}}}")
+            #expect(throws: expected) { try stream.line("") }
+        }
+    }
     @Test func mentionsHaveValidatedUTF16RangesAndNoIdentity() throws {
         let id = UUID()
         let response = try SubscriptionReply.decode("{\"text\":\"🏋️ Try SL RDL, then SL RDL again.\",\"exercise_names\":[\"SL RDL\",\"invented name\"]}", requestID: id)

@@ -46,10 +46,16 @@ Exact token-count preflight returned HTTP 401; the coach approved replacing the
 32,000-input-token proposal with the stated local byte limit. Six additional contract
 tests pass. Three synthetic submissions yielded no completed reply; the latest reached
 the event stream and reported subscription usage unavailable/limited. Successful
-inference remains unverified. Opt-in native trial wiring and sign-out exist, but
+inference remains unverified. A fourth attempt after the coach confirmed enabled
+app access and remaining allowance returned HTTP 200, then a different generic
+failure; its exact cause was not retained. Diagnostics now distinguish usage-limit,
+usage-check unavailability, allowlisted provider codes and local format rejection.
+No further request or settings change was made at this checkpoint.
+Opt-in native trial wiring and sign-out exist, but
 production composition remains offline.
 Official documentation checked on 2026-10-16:
 
 - https://developers.openai.com/siwc/token-sharing-open-source/sign-in
 - https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions
 - https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations
+- https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery

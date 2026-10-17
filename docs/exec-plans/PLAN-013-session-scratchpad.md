@@ -34,7 +34,8 @@ The coach selected `gpt-5.6-terra` with medium reasoning and Sign in with ChatGP
 plan usage on 2026-10-16. The coach subsequently approved credential/retention
 defaults and bounded synthetic trials, explicitly lifting the proposed output-token
 cap because the subscription route does not support it. Sign-in and model discovery
-succeeded; live inference is blocked by a subscription usage-unavailable/limit response.
+succeeded; live inference remains unverified after four failed synthetic attempts.
+The latest failure was neither of the two recognized subscription usage errors.
 The approved trial input bound is now 100,000 UTF-8 bytes, not an exact token cap.
 No push or merge into learner/main
 is authorized here.
@@ -44,7 +45,7 @@ is authorized here.
 - [x] (2026-10-16) Implement isolated native `ChatGPTConnection` authorization/model-discovery helper and `GymAssistantOpenAI` module. App-owned Keychain storage, persistent host/issued-client identity, loopback callback, PKCE/state/nonce and Security-framework RS256 verification. Seven new security/loopback tests and all five repository verification stages pass. No inference or change to the scratchpad's fake provider.
 - [x] (2026-10-16) Browser authorization completed; app-owned Keychain registration and 5.6 Terra catalog availability verified. Exact input-count preflight returned HTTP 401 while model discovery still succeeded. Coach approves a 100,000-byte whole-request text limit instead of the proposed 32,000-token cap; no truncation or exact token-limit claim.
 - [x] (2026-10-16) Implement subscription payload and byte-framed SSE parser, exact model/medium selection, persistent ten-attempt ledger saved before submission, late-failure/completion checks, validated mention ranges and safe user errors. Add opt-in `--live-synthetic` scratchpad and account controls; the installed Service remains fake/offline. Thirteen targeted security/contract tests pass.
-- [ ] Complete live acceptance: three deliberate synthetic attempts recorded, no completed reply. First two failed the overly strict response Content-Type check; third reached the parsed stream and raised the subscription usage-unavailable/limit failure. No automatic retries. Coach needs to review Gym Assistant's ChatGPT usage settings before another attempt. Native live-window acceptance and production composition/profile loading remain outstanding.
+- [ ] Complete live acceptance: four deliberate synthetic attempts recorded, no completed reply. First two failed the overly strict response Content-Type check; third raised the previously combined subscription usage-unavailable/limit failure. Coach then showed available plan allowance and enabled app access. Fourth returned HTTP 200 and a different, generic failure; exact cause was not retained. Split usage errors and add allowlisted provider-code versus local-format diagnostics before any further attempt. No automatic retries. Native live-window acceptance and production composition/profile loading remain outstanding.
 
 - [x] (2026-10-15) Implement explicit damaged-snapshot backup preview/restore in the existing entry window. Preview is read-only, shows revision and backup file modification time, and Cancel writes nothing. Restore revalidates previewed bytes, preserves damaged current separately, leaves backup intact, and refuses valid/newer-schema current files. Reset cached entry ownership only with no retained editors. Added storage/failure/UI tests; five stages pass (223 tests/36 suites). Synthetic native preview/cancel/restore/resume preserves saved scratchpad and unsent question.
 - [x] (2026-10-15) Coach defers batch association recovery and approves planning lifecycle direction below. Reconcile OST with learner/main b5d9916, preserving both contextual assistance and newer extraction/history directions; no branch merge or client-history changes.
@@ -129,11 +130,19 @@ is authorized here.
 - [ ] Implement persistent native workspace and production Notes permission/read adapter; pass offline/close/relaunch/recovery tests with a fake assistant.
 - [x] (2026-10-16) Coach selects `gpt-5.6-terra`, medium reasoning, using Sign in with ChatGPT plan usage rather than API-key billing. Official documentation establishes the local-personal-app flow, not this account's eligibility or model availability.
 - [x] (2026-10-16) Coach approves Keychain credentials, local conversation ownership, `store: false`, no automatic inference retries/background inference/billing fallback, and ten synthetic trial requests with at most 32,000 input tokens each. Plan allowance or available credits follow account settings; no credit purchases. Coach explicitly removes the proposed 8,000 output/reasoning-token cap; concise replies are a preference, not a usage bound.
-- [ ] Complete successful inference and native acceptance after resolving the provider's usage-unavailable/limit response. App-owned credentials are authorized; three synthetic inference attempts have run, none completed. No real Notes/profile data has been sent.
+- [ ] Complete successful inference and native acceptance after diagnosing the remaining live failure. App-owned credentials are authorized; four synthetic inference attempts have run, none completed. No real Notes/profile data has been sent.
 - [ ] Implement conversation freshness, fixed read-only profile, and truthful exercise decoration; verify fake-provider behavior before paid tests.
 - [ ] Complete synthetic end-to-end acceptance, regression checks, and coach review; publish only the approved coherent package under the repository Git lifecycle.
 
 ## Surprises & Discoveries
+
+2026-10-16 diagnostic follow-up: the coach's screenshot shows enabled Gym Assistant
+with a 100% app allowance and remaining plan allowance; credit fallback is off.
+After separating usage errors, one authorized request returned HTTP 200 but neither
+usage error. Its generic failure cannot retrospectively be classified as provider
+rejection versus local format validation. Diagnostics now distinguish these paths
+and expose only allowlisted provider codes, not arbitrary messages. Do not infer
+that settings are wrong or change billing. Four attempts consumed; six remain.
 
 2026-10-16: Subscription model discovery succeeded while the exact input-count
 endpoint rejected the same connection (HTTP 401). The coach approved a local
@@ -699,6 +708,13 @@ Rationale: modification time is not a reliable body revision. Date/author:
 2026-10-14, Codex evidence reconciliation of the shared freshness policy.
 
 ## Outcomes & Retrospective
+
+2026-10-16 diagnostic follow-up: separate exhausted allowance from inability to
+check availability; add a single-request trial command and safe remaining failure
+diagnostics. Fourth synthetic attempt did not yield a usable reply; no further
+request made this checkpoint. Live success remains open.
+All five offline verification stages pass (254 tests/40 suites); these checks do
+not establish successful inference or native live-window behavior.
 
 2026-10-16 subscription increment: app-owned authorization and exact-model discovery
 work. The guarded adapter and opt-in synthetic window are implemented; all five
@@ -1852,7 +1868,8 @@ each trial request ID before submission. Failed/cancelled attempts remain consum
 Run `.build/debug/ChatGPTConnection --synthetic-trial` only after the account usage
 issue is resolved: it attempts a two-question synthetic planning exchange, changing
 B1 from Press to Side plank between requests. Each submission counts against ten;
-there are currently three used. Run `swift run ScratchpadDevelopment --live-synthetic`
+there are currently four used. Use `--synthetic-single` instead for exactly one
+diagnostic request (no follow-up even on success). Run `swift run ScratchpadDevelopment --live-synthetic`
 for the opt-in native trial; it uses a separate `GymAssistantLiveSyntheticTrial`
 workspace directory and frozen synthetic Notes. The app menu offers ChatGPT Account
 for reauthorization, usage settings and sign-out. Sign-out preserves work and trial
@@ -2292,3 +2309,9 @@ ledger, terminal stream validation and opt-in synthetic native account controls.
 All five stages pass (252 tests/40 suites); three live attempts yielded no completed
 reply and the latest reported subscription usage unavailable/limited. Pause live
 submissions for the coach to review account usage settings; production stays offline.
+
+Revision note, 2026-10-16, usage diagnostics: coach supplied settings evidence and
+approved one further synthetic request. Separate the two usage errors, add a
+single-submission helper mode, and record the fourth failure without inventing its
+cause. Add safe provider-code/local-format diagnostics for future investigation.
+No account settings, credentials, real Notes or production wiring were changed.

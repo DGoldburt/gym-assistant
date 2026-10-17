@@ -49,12 +49,13 @@ public struct ProgrammingResponse: Equatable, Sendable {
 }
 public enum AssistantFailure: Error, Equatable, Sendable {
     case cancelled, transport, provider, sizeLimit
-    case authentication, modelUnavailable, usageLimit, trialLimit, incomplete, busy
+    case authentication, modelUnavailable, usageLimit, usageUnavailable, trialLimit, incomplete, busy
     public var userMessage: String {
         switch self {
         case .authentication: "Connect Gym Assistant to ChatGPT and enable plan usage. No automatic retry."
         case .modelUnavailable: "5.6 Terra is unavailable for this account. No substitute model was used."
-        case .usageLimit: "ChatGPT usage is unavailable or limited. Review your ChatGPT usage settings. No automatic retry."
+        case .usageLimit: "ChatGPT reported a usage limit. Review your plan or this app's limit in ChatGPT usage settings. No automatic retry."
+        case .usageUnavailable: "OpenAI could not check ChatGPT usage availability. This does not establish that your allowance is exhausted. Try again later; no automatic retry."
         case .trialLimit: "The ten-request trial allowance is exhausted or this request was already submitted. No request sent."
         case .sizeLimit: "Context exceeds the 100 KB trial text limit. Nothing was trimmed or sent."
         case .incomplete: "The reply did not complete. No automatic retry; your question is preserved."

@@ -5,14 +5,14 @@ import GymAssistantWorkspace
 @main struct ConnectionMain {
     static func main() async {
         guard CommandLine.arguments.count == 2,
-              ["--connect", "--check-model", "--check-input-count", "--synthetic-trial"].contains(CommandLine.arguments[1]) else {
+              ["--connect", "--check-model", "--check-input-count", "--synthetic-trial", "--synthetic-single"].contains(CommandLine.arguments[1]) else {
             print("Use --connect to authorize Gym Assistant, or --check-model to verify 5.6 Terra availability. No inference is performed.")
             return
         }
         do {
             let connection = ChatGPTConnection()
-            if CommandLine.arguments[1] == "--synthetic-trial" {
-                do { try await runSyntheticTrial(connection) }
+            if ["--synthetic-trial", "--synthetic-single"].contains(CommandLine.arguments[1]) {
+                do { try await runSyntheticTrial(connection, single: CommandLine.arguments[1] == "--synthetic-single") }
                 catch {
                     print(await connection.trialDiagnostic)
                     print("Trial requests used: \(try await connection.trialRequestsUsed()) / 10.")
@@ -56,7 +56,7 @@ import GymAssistantWorkspace
         }
     }
 
-    static func runSyntheticTrial(_ connection: ChatGPTConnection) async throws {
+    static func runSyntheticTrial(_ connection: ChatGPTConnection, single: Bool) async throws {
         let note = NoteSnapshot(id: .init("synthetic-live-test"), text: "Synthetic client\nSession 1\nA1 Row\nA2 Split squat\n")
         var scratchpad = WorkspaceSnapshot(anchor: .init(noteID: note.id, recordedHeading: "Session 2", baselineText: "", recordingState: .unrecorded),
             text: "Session 2\nA1 Deadlift\nA2 Push-up\nB1 Press\nB2 undecided\n", richTextArchive: Data([1]))
@@ -71,6 +71,7 @@ import GymAssistantWorkspace
             let reply = try await connection.reply(to: request)
             print("Synthetic reply completed in \(Int(Date().timeIntervalSince(start)))s; validated exercise mentions: \(reply.exerciseMentions.count).")
             print(reply.text)
+            if single { break }
             scratchpad.messages.append(.init(requestID: request.id, conversationID: request.conversationID,
                 role: .coach, text: question, status: .complete, scratchpadRevision: scratchpad.revision, observationID: note.observationID))
             scratchpad.messages.append(.init(requestID: request.id, conversationID: request.conversationID,

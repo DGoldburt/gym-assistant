@@ -49,7 +49,8 @@ struct SubscriptionPayload: Encodable {
 }
 
 enum SubscriptionFailure: Error, Equatable {
-    case incomplete, invalidResponse, usageLimit, provider, inputLimit, trialLimit
+    case incomplete, invalidResponse, usageLimit, usageUnavailable, provider, inputLimit, trialLimit
+    case providerCode(String)
 }
 
 struct SubscriptionTrialLedger: Codable {
@@ -108,9 +109,18 @@ struct SubscriptionStream {
         switch event.type {
         case "error", "response.failed":
             let code = event.error?.code ?? event.response?.error?.code ?? event.code
-            if code == "subscription_sharing_usage_limit_exceeded" || code == "subscription_sharing_usage_unavailable" {
+            if code == "subscription_sharing_usage_limit_exceeded" {
                 throw SubscriptionFailure.usageLimit
             }
+            if code == "subscription_sharing_usage_unavailable" {
+                throw SubscriptionFailure.usageUnavailable
+            }
+            // Only documented protocol labels may leave the parser, never provider messages.
+            let knownCodes = ["subscription_sharing_user_not_eligible", "subscription_sharing_unsupported_capability",
+                "subscription_sharing_route_not_supported", "subscription_sharing_invalid_user",
+                "chatpass_v2_scope_not_authorized", "chatpass_v2_invalid_authorization_context",
+                "subscription_sharing_user_unavailable", "server_error", "invalid_prompt"]
+            if let code, knownCodes.contains(code) { throw SubscriptionFailure.providerCode(code) }
             throw SubscriptionFailure.provider
         case "response.incomplete": throw SubscriptionFailure.incomplete
         case "response.completed":

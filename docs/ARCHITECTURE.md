@@ -12,9 +12,10 @@ processes. Connection commands send no Notes/profile content; the explicit synth
 trial makes inference calls using 5.6 Terra medium. The adapter validates a 100 KB
 whole-request text bound, reserves attempts durably in Keychain, and requires a
 completed stream event plus a valid reply before updating conversation text. No
-automatic retries or API-key fallback. Three attempts have yielded no completed reply;
-latest failure is provider subscription usage unavailable/limited. PLAN 013 records
-the account-settings checkpoint and remaining live/native/production validation.
+automatic retries or API-key fallback. Four attempts have yielded no completed reply.
+Usage-check unavailability is distinct from an exhausted allowance; diagnostics
+separate known provider codes from local format rejection without exposing raw
+provider messages. PLAN 013 records remaining live/native/production validation.
 
 Status: the Notes adapter direction is validated by ADR 001. The initial
 exercise-identity persistence boundary, deterministic normalization and
