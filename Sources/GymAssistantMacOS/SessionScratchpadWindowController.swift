@@ -374,9 +374,7 @@ import GymAssistantWorkspace
         sendButton.target = self; sendButton.action = #selector(send)
         sendButton.frame = NSRect(x: 1007, y: 54, width: 83, height: 26)
         sendButton.autoresizingMask = [.minXMargin]
-        GymAssistantAppearance.primary(sendButton)
-        sendButton.bezelColor = GymAssistantAppearance.accent
-        sendButton.contentTintColor = .white
+        GymAssistantAppearance.filledPrimary(sendButton)
         root.addSubview(sendButton)
         stopButton.target = self; stopButton.action = #selector(stop)
         stopButton.frame = NSRect(x: 917, y: 54, width: 83, height: 26)

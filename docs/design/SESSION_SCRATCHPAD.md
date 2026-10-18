@@ -1,5 +1,9 @@
 # Session scratchpad with margin conversation
 
+For current visual styling, shared components, and light/dark review requirements,
+follow the [Gym Assistant design guide](DESIGN_GUIDE.md). This document continues
+to define the interaction and product boundaries.
+
 Design direction selected by the user, 2026-10-12. Refines the contextual-assistance
 candidate; not approval to implement or replace the active tutorial slice.
 The user chose the OpenAI API and approved transmission of all note and profile

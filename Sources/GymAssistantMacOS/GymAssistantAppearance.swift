@@ -3,6 +3,7 @@ import AppKit
 /// A deliberately small native visual system shared by the programming windows.
 /// The warm accent and deep-blue-adjacent neutrals take their cue from the app icon;
 /// controls remain standard AppKit controls so keyboard behavior stays familiar.
+/// Visual rules and review checklist: docs/design/DESIGN_GUIDE.md.
 @MainActor enum GymAssistantAppearance {
     static let accent = NSColor(srgbRed: 1.0, green: 0.34, blue: 0.12, alpha: 1)
     static let promptFill = adaptive(light: 0xFBE5D8, dark: 0x58392E)
@@ -11,6 +12,8 @@ import AppKit
     static let paper = adaptive(light: 0xFFFCF7, dark: 0x292B30)
     static let paperBorder = adaptive(light: 0xBD7955, dark: 0xC58A68)
     static let inkAccent = adaptive(light: 0x9D4828, dark: 0xF3B08C)
+    static let actionFill = adaptive(light: 0xCFAF96, dark: 0x936E57)
+    static let actionInk = NSColor.black
 
     private static func adaptive(light: UInt32, dark: UInt32) -> NSColor {
         NSColor(name: nil) { appearance in
@@ -53,6 +56,15 @@ import AppKit
         button.bezelStyle = .rounded
         button.controlSize = .regular
         button.font = .systemFont(ofSize: 13, weight: .medium)
+    }
+
+    static func filledPrimary(_ button: NSButton) {
+        primary(button)
+        button.bezelColor = actionFill
+        // AppKit otherwise chooses white on the light tan fill (only ~2:1).
+        button.attributedTitle = NSAttributedString(string: button.title, attributes: [
+            .foregroundColor: actionInk, .font: button.font ?? NSFont.systemFont(ofSize: 13, weight: .semibold)
+        ])
     }
 
     static func quiet(_ button: NSButton) {

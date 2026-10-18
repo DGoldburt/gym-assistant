@@ -16,6 +16,7 @@ Complete. The user's 2026-10-18 request authorized implementation of these concr
 - [x] (2026-10-18) Implement message presentation, conditional down-arrow, note heading, and surfaces.
 - [x] (2026-10-18) Add behavior tests; all five `scripts/verify` stages passed, including 268 tests; inspect synthetic light/dark renderings.
 - [x] (2026-10-18) Export review PNGs to the main checkout's `docs/design` folder; prepare the verified feature milestone for a local commit.
+- [x] (2026-10-18) Coach accepted the visual direction. Add a muted `actionFill` and shared `filledPrimary` helper for Send, plus `docs/design/DESIGN_GUIDE.md` covering future implementation and integration sequencing.
 
 ## Surprises & Discoveries
 
@@ -29,9 +30,11 @@ Decision: retain `ExerciseConversationView`, an AppKit text view, and style mess
 
 Decision: use warm orange for prompts and scratchpad borders with cool slate conversation surfaces; resolve colors for light and dark appearances. Rationale: bring more of the icon palette into the workspace while retaining readable native text. Date/author: 2026-10-18, Codex.
 
+Decision: following the coach's review, reserve vivid orange for small accents and use muted warm fills (`#CFAF96` light / `#936E57` dark) for filled primary actions. Record the accepted rules in a guide linked from the scratchpad specification and shared appearance source. Recommend integrating after the contextual branch's active overlapping fixes reach a stable checkpoint, before its combined native acceptance. Date/author: 2026-10-18, Codex.
+
 ## Outcomes & Retrospective
 
-Coach messages now occupy the right side in warm rounded bubbles; assistant messages begin on the left. Conversation updates follow the bottom only when the reader is already there. The conditional arrow jumps to the latest content without changing text selection. The scratchpad shows its note title and session label, a stronger warm border, and the requested “Compare with note” wording in both the control and menu. The composer and conversation surfaces adapt to light/dark appearance. Existing formatting, annotations, persistence, copy, and comparison checks pass. No live model or Notes UI acceptance was performed, and the installed app was not replaced.
+Coach messages now occupy the right side in warm rounded bubbles; assistant messages begin on the left. Conversation updates follow the bottom only when the reader is already there. The conditional arrow jumps to the latest content without changing text selection. The scratchpad shows its note title and session label, a stronger warm border, and the requested “Compare with note” wording in both the control and menu. The composer and conversation surfaces adapt to light/dark appearance. The accepted baseline is documented in `docs/design/DESIGN_GUIDE.md`, linked from the scratchpad specification and the shared appearance source. Send uses a quieter warm fill with explicit dark label ink, avoiding AppKit's low-contrast white label on light tan. Existing formatting, annotations, persistence, copy, and comparison checks pass. No live model or Notes UI acceptance was performed, and the installed app was not replaced.
 
 ## Context and Orientation
 
@@ -68,3 +71,7 @@ Use existing AppKit and workspace types only. Add a message-presentation range (
 Revision 2026-10-18: created for the requested visual and scrolling follow-up.
 
 Revision 2026-10-18: recorded completed implementation, Swift entry-file rename, native bitmap rendering details, passing verification, and exported review artifacts.
+
+Revision 2026-10-18: capture accepted appearance, quieter Send feedback, durable design guide, and an evidence-based integration recommendation. The contextual worktree was inspected read-only and left unchanged.
+
+Follow-up verification: all five repository verification stages passed after the guide and muted-fill update. After the final label-contrast correction, all ten focused conversation/controller tests passed and final light/dark PNGs were regenerated; native view review confirms the muted fill and dark label. Calculated normal label contrast against the specified fills is approximately 10.2:1 light and 4.6:1 dark.
