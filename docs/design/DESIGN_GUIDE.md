@@ -1,6 +1,6 @@
 # Gym Assistant design guide
 
-Status: implementation baseline, based on the coach's accepted scratchpad appearance on 2026-10-18, with the requested quieter Send button. Apply this guide to new and changed screens. Existing library, review, and history screens may need gradual alignment; this document does not authorize redesigning them all at once.
+Status: implementation baseline, based on the coach's accepted scratchpad appearance on 2026-10-18, with a warm Send button between the previous muted tan and vivid orange versions. The autocomplete screen now uses this baseline too. Apply this guide to new and changed screens. Existing library, review, and history screens may need gradual alignment; this document does not authorize redesigning them all at once.
 
 ## Intent
 
@@ -22,8 +22,8 @@ Hex values below are sRGB. The shared color provider selects a light or dark val
 | --- | --- | --- | --- |
 | `accent` | `#FF571F` | `#FF571F` | Small brand accents and native primary/quiet control tint; avoid large filled areas. |
 | `inkAccent` | `#9D4828` | `#F3B08C` | Note title and jump-arrow glyph. |
-| `actionFill` | `#CFAF96` | `#936E57` | Muted filled primary action, currently Send. Never use vivid brand orange as the default large button fill. |
-| `actionInk` | `#000000` | `#000000` | Filled primary-action label only; contrast against `actionFill` is approximately 10.2:1 light and 4.6:1 dark. |
+| `actionFill` | `#E49A64` | `#C38659` | Warm filled primary action, currently Send; brighter than muted tan, below vivid brand orange. |
+| `actionInk` | `#000000` | `#000000` | Filled primary-action label only; contrast against `actionFill` is approximately 9.1:1 light and 6.9:1 dark. |
 | `promptFill` | `#FBE5D8` | `#58392E` | Coach prompt bubbles. |
 | `promptBorder` | `#E9B79B` | `#8B5942` | Quiet edge around prompt bubbles. |
 | `canvas` | `#EDF0F5` | `#202733` | Conversation background. |
@@ -36,7 +36,7 @@ Hex values below are sRGB. The shared color provider selects a light or dark val
 
 Reserve red for destructive actions or errors and use accompanying words or symbols. Do not infer identity, source verification, selection, or a successful operation solely from color. Status text remains explicit even when accented. Disabled controls keep native disabled behavior instead of becoming a second accent treatment.
 
-Set filled primary-action labels through the shared helper. AppKit's automatic label choice can produce white text on the light tan fill (about 2.1:1 contrast); the explicit dark attributed title avoids that result. If the action fill changes, recheck the label contrast in both appearances and retain at least 4.5:1 for normal-size text.
+Set filled primary-action labels through the shared helper. AppKit's automatic label choice can produce low-contrast white text on a warm fill; the explicit dark attributed title avoids that result. If the action fill changes, recheck the label contrast in both appearances and retain at least 4.5:1 for normal-size text. Prompt bubble colors are independent from action fills: changing the action emphasis must not change saved-message presentation.
 
 ## Typography and hierarchy
 
@@ -68,9 +68,17 @@ The composer uses a paper surface with a warm outline. Keep Send and Stop at its
 
 ## Controls and wording
 
-Use native AppKit buttons, checkboxes, scroll bars, focus rings, menus, and keyboard shortcuts. `primary(_:)` provides the native primary hierarchy without forcing a filled color. Use `filledPrimary(_:)` for a main action that benefits from a muted warm fill; currently Send uses this treatment. Avoid multiple competing filled primary actions in one region. `secondary(_:)` is for ordinary actions; `quiet(_:)` is for low-emphasis navigation such as Previous planning. Never paint over native disabled, focused, or pressed feedback.
+Use native AppKit buttons, checkboxes, scroll bars, focus rings, menus, and keyboard shortcuts. `primary(_:)` provides the native primary hierarchy without forcing a filled color. Use `filledPrimary(_:)` for a main action that benefits from a warm fill; currently Send uses this treatment. Avoid multiple competing filled primary actions in one region. `secondary(_:)` is for ordinary actions; `quiet(_:)` is for low-emphasis navigation such as Previous planning. Never paint over native disabled, focused, or pressed feedback.
 
 Use “Compare with note” in the visible control and “Compare with Note” in its menu item. Use “scratchpad” for the editable local working copy and “note” or “Notes” for the source. Avoid internal terms such as source range, observation ID, or request gate in normal writing flows. Keep the menu wording and shortcuts consistent with the visible action. Any feature requiring an explicit confirmation keeps that confirmation during visual changes.
+
+## Autocomplete
+
+Autocomplete stays a compact keyboard-first panel, currently 640 × 414 points. Use the shared headline and supporting text above the native search field, the paper result surface with a 1-point copper border and 12-point corners, and secondary Add Exercises/Edit Library controls below. Keep Program session as a secondary action beside the search field. Give insertion/selection hints a full-width line below results so longer raw-query hints remain readable. Preserve native focus rings and selected-row colors; a row selection is not a coach prompt and must not reuse the conversation bubble treatment.
+
+`ExerciseAutocompletePanel` and `RankedCandidateChooser` live in `Sources/GymAssistantNotesService/main.swift`. They reuse the public `GymAssistantAppearance` helpers and `searchResultsSurface()` from the macOS adapter. The appearance option is enabled only for autocomplete; the chooser's other library/review consumers keep their existing presentation until separately requested. The change must leave ranking, result count, preferred/alias identity, initial empty selection, arrow-key navigation, Return/raw-query insertion, Escape, maintenance shortcuts, and Notes handoff intact. Do not turn this panel into a smaller version of the two-column programming window.
+
+Related appearance changes may be implemented on `codex/improve-aesthetics` as separate commits while contextual functionality develops in its own worktree. Preserve that separation until a stable contextual checkpoint is ready to reconcile; use a new learner-application feature branch for a separately scoped redesign or for later work after this branch is integrated. Do not make product styling changes directly on the reusable starter `main` branch.
 
 ## Future implementation review
 
@@ -84,6 +92,8 @@ Add behavioral tests for changed interaction rules, not tests that merely repeat
     .build/debug/ScratchpadDevelopment --appearance-preview /private/tmp/gym-assistant-design-review
 
 This exports `scratchpad-conversation-light.png` and `scratchpad-conversation-dark.png` from the actual native content view using fresh synthetic data. The images exclude window chrome. They verify visual layout, not live Notes behavior, model quality, or installation. Preserve historical HTML mockups unchanged. Do not use private notes or real client content in shared review images.
+
+For autocomplete, run `swift build --product GymAssistantNotesService`, then `.build/debug/GymAssistantNotesService --autocomplete-appearance-preview /private/tmp/gym-assistant-design-review`. This starts a separate preview delegate before creating the normal Service provider, uses a temporary synthetic library, and exports `autocomplete-light.png` and `autocomplete-dark.png`. It also checks search results start unselected, keyboard selection and alias expansion/collapse, empty/raw-query hints, and read-only library behavior. It does not insert into Notes, register Services, or record field feedback.
 
 ## Integration guidance for this baseline
 
