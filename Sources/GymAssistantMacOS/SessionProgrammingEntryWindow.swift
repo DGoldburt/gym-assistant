@@ -41,35 +41,49 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 530, height: 250),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         super.init(window: window)
+        GymAssistantAppearance.configure(window)
         workspaces.onWorkspaceSetAside = { [weak self] in self?.showExisting() }
         workspaces.onResumeWorkspace = { [weak self] controller in self?.showWorkspace(controller) }
         window.title = "Program session"; window.isReleasedWhenClosed = false; window.delegate = self
         let detail = NSTextField(wrappingLabelWithString: modeDescription)
+        GymAssistantAppearance.supportingText(detail)
         let detailHeight = max(40, ceil(detail.cell?.cellSize(forBounds: NSRect(x: 0, y: 0, width: 490, height: 10_000)).height ?? 40))
         detail.frame = NSRect(x: 20, y: 192, width: 490, height: detailHeight)
         detail.identifier = .init("program-entry-description")
-        entryHeight = 295 + detailHeight - 40
+        entryHeight = 335 + detailHeight - 40
         window.contentView?.addSubview(detail)
+        let heading = NSTextField(labelWithString: "Plan a session")
+        // Existing controls move up together below; place the header so that
+        // shared adjustment leaves it with the intended top breathing room.
+        heading.frame = NSRect(x: 20, y: entryHeight - 83, width: 490, height: 28)
+        heading.autoresizingMask = [.minYMargin]
+        GymAssistantAppearance.headline(heading)
+        window.contentView?.addSubview(heading)
         status.frame = NSRect(x: 20, y: 104, width: 490, height: 78)
         status.identifier = NSUserInterfaceItemIdentifier("program-entry-status")
+        GymAssistantAppearance.supportingText(status)
         window.contentView?.addSubview(status)
         latest.frame = NSRect(x: 20, y: 64, width: 230, height: 32)
         latest.keyEquivalent = "\r"; latest.target = self; latest.action = #selector(openLatest)
         latest.identifier = NSUserInterfaceItemIdentifier("program-entry-latest")
+        GymAssistantAppearance.primary(latest)
         window.contentView?.addSubview(latest)
         skeleton.frame = NSRect(x: 260, y: 64, width: 250, height: 32); skeleton.isEnabled = false
         skeleton.target = self; skeleton.action = #selector(openNewSession)
         skeleton.keyEquivalent = "n"; skeleton.keyEquivalentModifierMask = [.command]
         skeleton.identifier = .init("program-entry-new")
         skeleton.toolTip = "New session (Command-N). Resume unfinished work, or preview session headings and parking-lot ideas."
+        GymAssistantAppearance.secondary(skeleton)
         window.contentView?.addSubview(skeleton)
         access.frame = NSRect(x: 20, y: 20, width: 190, height: 30)
         access.target = self; access.action = #selector(allowAccess)
         access.identifier = NSUserInterfaceItemIdentifier("program-entry-access")
+        GymAssistantAppearance.secondary(access)
         window.contentView?.addSubview(access)
         retry.frame = NSRect(x: 210, y: 20, width: 300, height: 30)
         retry.target = self; retry.action = #selector(captureSelection)
         retry.identifier = NSUserInterfaceItemIdentifier("program-entry-capture")
+        GymAssistantAppearance.secondary(retry)
         window.contentView?.addSubview(retry)
         latest.isEnabled = false; access.isHidden = true
         entryContent = window.contentView
@@ -85,11 +99,13 @@ import GymAssistantWorkspace
         previousPlanning.identifier = .init("program-entry-previous-planning")
         previousPlanning.keyEquivalent = "h"; previousPlanning.keyEquivalentModifierMask = [.command, .shift]
         previousPlanning.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
+        GymAssistantAppearance.quiet(previousPlanning)
         previousPlanning.isEnabled = false; window.contentView?.addSubview(previousPlanning)
         if accountAction != nil {
             let account = NSButton(title: "ChatGPT account…", target: self, action: #selector(openAccount))
             account.frame = NSRect(x: 300, y: 12, width: 210, height: 28)
             account.identifier = .init("program-entry-account")
+            GymAssistantAppearance.quiet(account)
             window.contentView?.addSubview(account)
         }
     }

@@ -136,6 +136,7 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
+        GymAssistantAppearance.configure(window)
         window.title = noteContext == nil ? "Session scratchpad — offline synthetic test" : "Session scratchpad"
         window.isReleasedWhenClosed = false
         window.delegate = self
@@ -282,6 +283,7 @@ import GymAssistantWorkspace
         text.autoresizingMask = [.width]
         text.isEditable = editable; text.isRichText = rich; text.allowsUndo = editable
         text.font = .systemFont(ofSize: 15)
+        text.usesAdaptiveColorMappingForDarkAppearance = true
         scroll.documentView = text
         return scroll
     }
@@ -293,11 +295,22 @@ import GymAssistantWorkspace
             self?.formatScratchpad(item)
         }
         let description = NSTextField(labelWithString: noteContext == nil
-            ? "Synthetic note · saved locally · fake assistant · no Notes/API access"
+            ? "Synthetic note · saved locally · no Notes or API access"
             : "Notes context · scratchpad saved locally · manual handoff")
         description.frame = NSRect(x: 18, y: 646, width: 1000, height: 20)
-        description.textColor = .secondaryLabelColor
+        GymAssistantAppearance.supportingText(description)
         root.addSubview(description)
+        let scratchpadLabel = NSTextField(labelWithString: "SCRATCHPAD")
+        scratchpadLabel.frame = NSRect(x: 16, y: 626, width: 250, height: 18)
+        GymAssistantAppearance.sectionLabel(scratchpadLabel)
+        root.addSubview(scratchpadLabel)
+        let conversationLabel = NSTextField(labelWithString: "COACHING CONVERSATION")
+        conversationLabel.frame = NSRect(x: 605, y: 626, width: 270, height: 18)
+        GymAssistantAppearance.sectionLabel(conversationLabel)
+        root.addSubview(conversationLabel)
+        let conversationPanel = GymAssistantAppearance.panel(frame: NSRect(x: 593, y: 48, width: 441, height: 598))
+        conversationPanel.autoresizingMask = [.minXMargin, .height]
+        root.addSubview(conversationPanel, positioned: .below, relativeTo: nil)
         editorScroll = scroll(editor, frame: NSRect(x: 16, y: 58, width: 570, height: 568), editable: true, rich: true)
         editorScroll.autoresizingMask = [.width, .height]
         editor.textStorage?.setAttributedString(rich)
@@ -338,21 +351,25 @@ import GymAssistantWorkspace
         sendButton.target = self; sendButton.action = #selector(send)
         sendButton.frame = NSRect(x: 947, y: 54, width: 83, height: 26)
         sendButton.autoresizingMask = [.minXMargin]
+        GymAssistantAppearance.primary(sendButton)
         root.addSubview(sendButton)
         stopButton.target = self; stopButton.action = #selector(stop)
         stopButton.frame = NSRect(x: 857, y: 54, width: 83, height: 26)
         stopButton.autoresizingMask = [.minXMargin]
+        GymAssistantAppearance.secondary(stopButton)
         root.addSubview(stopButton)
         conversationViews = [chat, input, sendButton, stopButton]
         findSessionButton.frame = NSRect(x: 605, y: 630, width: 235, height: 28)
         findSessionButton.target = self; findSessionButton.action = #selector(findSessionInNotes)
         findSessionButton.autoresizingMask = [.minXMargin, .minYMargin]
         findSessionButton.isHidden = !needsAssociationReview
+        GymAssistantAppearance.secondary(findSessionButton)
         root.addSubview(findSessionButton)
         notPastedButton.frame = NSRect(x: 850, y: 630, width: 180, height: 28)
         notPastedButton.target = self; notPastedButton.action = #selector(confirmNotPasted)
         notPastedButton.autoresizingMask = [.minXMargin, .minYMargin]
         notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
+        GymAssistantAppearance.secondary(notPastedButton)
         root.addSubview(notPastedButton)
         description.frame.size.width = 575
         let history = NSButton(title: "Previous planning…", target: self, action: #selector(previousPlanning))
@@ -360,6 +377,7 @@ import GymAssistantWorkspace
         history.identifier = .init("scratchpad-previous-planning")
         history.keyEquivalent = "h"; history.keyEquivalentModifierMask = [.command, .shift]
         history.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
+        GymAssistantAppearance.quiet(history)
         root.addSubview(history)
         description.frame.size.width = 370
         replaceButton.frame = NSRect(x: 215, y: 25, width: 375, height: 26)
@@ -369,10 +387,11 @@ import GymAssistantWorkspace
         status.frame = NSRect(x: 16, y: 3, width: 1014, height: 20)
         status.identifier = NSUserInterfaceItemIdentifier("workspace-status")
         status.autoresizingMask = [.width]
-        status.textColor = .secondaryLabelColor
+        GymAssistantAppearance.supportingText(status)
         root.addSubview(status)
         window?.minSize = NSSize(width: 1000, height: 650)
     }
+
     public func show() {
         guard snapshot.isActive else { return }
         showWindow(nil); window?.makeKeyAndOrderFront(nil)

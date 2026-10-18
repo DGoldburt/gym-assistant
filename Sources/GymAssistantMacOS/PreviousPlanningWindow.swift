@@ -29,6 +29,7 @@ public struct PlanningReference {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 980, height: 620),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         super.init(window: window)
+        GymAssistantAppearance.configure(window)
         window.title = "Previous planning — read only"; window.isReleasedWhenClosed = false
         window.delegate = self
         guard let root = window.contentView else { return }
@@ -44,24 +45,29 @@ public struct PlanningReference {
         chooser.isEnabled = !records.isEmpty; root.addSubview(chooser)
         detail.frame = NSRect(x: 20, y: 493, width: 940, height: 65)
         detail.identifier = .init("previous-planning-detail"); root.addSubview(detail)
+        GymAssistantAppearance.supportingText(detail)
         addText(scratchpad, title: "Scratchpad", id: "previous-planning-scratchpad", x: 20, root: root)
         addText(conversation, title: "Conversation", id: "previous-planning-conversation", x: 500, root: root)
         let help = NSTextField(wrappingLabelWithString: "Copy a useful passage directly into Notes. You can also paste into a scratchpad. Viewing changes neither version; setting aside preserves this record and ends active editing.")
         help.frame = NSRect(x: 20, y: 15, width: 555, height: 40); root.addSubview(help)
+        GymAssistantAppearance.supportingText(help)
         resumeButton.frame = NSRect(x: 585, y: 20, width: 205, height: 28)
         resumeButton.identifier = .init("previous-planning-resume")
         resumeButton.target = self; resumeButton.action = #selector(continueScratchpad)
         resumeButton.isHidden = resume == nil; root.addSubview(resumeButton)
+        GymAssistantAppearance.primary(resumeButton)
         setAsideButton.frame = NSRect(x: 800, y: 20, width: 160, height: 28)
         setAsideButton.identifier = .init("previous-planning-set-aside")
         setAsideButton.target = self; setAsideButton.action = #selector(confirmSetAside)
         setAsideButton.isHidden = setAside == nil; root.addSubview(setAsideButton)
+        GymAssistantAppearance.secondary(setAsideButton)
         selectRecord()
     }
     public required init?(coder: NSCoder) { nil }
     private func addText(_ text: NSTextView, title: String, id: String, x: CGFloat, root: NSView) {
         let label = NSTextField(labelWithString: title)
         label.frame = NSRect(x: x, y: 467, width: 450, height: 20); root.addSubview(label)
+        GymAssistantAppearance.sectionLabel(label)
         let scroll = NSScrollView(frame: NSRect(x: x, y: 65, width: 460, height: 395))
         scroll.hasVerticalScroller = true; scroll.borderType = .lineBorder
         text.frame = scroll.bounds; text.isEditable = false; text.isSelectable = true
