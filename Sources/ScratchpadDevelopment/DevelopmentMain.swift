@@ -31,6 +31,18 @@ private actor SyntheticEntryReader: NotesContextReading {
     private let notesReader = NotesContextReader()
     private let chatGPTConnection = ChatGPTConnection()
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if let index = CommandLine.arguments.firstIndex(of: "--appearance-preview"),
+           CommandLine.arguments.indices.contains(index + 1) {
+            Task { @MainActor in
+                do {
+                    let preview = try AppearancePreview()
+                    self.controller = preview.controller
+                    try await preview.export(to: URL(fileURLWithPath: CommandLine.arguments[index + 1], isDirectory: true))
+                } catch { fputs("Appearance export failed: \(error)\n", stderr) }
+                NSApp.terminate(nil)
+            }
+            return
+        }
         if CommandLine.arguments.contains("--synthetic-entry") {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-assistant-entry-acceptance-" + UUID().uuidString)
             let store = WorkspaceSnapshotStore(directory: root)

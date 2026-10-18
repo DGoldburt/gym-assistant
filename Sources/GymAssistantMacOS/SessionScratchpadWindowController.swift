@@ -43,6 +43,8 @@ import GymAssistantWorkspace
     private let pasteboard: NSPasteboard
     private let editor = ScratchpadTextView()
     private let transcript = ExerciseConversationView()
+    private var chatScroll = ConversationScrollView()
+    private let noteTitle = NSTextField(labelWithString: "")
     private let exerciseLookup: (String) -> ExerciseMentionMatch
     private let composer = ChatComposer()
     private let diff = NSTextView()
@@ -133,10 +135,11 @@ import GymAssistantWorkspace
                 throw WorkspaceError.staleAssociation
             }
         }
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1050, height: 680),
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1120, height: 740),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
         GymAssistantAppearance.configure(window)
+        window.contentView = WorkspaceBackgroundView(frame: NSRect(x: 0, y: 0, width: 1120, height: 740))
         window.title = noteContext == nil ? "Session scratchpad — offline synthetic test" : "Session scratchpad"
         window.isReleasedWhenClosed = false
         window.delegate = self
@@ -196,7 +199,7 @@ import GymAssistantWorkspace
     }
     public func comparisonMenuItems() -> [NSMenuItem] {
         [("Find Session in Notes…", #selector(findSessionInNotes), "f"),
-         ("Compare with Source", #selector(toggleDiff), "d"),
+         ("Compare with Note", #selector(toggleDiff), "d"),
          ("Focus Conversation", #selector(focusConversation), "m")].map { title, action, key in
             let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
             item.target = self; item.keyEquivalentModifierMask = [.command, .shift]
@@ -270,8 +273,10 @@ import GymAssistantWorkspace
         textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
     }
     private func snapshotDidRestore() { snapshot.markInterruptedRequests() }
-    private func scroll(_ text: NSTextView, frame: NSRect, editable: Bool, rich: Bool) -> NSScrollView {
-        let scroll = NSScrollView(frame: frame)
+    private func scroll(_ text: NSTextView, frame: NSRect, editable: Bool, rich: Bool,
+                        container: NSScrollView? = nil) -> NSScrollView {
+        let scroll = container ?? WorkspaceSurfaceScrollView(frame: frame)
+        scroll.frame = frame
         scroll.hasVerticalScroller = true
         text.frame = NSRect(origin: .zero, size: frame.size)
         text.minSize = NSSize(width: 0, height: frame.height)
@@ -284,6 +289,7 @@ import GymAssistantWorkspace
         text.isEditable = editable; text.isRichText = rich; text.allowsUndo = editable
         text.font = .systemFont(ofSize: 15)
         text.usesAdaptiveColorMappingForDarkAppearance = true
+        text.drawsBackground = false
         scroll.documentView = text
         return scroll
     }
@@ -297,21 +303,35 @@ import GymAssistantWorkspace
         let description = NSTextField(labelWithString: noteContext == nil
             ? "Synthetic note · saved locally · no Notes or API access"
             : "Notes context · scratchpad saved locally · manual handoff")
-        description.frame = NSRect(x: 18, y: 646, width: 1000, height: 20)
+        description.frame = NSRect(x: 20, y: 707, width: 580, height: 18)
+        description.autoresizingMask = [.width, .minYMargin]
         GymAssistantAppearance.supportingText(description)
         root.addSubview(description)
-        let scratchpadLabel = NSTextField(labelWithString: "SCRATCHPAD")
-        scratchpadLabel.frame = NSRect(x: 16, y: 626, width: 250, height: 18)
+        updateNoteTitle()
+        noteTitle.frame = NSRect(x: 20, y: 671, width: 390, height: 30)
+        noteTitle.autoresizingMask = [.width, .minYMargin]
+        noteTitle.identifier = .init("scratchpad-note-title")
+        noteTitle.lineBreakMode = .byTruncatingTail
+        GymAssistantAppearance.headline(noteTitle)
+        noteTitle.textColor = GymAssistantAppearance.inkAccent
+        root.addSubview(noteTitle)
+        let scratchpadLabel = NSTextField(labelWithString: "SCRATCHPAD · " + snapshot.anchor.recordedHeading)
+        scratchpadLabel.frame = NSRect(x: 20, y: 646, width: 360, height: 18)
+        scratchpadLabel.autoresizingMask = [.width, .minYMargin]
         GymAssistantAppearance.sectionLabel(scratchpadLabel)
         root.addSubview(scratchpadLabel)
         let conversationLabel = NSTextField(labelWithString: "COACHING CONVERSATION")
-        conversationLabel.frame = NSRect(x: 605, y: 626, width: 270, height: 18)
+        conversationLabel.frame = NSRect(x: 654, y: 646, width: 420, height: 18)
+        conversationLabel.autoresizingMask = [.minXMargin, .minYMargin]
         GymAssistantAppearance.sectionLabel(conversationLabel)
         root.addSubview(conversationLabel)
-        let conversationPanel = GymAssistantAppearance.panel(frame: NSRect(x: 593, y: 48, width: 441, height: 598))
+        let conversationPanel = WorkspaceSurfaceScrollView(frame: NSRect(x: 634, y: 48, width: 468, height: 586))
+        conversationPanel.surfaceColor = GymAssistantAppearance.canvas
+        conversationPanel.outlineColor = .separatorColor
+        conversationPanel.outlineWidth = 0.75
         conversationPanel.autoresizingMask = [.minXMargin, .height]
         root.addSubview(conversationPanel, positioned: .below, relativeTo: nil)
-        editorScroll = scroll(editor, frame: NSRect(x: 16, y: 58, width: 570, height: 568), editable: true, rich: true)
+        editorScroll = scroll(editor, frame: NSRect(x: 18, y: 58, width: 600, height: 576), editable: true, rich: true)
         editorScroll.autoresizingMask = [.width, .height]
         editor.textStorage?.setAttributedString(rich)
         editor.identifier = NSUserInterfaceItemIdentifier("scratchpad-editor")
@@ -322,26 +342,29 @@ import GymAssistantWorkspace
         diffScroll.autoresizingMask = editorScroll.autoresizingMask
         diffScroll.isHidden = true
         root.addSubview(diffScroll)
-        let chat = scroll(transcript, frame: NSRect(x: 605, y: 222, width: 425, height: 404), editable: false, rich: false)
+        let chat = scroll(transcript, frame: NSRect(x: 646, y: 222, width: 444, height: 398), editable: false, rich: false,
+                          container: chatScroll)
         transcript.setAccessibilityLabel("Conversation")
+        transcript.identifier = .init("conversation-transcript")
+        chat.identifier = .init("conversation-scroll")
         chat.autoresizingMask = [.minXMargin, .height]
         root.addSubview(chat)
-        let input = scroll(composer, frame: NSRect(x: 605, y: 90, width: 425, height: 118), editable: true, rich: false)
+        let input = scroll(composer, frame: NSRect(x: 646, y: 90, width: 444, height: 118), editable: true, rich: false)
+        if let surface = input as? WorkspaceSurfaceScrollView { surface.outlineWidth = 1 }
         input.autoresizingMask = [.minXMargin]
         composer.submit = { [weak self] in self?.submit() }
         composer.identifier = NSUserInterfaceItemIdentifier("chat-composer")
         composer.setAccessibilityLabel("Message")
-        input.borderType = .lineBorder
         composer.string = snapshot.composerText
         composer.delegate = self
         root.addSubview(input)
         let copy = NSButton(image: NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: "Copy Markdown for Notes")!, target: self, action: #selector(copyForNotes))
-        copy.frame = NSRect(x: 543, y: 591, width: 30, height: 28)
+        copy.frame = NSRect(x: 578, y: 595, width: 30, height: 28)
         copy.autoresizingMask = [.minXMargin, .minYMargin]
         copy.toolTip = "Copy Markdown for Notes (Command-Shift-C). Use Notes Paste as Markdown."
         copy.keyEquivalent = "c"; copy.keyEquivalentModifierMask = [.command, .shift]
         root.addSubview(copy)
-        let compare = NSButton(checkboxWithTitle: "Compare with source", target: self, action: #selector(toggleDiff))
+        let compare = NSButton(checkboxWithTitle: "Compare with note", target: self, action: #selector(toggleDiff))
         compareButton = compare
         compare.frame = NSRect(x: 16, y: 26, width: 195, height: 24)
         compare.toolTip = noteContext == nil ? "Compare with the frozen synthetic source; live Notes monitoring is not connected."
@@ -349,47 +372,55 @@ import GymAssistantWorkspace
         diff.identifier = NSUserInterfaceItemIdentifier("notes-comparison")
         root.addSubview(compare)
         sendButton.target = self; sendButton.action = #selector(send)
-        sendButton.frame = NSRect(x: 947, y: 54, width: 83, height: 26)
+        sendButton.frame = NSRect(x: 1007, y: 54, width: 83, height: 26)
         sendButton.autoresizingMask = [.minXMargin]
         GymAssistantAppearance.primary(sendButton)
+        sendButton.bezelColor = GymAssistantAppearance.accent
+        sendButton.contentTintColor = .white
         root.addSubview(sendButton)
         stopButton.target = self; stopButton.action = #selector(stop)
-        stopButton.frame = NSRect(x: 857, y: 54, width: 83, height: 26)
+        stopButton.frame = NSRect(x: 917, y: 54, width: 83, height: 26)
         stopButton.autoresizingMask = [.minXMargin]
         GymAssistantAppearance.secondary(stopButton)
         root.addSubview(stopButton)
         conversationViews = [chat, input, sendButton, stopButton]
-        findSessionButton.frame = NSRect(x: 605, y: 630, width: 235, height: 28)
+        findSessionButton.frame = NSRect(x: 646, y: 677, width: 235, height: 28)
         findSessionButton.target = self; findSessionButton.action = #selector(findSessionInNotes)
         findSessionButton.autoresizingMask = [.minXMargin, .minYMargin]
         findSessionButton.isHidden = !needsAssociationReview
         GymAssistantAppearance.secondary(findSessionButton)
         root.addSubview(findSessionButton)
-        notPastedButton.frame = NSRect(x: 850, y: 630, width: 180, height: 28)
+        notPastedButton.frame = NSRect(x: 900, y: 677, width: 190, height: 28)
         notPastedButton.target = self; notPastedButton.action = #selector(confirmNotPasted)
         notPastedButton.autoresizingMask = [.minXMargin, .minYMargin]
         notPastedButton.isHidden = !snapshot.anchor.isUnrecorded
         GymAssistantAppearance.secondary(notPastedButton)
         root.addSubview(notPastedButton)
-        description.frame.size.width = 575
         let history = NSButton(title: "Previous planning…", target: self, action: #selector(previousPlanning))
-        history.frame = NSRect(x: 395, y: 630, width: 190, height: 25)
+        history.frame = NSRect(x: 425, y: 674, width: 190, height: 25)
+        history.autoresizingMask = [.minXMargin, .minYMargin]
         history.identifier = .init("scratchpad-previous-planning")
         history.keyEquivalent = "h"; history.keyEquivalentModifierMask = [.command, .shift]
         history.toolTip = "Previous planning for this note (Command-Shift-H). Read only."
         GymAssistantAppearance.quiet(history)
         root.addSubview(history)
-        description.frame.size.width = 370
         replaceButton.frame = NSRect(x: 215, y: 25, width: 375, height: 26)
         replaceButton.target = self; replaceButton.action = #selector(replaceFromCurrentNotes)
         replaceButton.identifier = .init("replace-scratchpad-from-notes")
         replaceButton.isHidden = true; root.addSubview(replaceButton)
-        status.frame = NSRect(x: 16, y: 3, width: 1014, height: 20)
+        status.frame = NSRect(x: 16, y: 3, width: 1088, height: 20)
         status.identifier = NSUserInterfaceItemIdentifier("workspace-status")
         status.autoresizingMask = [.width]
         GymAssistantAppearance.supportingText(status)
         root.addSubview(status)
-        window?.minSize = NSSize(width: 1000, height: 650)
+        window?.minSize = NSSize(width: 1060, height: 680)
+    }
+
+    private func updateNoteTitle() {
+        noteTitle.stringValue = note.text.components(separatedBy: .newlines)
+            .first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })?
+            .trimmingCharacters(in: .whitespaces) ?? "Untitled note"
+        noteTitle.toolTip = noteTitle.stringValue
     }
 
     public func show() {
@@ -406,6 +437,7 @@ import GymAssistantWorkspace
         guard !committingBoundary else { return }
         guard let noteContext else { return }
         if let document = noteContext.sourceDocument { note = document.snapshot }
+        updateNoteTitle()
         if let pane = associationPane {
             if let document = noteContext.sourceDocument, let rich = noteContext.richText {
                 if document.paragraphs != pane.document.paragraphs {
@@ -948,14 +980,19 @@ import GymAssistantWorkspace
         updateAvailability()
     }
     private func refreshTranscript() {
+        let followLatest = !chatScroll.hasContentBelow
+        let previousOrigin = chatScroll.contentView.bounds.origin
         let text = NSMutableAttributedString(string: "")
         var decorations: [ExerciseConversationView.Decoration] = []
+        var presentations: [ExerciseConversationView.MessagePresentation] = []
         for message in snapshot.messages.filter({ $0.conversationID == snapshot.conversationID }) {
             if text.length > 0 { text.append(NSAttributedString(string: "\n\n")) }
+            let start = text.length
             let freshness = message.role == .assistant && message.scratchpadRevision != snapshot.revision ? " · Scratchpad changed" : ""
             text.append(NSAttributedString(string: "\(message.role == .coach ? "You" : "Assistant") · r\(message.scratchpadRevision) · \(message.status.rawValue)\(freshness)\n"))
             let offset = text.length
             text.append(NSAttributedString(string: message.text))
+            presentations.append(.init(range: NSRange(location: start, length: text.length - start), role: message.role))
             if message.role == .assistant && message.status == .complete {
                 for mention in ExerciseMention.validated(message.exerciseMentions ?? [], in: message.text) {
                     decorations.append(.init(range: NSRange(location: offset + mention.range.location, length: mention.range.length),
@@ -964,7 +1001,18 @@ import GymAssistantWorkspace
             }
         }
         if text.length > 0 { text.addAttributes([.font: NSFont.systemFont(ofSize: 15), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: text.length)) }
-        transcript.display(text, decorations: decorations)
+        for message in presentations {
+            let header = (text.string as NSString).paragraphRange(for: NSRange(location: message.range.location, length: 0))
+            text.addAttributes([.font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                                .foregroundColor: NSColor.secondaryLabelColor], range: header)
+        }
+        transcript.display(text, decorations: decorations, messages: presentations)
+        if followLatest { chatScroll.jumpToLatest() }
+        else {
+            chatScroll.contentView.scroll(to: previousOrigin)
+            chatScroll.reflectScrolledClipView(chatScroll.contentView)
+        }
+        chatScroll.updateLatestVisibility()
     }
     @objc public func copyForNotes() {
         guard !replacing, !replacementNeedsReopen else { return }
