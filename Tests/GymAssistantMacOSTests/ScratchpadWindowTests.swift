@@ -53,7 +53,7 @@ private actor WindowNotesReader: NotesContextReading {
         let composer = try #require(views.first { $0.identifier?.rawValue == "chat-composer" } as? NSTextView)
         let comparison = try #require(views.first { $0.identifier?.rawValue == "notes-comparison" } as? NSTextView)
         let send = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Send" })
-        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with note" })
         #expect(controller.snapshot.boundaryProtection == nil)
         controller.adjustBoundary()
         #expect(status.stringValue.contains("no Notes boundary"))
@@ -134,7 +134,7 @@ private actor WindowNotesReader: NotesContextReading {
         let views = descendants(try #require(controller.window?.contentView))
         let status = try #require(views.first { $0.identifier?.rawValue == "workspace-status" } as? NSTextField)
         let comparison = try #require(views.first { $0.identifier?.rawValue == "notes-comparison" } as? NSTextView)
-        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with source" })
+        let toggle = try #require(views.compactMap { $0 as? NSButton }.first { $0.title == "Compare with note" })
         let before = await reader.reads
         controller.copyForNotes()
         try await eventually { status.stringValue.contains("Notes checked") }

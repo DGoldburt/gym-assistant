@@ -695,6 +695,16 @@ library integration still need acceptance; package tests do not establish their 
 behavior. No module from concurrent client-history
 work is imported or changed by this implementation.
 
+Native appearance is owned by `GymAssistantMacOS.GymAssistantAppearance`, following
+`docs/design/DESIGN_GUIDE.md`. The Service executable reuses its public typography,
+button, background, and result-surface helpers for autocomplete; other chooser
+consumers retain their previous appearance. No visual state is persisted in the
+exercise library or workspace models. The optional
+`--autocomplete-appearance-preview` entry selects a separate delegate before the
+normal Service provider is created, exercises a temporary synthetic library, and
+renders native light/dark content views without Service registration or Notes
+insertion. This preview is visual/interaction evidence, not installed acceptance.
+
 Damaged snapshot discovery reports its workspace ID to the programming entry window.
 `WorkspaceSnapshotStore.recoveryPreview` validates the previous copy without writing;
 `restore` compares the current/backup bytes with the preview, preserves damaged bytes

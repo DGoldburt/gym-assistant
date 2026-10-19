@@ -6,6 +6,7 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 600),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
+        GymAssistantAppearance.configure(window)
         window.title = "Programming preferences"
         window.isReleasedWhenClosed = false
         let scroll = NSScrollView(frame: window.contentView!.bounds)
@@ -16,6 +17,7 @@ import GymAssistantWorkspace
         text.textContainer?.widthTracksTextView = true; text.autoresizingMask = [.width]
         text.textContainerInset = NSSize(width: 20, height: 18)
         text.font = .systemFont(ofSize: 15)
+        text.textColor = .labelColor
         text.setAccessibilityLabel("Read-only programming preferences and sources")
         text.string = Self.inspectionText(profile)
         scroll.documentView = text; window.contentView?.addSubview(scroll)

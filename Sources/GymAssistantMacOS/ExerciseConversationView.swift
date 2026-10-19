@@ -4,7 +4,9 @@ import GymAssistantWorkspace
 /// Display-only annotations: no links, exercise actions or changes to copy text.
 @MainActor final class ExerciseConversationView: NSTextView {
     struct Decoration { let range: NSRange; let match: ExerciseMentionMatch }
+    struct MessagePresentation { let range: NSRange; let role: MessageRole }
     private(set) var decorations: [Decoration] = []
+    private(set) var messages: [MessagePresentation] = []
     private let labelPopover = NSPopover()
 
     func focusFirstMention() {
@@ -14,8 +16,9 @@ import GymAssistantWorkspace
         showLabelForSelection()
     }
 
-    func display(_ text: NSAttributedString, decorations: [Decoration]) {
+    func display(_ text: NSAttributedString, decorations: [Decoration], messages: [MessagePresentation] = []) {
         labelPopover.close()
+        self.messages = messages
         self.decorations = decorations.filter { $0.match != .unavailable }
         let rich = NSMutableAttributedString(attributedString: text)
         for decoration in self.decorations {
@@ -25,6 +28,52 @@ import GymAssistantWorkspace
                                 .toolTip: decoration.match.label], range: decoration.range)
         }
         textStorage?.setAttributedString(rich)
+        styleMessages()
+        sizeToFit()
+        needsDisplay = true
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        let changedWidth = frame.width != newSize.width
+        super.setFrameSize(newSize)
+        if changedWidth { styleMessages() }
+    }
+
+    private func styleMessages() {
+        guard let textStorage else { return }
+        let width = max(100, bounds.width - 2 * textContainerInset.width)
+        textStorage.beginEditing()
+        for message in messages where NSMaxRange(message.range) <= textStorage.length {
+            let style = NSMutableParagraphStyle()
+            style.lineSpacing = 3
+            style.paragraphSpacing = 5
+            style.firstLineHeadIndent = message.role == .coach ? width * 0.20 + 14 : 4
+            style.headIndent = style.firstLineHeadIndent
+            style.tailIndent = message.role == .coach ? -14 : -30
+            textStorage.addAttribute(.paragraphStyle, value: style, range: message.range)
+        }
+        textStorage.endEditing()
+        needsDisplay = true
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        if let layoutManager, let textContainer {
+            layoutManager.ensureLayout(for: textContainer)
+            let width = textContainer.containerSize.width
+            for message in messages where message.role == .coach && message.range.length > 0 {
+                let glyphs = layoutManager.glyphRange(forCharacterRange: message.range, actualCharacterRange: nil)
+                var rect = layoutManager.boundingRect(forGlyphRange: glyphs, in: textContainer)
+                rect.origin.x = textContainerOrigin.x + width * 0.20 + 2
+                rect.size.width = width * 0.80 - 4
+                rect.origin.y += textContainerOrigin.y - 10
+                rect.size.height += 20
+                guard rect.intersects(dirtyRect) else { continue }
+                let bubble = NSBezierPath(roundedRect: rect, xRadius: 15, yRadius: 15)
+                GymAssistantAppearance.promptFill.setFill(); bubble.fill()
+                GymAssistantAppearance.promptBorder.setStroke(); bubble.lineWidth = 0.75; bubble.stroke()
+            }
+        }
+        super.draw(dirtyRect)
     }
 
     override func becomeFirstResponder() -> Bool {

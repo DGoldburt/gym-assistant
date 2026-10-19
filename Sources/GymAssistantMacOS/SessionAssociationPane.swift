@@ -21,6 +21,7 @@ import GymAssistantWorkspace
         let title = NSTextField(labelWithString: "Find this session in Notes")
         title.frame = NSRect(x: 0, y: frame.height - 25, width: frame.width, height: 22)
         title.autoresizingMask = [.width, .minYMargin]; addSubview(title)
+        GymAssistantAppearance.sectionLabel(title)
         search.frame = NSRect(x: 0, y: frame.height - 58, width: frame.width, height: 26)
         search.placeholderString = "Find heading"; search.delegate = self
         search.autoresizingMask = [.width, .minYMargin]; addSubview(search)
@@ -36,6 +37,7 @@ import GymAssistantWorkspace
         scroll.documentView = source; addSubview(scroll)
         status.frame = NSRect(x: 0, y: 50, width: frame.width, height: 75)
         status.autoresizingMask = [.width]; status.identifier = .init("association-status"); addSubview(status)
+        GymAssistantAppearance.supportingText(status)
         let cancelButton = NSButton(title: "Cancel", target: self, action: #selector(cancelReview))
         cancelButton.frame = NSRect(x: 0, y: 5, width: 80, height: 30)
         cancelButton.keyEquivalent = "\u{1b}"; addSubview(cancelButton)
@@ -43,6 +45,7 @@ import GymAssistantWorkspace
         confirm.autoresizingMask = [.width]; confirm.target = self; confirm.action = #selector(confirmSelection)
         confirm.keyEquivalent = "\r"; confirm.keyEquivalentModifierMask = [.command]
         confirm.identifier = .init("association-confirm"); addSubview(confirm)
+        GymAssistantAppearance.primary(confirm)
         search.nextKeyView = source
         updateSelection()
     }

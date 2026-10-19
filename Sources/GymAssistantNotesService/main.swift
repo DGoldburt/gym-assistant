@@ -152,13 +152,14 @@ private final class RankedCandidateTableView: NSTableView {
 @MainActor
 private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     let tableView = RankedCandidateTableView()
-    let scrollView = NSScrollView()
+    let scrollView: NSScrollView
     var onSelectionChange: (() -> Void)?
     private var items: [RankedCandidateItem] = []
     private var rows: [RankedCandidateRow] = []
     private var expansion = ExerciseChooserExpansion()
 
-    override init() {
+    init(usesWorkspaceAppearance: Bool = false) {
+        scrollView = usesWorkspaceAppearance ? GymAssistantAppearance.searchResultsSurface() : NSScrollView()
         super.init()
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("ranked-candidate"))
         tableView.addTableColumn(column)
@@ -170,7 +171,11 @@ private final class RankedCandidateChooser: NSObject, NSTableViewDataSource, NST
         tableView.delegate = self
         tableView.onExpand = { [weak self] in self?.expandSelection() }
         tableView.onCollapse = { [weak self] in self?.collapseSelection() }
-        scrollView.borderType = .bezelBorder
+        scrollView.borderType = usesWorkspaceAppearance ? .noBorder : .bezelBorder
+        if usesWorkspaceAppearance {
+            tableView.backgroundColor = GymAssistantAppearance.paper
+            tableView.intercellSpacing = NSSize(width: 0, height: 2)
+        }
         scrollView.hasVerticalScroller = true
         scrollView.documentView = tableView
     }
@@ -368,7 +373,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
     private let search: ExerciseAutocompleteSearch
     private let panel: NSPanel
     private let searchField = AutocompleteSearchField()
-    private let chooser = RankedCandidateChooser()
+    private let chooser = RankedCandidateChooser(usesWorkspaceAppearance: true)
     private let statusField = NSTextField(labelWithString: "Type to search")
     private lazy var reviewButton = NSButton(
         title: "Add Exercises…  ⌘R",
@@ -396,7 +401,7 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
     init(search: ExerciseAutocompleteSearch) {
         self.search = search
         panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 330),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 414),
             styleMask: [.titled],
             backing: .buffered,
             defer: false
@@ -479,13 +484,25 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
 
     private func configurePanel() {
         panel.title = "Gym Assistant"
+        GymAssistantAppearance.configure(panel)
         panel.isReleasedWhenClosed = false
-        let content = NSView(frame: panel.contentRect(forFrameRect: panel.frame))
+        let content = GymAssistantAppearance.backgroundView(frame: panel.contentRect(forFrameRect: panel.frame))
         panel.contentView = content
 
-        searchField.frame = NSRect(x: 24, y: 270, width: 355, height: 32)
+        let heading = NSTextField(labelWithString: "Find an exercise")
+        heading.frame = NSRect(x: 24, y: 366, width: 340, height: 29)
+        GymAssistantAppearance.headline(heading)
+        content.addSubview(heading)
+        let detail = NSTextField(labelWithString: "Search your library, then insert into Notes.")
+        detail.frame = NSRect(x: 24, y: 341, width: 500, height: 20)
+        GymAssistantAppearance.supportingText(detail)
+        content.addSubview(detail)
+
+        searchField.frame = NSRect(x: 24, y: 294, width: 355, height: 32)
         searchField.placeholderString = "Search exercises"
         searchField.font = .systemFont(ofSize: 16)
+        searchField.controlSize = .large
+        searchField.setAccessibilityLabel("Search exercises")
         searchField.delegate = self
         searchField.onMove = { [weak self] delta in self?.moveSelection(delta) }
         searchField.onExpand = { [weak self] in self?.expandSelection() }
@@ -493,12 +510,13 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         searchField.onChoose = { [weak self] in self?.chooseSelection() }
         searchField.onCancel = { [weak self] in self?.cancel() }
         content.addSubview(searchField)
-        programButton.frame = NSRect(x: 385, y: 270, width: 195, height: 32)
+        programButton.frame = NSRect(x: 385, y: 294, width: 195, height: 32)
         programButton.keyEquivalent = "p"; programButton.keyEquivalentModifierMask = [.command]
         programButton.toolTip = "Open a persistent session scratchpad after returning to Notes (Command-P)"
+        GymAssistantAppearance.secondary(programButton)
         content.addSubview(programButton)
 
-        chooser.scrollView.frame = NSRect(x: 24, y: 52, width: 592, height: 202)
+        chooser.scrollView.frame = NSRect(x: 24, y: 78, width: 592, height: 200)
         chooser.tableView.tableColumns.first?.width = 576
         chooser.onSelectionChange = { [weak self] in self?.updateSelectionHint() }
         content.addSubview(chooser.scrollView)
@@ -507,19 +525,23 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
         reviewButton.keyEquivalent = "r"
         reviewButton.keyEquivalentModifierMask = [.command]
         reviewButton.toolTip = "Add an exercise or import candidates (Command-R)"
+        GymAssistantAppearance.secondary(reviewButton)
         content.addSubview(reviewButton)
 
         editButton.frame = NSRect(x: 200, y: 12, width: 166, height: 30)
         editButton.keyEquivalent = "e"
         editButton.keyEquivalentModifierMask = [.command]
         editButton.isEnabled = true
+        GymAssistantAppearance.secondary(editButton)
         content.addSubview(editButton)
 
-        statusField.frame = NSRect(x: 375, y: 18, width: 241, height: 22)
+        statusField.frame = NSRect(x: 24, y: 48, width: 592, height: 20)
+        statusField.font = .systemFont(ofSize: 11)
         statusField.textColor = .secondaryLabelColor
+        statusField.lineBreakMode = .byTruncatingTail
         content.addSubview(statusField)
 
-        reportButton.frame = NSRect(x: 588, y: 270, width: 28, height: 28)
+        reportButton.frame = NSRect(x: 588, y: 294, width: 28, height: 28)
         content.addSubview(reportButton)
     }
 
@@ -692,6 +714,73 @@ private final class ExerciseAutocompletePanel: NSObject, NSSearchFieldDelegate, 
             interaction,
             panelScreenshot: flagged ? panelScreenshotPNG(panel) : nil
         )
+    }
+
+    /// Runs without a Service provider, personal library, Notes access, or feedback recording.
+    static func exportAppearancePreview(to directory: URL) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("gym-autocomplete-appearance-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = try ExerciseLibrary(databaseURL: root.appendingPathComponent("synthetic.sqlite"))
+        for (name, aliases) in [
+            ("Romanian Deadlift", ["RDL"]),
+            ("Single-leg Romanian Deadlift", ["SL RDL", "Single Leg RDL"]),
+            ("Dumbbell RDL", ["DB RDL"]),
+            ("Kickstand RDL", []),
+            ("RDL with reach", [])
+        ] {
+            let exercise = try library.createExercise(preferredName: name)
+            for alias in aliases { _ = try library.addName(alias, to: exercise.exercise.id) }
+        }
+        let originalNames = try library.allNames()
+        let preview = ExerciseAutocompletePanel(search: ExerciseAutocompleteSearch(library: library))
+        func require(_ condition: Bool) throws {
+            if !condition { throw CocoaError(.validationMissingMandatoryProperty) }
+        }
+        preview.searchField.stringValue = "rdl"
+        preview.updateResults()
+        try require(!preview.matches.isEmpty && preview.chooser.selectedName == nil)
+        preview.moveSelection(1)
+        try require(preview.chooser.selectedName == preview.matches.first?.matchedName)
+        let count = preview.chooser.tableView.numberOfRows
+        preview.expandSelection()
+        try require(preview.chooser.tableView.numberOfRows > count)
+        preview.moveSelection(1)
+        try require(preview.chooser.isAliasSelected)
+        preview.collapseSelection()
+        try require(preview.chooser.selectedName == preview.matches.first?.matchedName)
+        preview.searchField.stringValue = "Unlisted synthetic movement"
+        preview.updateResults()
+        try require(preview.matches.isEmpty && preview.chooser.selectedName == nil)
+        try require(preview.statusField.stringValue.contains("Press Return to insert"))
+        preview.searchField.stringValue = ""
+        preview.updateResults()
+        try require(preview.matches.isEmpty && preview.statusField.stringValue == "Type to search")
+        preview.searchField.stringValue = "rdl"
+        preview.updateResults()
+        preview.panel.center()
+        preview.panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        defer { preview.panel.close() }
+        guard let view = preview.panel.contentView else { throw CocoaError(.fileWriteUnknown) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+            preview.panel.appearance = NSAppearance(named: appearance)
+            preview.panel.makeFirstResponder(preview.searchField)
+            view.layoutSubtreeIfNeeded()
+            try await Task.sleep(for: .milliseconds(200))
+            guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { throw CocoaError(.fileWriteUnknown) }
+            preview.panel.effectiveAppearance.performAsCurrentDrawingAppearance {
+                view.display()
+                view.cacheDisplay(in: view.bounds, to: bitmap)
+            }
+            guard let data = bitmap.representation(using: .png, properties: [:]) else { throw CocoaError(.fileWriteUnknown) }
+            let url = directory.appendingPathComponent("autocomplete-\(name).png")
+            try data.write(to: url, options: .atomic)
+            print(url.path)
+        }
+        try require(try library.allNames() == originalNames)
+        print("PASS: synthetic autocomplete search, keyboard selection, alias expansion/collapse, raw-query and empty states; library unchanged")
     }
 }
 
@@ -2125,11 +2214,36 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+/// A separate delegate prevents preview startup from opening the personal library
+/// or registering Services through AppDelegate's normal provider.
+@MainActor private final class AutocompleteAppearanceDelegate: NSObject, NSApplicationDelegate {
+    let directory: URL
+    init(directory: URL) { self.directory = directory }
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { @MainActor in
+            do { try await ExerciseAutocompletePanel.exportAppearancePreview(to: directory) }
+            catch { fputs("Autocomplete appearance export failed: \(error)\n", stderr); exit(1) }
+            NSApp.terminate(nil)
+        }
+    }
+}
+
 @main
 @MainActor
 private struct Main {
     static func main() {
         let application = NSApplication.shared
+        if let index = CommandLine.arguments.firstIndex(of: "--autocomplete-appearance-preview") {
+            guard CommandLine.arguments.indices.contains(index + 1) else {
+                fputs("Provide an output directory for --autocomplete-appearance-preview.\n", stderr)
+                return
+            }
+            let delegate = AutocompleteAppearanceDelegate(directory: URL(fileURLWithPath: CommandLine.arguments[index + 1], isDirectory: true))
+            application.delegate = delegate
+            application.setActivationPolicy(.regular)
+            application.run()
+            return
+        }
         let delegate = AppDelegate()
         application.delegate = delegate
         application.setActivationPolicy(.regular)

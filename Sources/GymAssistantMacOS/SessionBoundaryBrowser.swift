@@ -26,12 +26,14 @@ import GymAssistantWorkspace
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 650),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
+        GymAssistantAppearance.configure(window)
         window.title = "Session boundary — read-only Notes"
         window.isReleasedWhenClosed = false
         window.delegate = self
         let help = NSTextField(wrappingLabelWithString: "Highlight the paragraphs for this session. Drag in the note or use Shift–Arrow keys to move the selection. Escape cancels; Command–Return uses the highlighted paragraphs. Existing scratchpad edits stay protected.")
         help.frame = NSRect(x: 18, y: 570, width: 664, height: 64)
         help.autoresizingMask = [.width, .minYMargin]
+        GymAssistantAppearance.supportingText(help)
         window.contentView?.addSubview(help)
         let scroll = NSScrollView(frame: NSRect(x: 18, y: 104, width: 664, height: 454))
         scroll.autoresizingMask = [.width, .height]; scroll.hasVerticalScroller = true
@@ -47,12 +49,14 @@ import GymAssistantWorkspace
         status.frame = NSRect(x: 18, y: 46, width: 420, height: 50)
         status.identifier = NSUserInterfaceItemIdentifier("boundary-status")
         status.autoresizingMask = [.width]
+        GymAssistantAppearance.supportingText(status)
         window.contentView?.addSubview(status)
         applyButton.frame = NSRect(x: 443, y: 18, width: 240, height: 28)
         applyButton.autoresizingMask = [.minXMargin]
         applyButton.target = self; applyButton.action = #selector(applySelection)
         applyButton.identifier = NSUserInterfaceItemIdentifier("boundary-apply")
         applyButton.keyEquivalent = "\r"; applyButton.keyEquivalentModifierMask = [.command]
+        GymAssistantAppearance.primary(applyButton)
         window.contentView?.addSubview(applyButton)
         let cancel = NSButton(title: "Cancel", target: self, action: #selector(cancelSelection))
         cancel.frame = NSRect(x: 18, y: 12, width: 90, height: 28)
